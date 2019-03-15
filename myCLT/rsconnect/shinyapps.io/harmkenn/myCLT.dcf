@@ -1,0 +1,12 @@
+name: myCLT
+title: myCLT
+username:
+account: harmkenn
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 792660
+bundleId: 1942920
+url: https://harmkenn.shinyapps.io/myCLT/
+when: 1552670913.64888
+asMultiple: FALSE
+asStatic: FALSE

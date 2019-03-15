@@ -1,0 +1,181 @@
+---
+title: "Central Limit Theorem on NBA Stats"
+author: "Ken Harmon"
+date: "`r format(Sys.time(), '%Y %B %d')`"
+output:
+  html_document:  
+    keep_md: true
+    code_folding: hide
+    fig_height: 6
+    fig_width: 12
+    fig_align: 'center'
+runtime: shiny
+---
+
+# {.tabset .tabset-fade}
+
+```{r, echo=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
+```
+
+```{r load_libraries, include=FALSE}
+# Use this R-Chunk to load all your libraries!
+#install.packages("tidyverse") # run this line once in console to get package
+library(tidyverse)
+library(shiny)
+theme_set(theme_bw())
+```
+
+## Background
+
+## Select Data
+
+```{r reactive}
+library(shiny)
+library(dplyr)
+library(readr)
+NBAplayers <- read.csv("NBAplayers.csv")
+
+# UI
+ui <- fluidPage(
+  sidebarLayout(
+    
+    # Input(s)
+    sidebarPanel(
+      
+      # Select variables to study
+      checkboxGroupInput(inputId = "selected_var",
+                         label = "Select variables:",
+                         choices = names(NBAplayers),
+                         selected = c("height"))
+      
+    ),
+
+        
+    # Output(s)
+    mainPanel(
+      HTML("Select a variables, then download and/or view the data."),
+      br(), br(),
+      downloadButton(outputId = "download_data", label = "Download data"),
+      br(), br(),
+      DT::dataTableOutput(outputId = "NBAstats")
+    )
+  )
+)
+
+# Server
+server <- function(input, output) {
+  
+  # Create reactive data frame
+  stats_selected <- reactive({
+    req(input$selected_var)               # ensure input$selected_var is available
+    NBAplayers %>% select(input$selected_var) # select columns of NBAstats
+  })
+  
+  # Create data table
+  output$NBAstats <- DT::renderDataTable({
+    DT::datatable(data = stats_selected(), 
+                  options = list(pageLength = 10), 
+                  rownames = FALSE)
+  })
+  
+  # Download file
+  output$download_data <- downloadHandler(
+    filename = function() {
+      "nbastats.csv"
+    },
+    content = function(file) { 
+        write_csv(stats_selected(), path = file) 
+      })
+}
+# Create a Shiny app object
+shinyApp(ui = ui, server = server)
+```
+
+## CLT
+
+```{r clt}
+# Load packages -----------------------------------------------------
+library(shiny)
+#library(openintro)
+#library(gridExtra)
+#library(BHH2)
+library(tidyverse)
+library(psych)
+library(pander)
+NBAplayers <- read.csv("NBAplayers.csv")
+
+
+
+
+# Define UI ---------------------------------------------------------
+ui <- pageWithSidebar(
+  headerPanel("Central Limit Theorem for NBAstats"),
+  sidebarPanel(
+    radioButtons(inputId = "stat", label = "NBA Stat:", choices = names(NBAplayers))
+              ),
+  mainPanel(
+    sliderInput(inputId = "bins", label = "Number of bins:", min = 1, max = 50, value = 30),
+    plotOutput(outputId = "distPlot"),
+    verbatimTextOutput("summary"),
+    sliderInput("n", "Sample size:", value = 30, min = 2, max = 500),
+    sliderInput(inputId = "dsmbins", label = "Number of bins:", min = 1, max = 50, value = 30),
+    plotOutput(outputId = "dsm"),
+    verbatimTextOutput("summaryxbars")
+  )
+)
+
+# Define server function required to create the scatterplot-
+server <- function(input, output) {
+
+ output$distPlot <- renderPlot({
+
+    x <- NBAplayers %>% select(input$stat) %>% filter_all(any_vars(. != 0)) %>% pull() %>% na.omit() %>% as.numeric() # select columns of NBA
+
+    bins <- seq(min(x), max(x), length.out = input$bins + 1)
+
+    hist(x, breaks = bins, col = "#75AADB", border = "white", xlab = input$stat,  main = "")
+
+    })
+   output$summary <- renderPrint({
+    x <- NBAplayers %>% select(input$stat) %>% filter_all(any_vars(. != 0)) %>% pull() %>% na.omit() %>% as.numeric()
+
+    pander(describe(x))
+  })
+   
+# Distribution of Sample Means   
+   
+ output$dsm <- renderPlot({
+
+    x <- NBAplayers %>% select(input$stat) %>% filter_all(any_vars(. != 0)) %>% pull() %>% na.omit() %>% as.numeric() # select columns of NBA
+    samplexs <- sample(x,10000*input$n,replace = TRUE)
+    msx <- as.data.frame(matrix(samplexs,10000,byrow = TRUE))
+    xbars <- apply(msx,1,mean)
+    
+    bins <- seq(min(xbars), max(xbars), length.out = input$dsmbins + 1)
+    bw <- max(xbars) - min(xbars)
+    #
+    #ggplot(as.data.frame(xbars), aes(xbars)) + geom_dotplot(stackgroups = TRUE,binwidth = bw/100,dotsize = .2)
+    #d <- density(xbars)                                  
+    #plot(d, main="Kernel Density of Miles Per Gallon")       
+    #polygon(d, col="red", border="blue")  
+    hist(xbars, breaks = bins, col = "#75AADB", border = "white", xlab = input$stat,  main = "")
+
+    })
+ output$summaryxbars <- renderPrint({
+    x <- NBAplayers %>% select(input$stat) %>% filter_all(any_vars(. != 0)) %>% pull() %>% na.omit() %>% as.numeric()
+    samplexs <- sample(x,10000*input$n,replace = TRUE)
+    msx <- as.data.frame(matrix(samplexs,10000,byrow = TRUE))
+    xbars <- apply(msx,1,mean)
+    pander(describe(xbars))
+  })
+}
+
+
+# Create a Shiny app object
+shinyApp(ui = ui, server = server)
+
+
+```
+
+

@@ -24,7 +24,7 @@ ui <- pageWithSidebar(
     radioButtons(inputId = "stat", label = "NBA Stat:", choices = names(NBAplayers)),width=2
     ),
   mainPanel(
-    sliderInput(inputId = "bins", label = "Number of bins:", min = 1, max = 50, value = 20),
+    sliderInput(inputId = "bins", label = "Number of bins:", min = 1, max = 50, value = 50),
     plotOutput(outputId = "distPlot"),
     plotOutput(outputId = "qqPlot"),
     verbatimTextOutput("summary"),

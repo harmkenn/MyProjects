@@ -14,6 +14,7 @@ library(shiny)
 library(tidyverse)
 library(psych)
 library(pander)
+library(car)
 NBAplayers <- read.csv("NBAplayers.csv")
 
 # Define UI for application that draws a histogram
@@ -30,6 +31,7 @@ ui <- pageWithSidebar(
     sliderInput("n", "Sample size:", value = 1, min = 1, max = 100),
     sliderInput(inputId = "dsmbins", label = "Number of bins:", min = 1, max = 50, value = 20),
     plotOutput(outputId = "dsm"),
+    plotOutput(outputId = "cltqqPlot"),
     verbatimTextOutput("summaryxbars")
   )
 )
@@ -50,7 +52,7 @@ server <- function(input, output) {
     
     x <- NBAplayers %>% select(input$stat) %>% filter_all(any_vars(. != 0)) %>% pull() %>% na.omit() %>% as.numeric() # select columns of NBA
 
-    qqnorm(x)
+    qqPlot(x)
     
   })
   output$summary <- renderPrint({
@@ -76,6 +78,16 @@ server <- function(input, output) {
     #plot(d, main="Kernel Density of Miles Per Gallon")       
     #polygon(d, col="red", border="blue")  
     hist(xbars, breaks = bins, col = "#75AADB", border = "white", xlab = input$stat,  main = "")
+    
+  })
+  output$cltqqPlot <- renderPlot({
+    
+    x <- NBAplayers %>% select(input$stat) %>% filter_all(any_vars(. != 0)) %>% pull() %>% na.omit() %>% as.numeric() # select columns of NBA
+    samplexs <- sample(x,10000*input$n,replace = TRUE)
+    msx <- as.data.frame(matrix(samplexs,10000,byrow = TRUE))
+    xbars <- apply(msx,1,mean)
+    
+    qqPlot(xbars)
     
   })
   output$summaryxbars <- renderPrint({

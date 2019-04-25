@@ -66,8 +66,8 @@ server <- function(input, output) {
   output$dsm <- renderPlot({
     
     x <- NBAplayers %>% select(input$stat) %>% filter_all(any_vars(. != 0)) %>% pull() %>% na.omit() %>% as.numeric() # select columns of NBA
-    samplexs <- sample(x,10000*input$n,replace = TRUE)
-    msx <- as.data.frame(matrix(samplexs,10000,byrow = TRUE))
+    samplexs <- sample(x,1000*input$n,replace = TRUE)
+    msx <- as.data.frame(matrix(samplexs,1000,byrow = TRUE))
     xbars <- apply(msx,1,mean)
     
     bins <- seq(min(xbars), max(xbars), length.out = input$dsmbins + 1)
@@ -83,8 +83,8 @@ server <- function(input, output) {
   output$cltqqPlot <- renderPlot({
     
     x <- NBAplayers %>% select(input$stat) %>% filter_all(any_vars(. != 0)) %>% pull() %>% na.omit() %>% as.numeric() # select columns of NBA
-    samplexs <- sample(x,10000*input$n,replace = TRUE)
-    msx <- as.data.frame(matrix(samplexs,10000,byrow = TRUE))
+    samplexs <- sample(x,1000*input$n,replace = TRUE)
+    msx <- as.data.frame(matrix(samplexs,1000,byrow = TRUE))
     xbars <- apply(msx,1,mean)
     
     qqPlot(xbars)
@@ -92,8 +92,8 @@ server <- function(input, output) {
   })
   output$summaryxbars <- renderPrint({
     x <- NBAplayers %>% select(input$stat) %>% filter_all(any_vars(. != 0)) %>% pull() %>% na.omit() %>% as.numeric()
-    samplexs <- sample(x,10000*input$n,replace = TRUE)
-    msx <- as.data.frame(matrix(samplexs,10000,byrow = TRUE))
+    samplexs <- sample(x,1000*input$n,replace = TRUE)
+    msx <- as.data.frame(matrix(samplexs,1000,byrow = TRUE))
     xbars <- apply(msx,1,mean)
     pander(describe(xbars))
   })

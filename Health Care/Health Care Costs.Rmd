@@ -1,0 +1,213 @@
+---
+title: "Health Care Costs"
+author: "Ken Harmon"
+date: "`r format(Sys.time(), '%Y %B %d')`"
+output:
+  html_document:  
+    keep_md: true
+    code_folding: hide
+    fig_height: 6
+    fig_width: 12
+    fig_align: 'center'
+editor_options: 
+  chunk_output_type: console
+---
+
+# {.tabset .tabset-fade}
+
+```{r, echo=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
+```
+
+```{r load_libraries, include=FALSE}
+# Use this R-Chunk to load all your libraries!
+#install.packages("tidyverse") # run this line once in console to get package
+library(tidyverse)
+library(downloader)
+library(sf)
+library(leaflet)
+library(maps)
+library(gapminder)
+library(plotly)
+library(fs)
+theme_set(theme_bw())
+```
+
+```{r load_data}
+# Use this R-Chunk to import all your datasets!
+world_path <- "http://thematicmapping.org/downloads/TM_WORLD_BORDERS_SIMPL-0.3.zip"
+df <- tempfile(); 
+uf <- tempfile()
+download(world_path, df, mode = "wb")
+unzip(df, exdir = uf)
+world <- read_sf(uf)
+file_delete(df); dir_delete(uf)
+
+# Total US$ spent per person on health care
+gm_ctry_codes <- country_codes
+hdpp <- read_csv("healthdpp.csv")
+names(hdpp)[1]<-"country"
+hdpp <- left_join(gm_ctry_codes,hdpp, by = "country")
+
+hdpp_geo <- world %>%
+  select("UN") %>%
+  left_join(hdpp, by = c("UN"="iso_num")) %>%
+  filter(!is.na(country)) %>%
+  mutate_at(4:19, funs(round(., 2)))
+```
+
+```{r}
+# Life Expectancy in years
+lifexp <- read_csv("lifexp.csv")
+names(lifexp)[1]<-"country"
+lifexp <- left_join(gm_ctry_codes,lifexp, by = "country") %>%
+  select(1:3,199:214)
+
+life_geo <- world %>%
+  select("UN") %>%
+  left_join(lifexp, by = c("UN"="iso_num")) %>%
+  filter(!is.na(country))
+```
+
+```{r}
+hdpp_tidy <- hdpp %>% 
+  select(-(2:3)) %>%    
+  gather(Year, hdpp, -country)
+life_tidy <- lifexp %>%
+  select(-(2:3)) %>%
+  gather(Year, lifexp, -country)
+Biggie <-left_join(hdpp_tidy,life_tidy, by = c("country","Year"))
+Biggie$Year <- as.integer(Biggie$Year)
+
+wdt <- read_csv("wdt.csv")
+Biggie <- left_join(wdt,Biggie, by = c("Country" = "country" , "Year" = "Year"))
+```
+
+
+## Background
+
+### The Datasets
+
+[Total health spending per person (US$)](https://docs.google.com/spreadsheet/pub?key=pyj6tScZqmEeL79qOoKtofQ&output=xlsx)
+
+[Life expectancy (years)](https://docs.google.com/spreadsheet/pub?key=phAwcNAVuyj2tPLxKvvnNPA&output=xlsx)
+
+### The Issue
+
+The United States is trying to outspend every other nation on the planet with health care. We spend almost 18% of our GDP on healthcare.
+
+According to a [pbs.org study](https://www.pbs.org/newshour/health/health-costs-how-the-us-compares-with-other-countries), in the United States:
+
+  * There are fewer physicians per person than in most other OECD countries. In 2010, for instance, the U.S. had 2.4 practicing physicians per 1,000 people — well below below the OECD average of 3.1.
+  * The number of hospital beds in the U.S. was 2.6 per 1,000 population in 2009, lower than the OECD average of 3.4 beds.
+  * Life expectancy at birth increased by almost nine years between 1960 and 2010, but that’s less than the increase of over 15 years in Japan and over 11 years on average in OECD countries. The average American now lives 78.7 years in 2010, more than one year below the average of 79.8 years.
+  
+There is no doubt that the quality of medical care has an influence on life expectancy but it is interesting to look at the amount money the United States is spending and the results that we see in life expectancy compared to other nations.
+
+## Health Expense vs. Life Expectancy
+
+### Country Expendature in US Dollars per person Average
+```{r plot_data}
+#leaflet(data = world)  %>% 
+ # setView(lng = -10, lat = 20, zoom =2) %>% 
+  #addProviderTiles(providers$Esri.WorldImagery) %>%
+  #addPolygons(data = world) %>%
+  #addPolygons(data = us)
+bins <- c(0,100,200,400,800,1600,3200,6400,Inf)
+
+leaflet(data =hdpp_geo) %>%
+  setView(lng = 0, lat = 20, zoom =2) %>% 
+  addProviderTiles(providers$Esri.WorldImagery) %>% 
+  addPolygons(color = "black", weight = 2, fillColor = "none") %>% 
+  # other color options: "RdYlBu"
+  addPolygons(fillColor = ~colorBin("RdYlBu", c(0,8000), bins = bins)(`1995`),
+              fillOpacity = .75, color = "black", weight = 1, group = "1995",
+              popup = paste0("<strong>Country: </strong>", hdpp_geo$country, 
+                           "<br><strong>Ave Per Person: $</strong>", hdpp_geo$`1995`)) %>%
+  
+  addPolygons(fillColor = ~colorBin("RdYlBu", c(0,8000), bins = bins)(`1999`),
+              fillOpacity = .75, color = "black", weight = 1, group = "1999",
+              popup = paste0("<strong>Country: </strong>", hdpp_geo$country, 
+                             "<br><strong>Ave Per Person: $</strong>", hdpp_geo$`1999`)) %>%
+  
+  addPolygons(fillColor = ~colorBin("RdYlBu", c(0,8000), bins = bins)(`2003`),
+              fillOpacity = .75, color = "black", weight = 1, group = "2003",
+              popup = paste0("<strong>Country: </strong>", hdpp_geo$country, 
+                             "<br><strong>Ave Per Person: $</strong>", hdpp_geo$`2003`)) %>%
+
+  addPolygons(fillColor = ~colorBin("RdYlBu", c(0,8000), bins = bins)(`2007`),
+              fillOpacity = .75, color = "black", weight = 1, group = "2007",
+              popup = paste0("<strong>Country: </strong>", hdpp_geo$country, 
+                             "<br><strong>Ave Per Person: $</strong>", hdpp_geo$`2007`)) %>%
+  
+  addPolygons(fillColor = ~colorBin("RdYlBu", c(0,8000), bins = bins)(`2010`),
+              fillOpacity = .75, color = "black", weight = 1, group = "2010",
+              popup = paste0("<strong>Country: </strong>", hdpp_geo$country, 
+                             "<br><strong>Ave Per Person: $</strong>", hdpp_geo$`2010`)) %>%
+  
+  addLayersControl(baseGroups = c("1995","1999","2003","2007","2010","None"), 
+              options = layersControlOptions(collapsed = FALSE)) %>%
+  
+  addLegend("bottomleft", pal = colorBin("RdYlBu",c(0,8000), bins = bins), values = 
+              c(0,8000),title = "$US ave per Person",opacity = 1)
+
+```
+
+### Country Life Expectancy
+```{r}
+bins <- c(0,50,66,74,78,80,Inf)
+leaflet(data =life_geo) %>%
+  setView(lng = 0, lat = 20, zoom =2) %>% 
+  addProviderTiles(providers$Esri.WorldImagery) %>% 
+  addPolygons(color = "black", weight = 2, fillColor = "none") %>% 
+  # other color options: "RdYlBu"
+  addPolygons(fillColor = ~colorBin("RdYlBu", c(10,90), bins = bins)(`1995`),
+              fillOpacity = .75, color = "black", weight = 1, group = "1995",
+              popup = paste0("<strong>Country: </strong>", life_geo$country, 
+                           "<br><strong>Life Exp: </strong>", life_geo$`1995`))%>%
+  addPolygons(fillColor = ~colorBin("RdYlBu", c(10,90), bins = bins)(`1999`),
+              fillOpacity = .75, color = "black", weight = 1, group = "1999",
+              popup = paste0("<strong>Country: </strong>", life_geo$country, 
+                           "<br><strong>Life Exp: </strong>", life_geo$`1999`)) %>%
+  addPolygons(fillColor = ~colorBin("RdYlBu", c(10,90), bins = bins)(`2003`),
+              fillOpacity = .75, color = "black", weight = 1, group = "2003",
+              popup = paste0("<strong>Country: </strong>", life_geo$country, 
+                           "<br><strong>Life Exp: </strong>", life_geo$`2003`)) %>%
+  addPolygons(fillColor = ~colorBin("RdYlBu", c(10,90), bins = bins)(`2007`),
+              fillOpacity = .75, color = "black", weight = 1, group = "2007",
+              popup = paste0("<strong>Country: </strong>", life_geo$country, 
+                           "<br><strong>Life Exp: </strong>", life_geo$`2007`)) %>%
+  addPolygons(fillColor = ~colorBin("RdYlBu", c(10,90), bins = bins)(`2010`),
+              fillOpacity = .75, color = "black", weight = 1, group = "2010",
+              popup = paste0("<strong>Country: </strong>", life_geo$country, 
+                           "<br><strong>Life Exp: </strong>", life_geo$`2010`)) %>%
+  addLayersControl(baseGroups = c("1995","1999","2003","2007","2010","None"), 
+              options = layersControlOptions(collapsed = FALSE)) %>%
+  addLegend("bottomleft", pal = colorBin("RdYlBu",c(10,90), bins = bins), values = 
+              c(10,90),title = "ave life exp",opacity = 1)
+```
+
+```{r}
+Biggie %>%
+  plot_ly(x = ~hdpp, y = ~lifexp, 
+    size = ~Population, color = ~Region, frame = ~Year, text = ~Country, 
+    hoverinfo = "text",type = 'scatter',mode = 'markers') %>%
+  layout(xaxis = list(title = "Health Expenatures: Average Per Person"), yaxis = list(title = "Life Expectancy"))
+```
+
+## Conclusions
+
+I am certain that there are a myriad of variables to consider when we look at the relationship between healthcare expenditures and life expectancy. However, it is easy to see that the United States is an extreme outlier in this model and not in a good way. I am a little embarrassed to see where we sit in comparison to the rest of the world. 
+
+Understand, the costs associated with individuals and their treatments are heavily skewed right; most individuals have little to no annual costs; while a few have exorbitant costs. 
+
+Since spending more on healthcare has little affect on life expectancy, it seems reasonable to try to decrease healthcare spending in the United States.
+
+There are two ways to decrease overall healthcare costs:
+
+  * Decrease the number of treatments performed
+    or
+  * Decrease the cost per treatment
+  
+Neither of these options are very popular.
+

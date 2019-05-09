@@ -21,13 +21,7 @@ library(ggplot2)
 library(tidyverse)
 library(mosaic)
 library(mosaicData)
-# Install devtools if necessary
-#install.packages("devtools")
-
-# Install statisticalModeling
-devtools::install_github("dtkaplan/statisticalModeling")
-library(statisticalModeling)
-
+library(stringr)
 ```
 
 ## Background
@@ -38,4 +32,7 @@ all_Games <- read.csv("All_NCAA_Tournament_Games.csv")
 SeasonStats <- read.csv("NCAASeasonTeamStats.csv")
 ```
 
+```{r Cds}
+YSS <- SeasonStats %>% mutate(Year = str_extract(Season, "^.{4}"))%>%select(Year, everything())
+```
 

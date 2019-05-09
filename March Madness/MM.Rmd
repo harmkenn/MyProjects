@@ -1,31 +1,41 @@
 ---
-title: "Untitled"
-output: github_document
+title: "Statstical Modeling Part 1"
+author: "Ken Harmon"
+date: "`r format(Sys.time(), '%Y %B %d')`"
+output:
+  html_document:  
+    keep_md: true
+    code_folding: hide
+    fig_height: 6
+    fig_width: 12
+    fig_align: 'center'
+editor_options: 
+  chunk_output_type: console
 ---
+
+# {.tabset .tabset-fade}
+
+```{r, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
+library(ggplot2)
+library(tidyverse)
+library(mosaic)
+library(mosaicData)
+# Install devtools if necessary
+#install.packages("devtools")
+
+# Install statisticalModeling
+devtools::install_github("dtkaplan/statisticalModeling")
+library(statisticalModeling)
+
+```
+
+## Background
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
-mm <- read.csv("2020 bracket Picker test.csv")
+all_Games <- read.csv("All_NCAA_Tournament_Games.csv")
+SeasonStats <- read.csv("NCAASeasonTeamStats.csv")
 ```
 
-## GitHub Documents
 
-This is an R Markdown format used for publishing markdown documents to GitHub. When you click the **Knit** button all R code chunks are run and a markdown file (.md) suitable for publishing to GitHub is generated.
-
-## Including Code
-
-You can include R code in the document as follows:
-
-```{r cars}
-summary(cars)
-```
-
-## Including Plots
-
-You can also embed plots, for example:
-
-```{r pressure, echo=FALSE}
-plot(pressure)
-```
-
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.

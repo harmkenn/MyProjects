@@ -1,0 +1,12 @@
+name: NBAPlayersStats
+title: NBAPlayersStats
+username:
+account: harmkenn
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 890605
+bundleId: 2038895
+url: https://harmkenn.shinyapps.io/NBAPlayersStats/
+when: 1556210573.93965
+asMultiple: FALSE
+asStatic: FALSE

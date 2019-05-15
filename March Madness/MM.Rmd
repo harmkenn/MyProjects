@@ -1,5 +1,5 @@
 ---
-title: "Statstical Modeling Part 1"
+title: "Predicting March Madness"
 author: "Ken Harmon"
 date: "`r format(Sys.time(), '%Y %B %d')`"
 output:
@@ -22,17 +22,32 @@ library(tidyverse)
 library(mosaic)
 library(mosaicData)
 library(stringr)
+library(psych)
 ```
 
 ## Background
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
-all_Games <- read.csv("All_NCAA_Tournament_Games.csv")
-SeasonStats <- read.csv("NCAASeasonTeamStats.csv")
+all_Games <- as_tibble(read.csv("All_NCAA_Tournament_Games.csv"))
+SeasonStats <- as_tibble(read.csv("NCAASeasonTeamStats.csv"))
+
 ```
 
 ```{r Cds}
-YSS <- SeasonStats %>% mutate(Year = str_extract(Season, "^.{4}"))%>%select(Year, everything())
+Games2000_19 <- all_Games %>% filter(Year > 1999) %>% tibble::rowid_to_column("ID")
+wss <- SeasonStats %>% mutate(Year = as.integer(str_extract(Season, "^.{4}"))+1)%>% setNames(paste0("w_",names(.)))
+lss <- SeasonStats %>% mutate(Year = as.integer(str_extract(Season, "^.{4}"))+1)%>% setNames(paste0("l_",names(.)))
+JoinedWinnerStats <- left_join(Games2000_19,wss,by=c("Year"="w_Year","Winner"="w_Team"))
+JoinedLoserStats <- left_join(JoinedWinnerStats,lss,by=c("Year"="l_Year","Loser"="l_Team"))
+ws <- JoinedLoserStats %>% select(starts_with("w_")) 
+ls <- JoinedLoserStats %>% select(contains("l_")) %>% select(5:35)
+dwl <- ws - ls
+dwl <- dwl %>% rename_all(funs(str_replace(., "w.", "d."))) %>% tibble::rowid_to_column("ID")
+GWSLSDS2000_19<- left_join(JoinedLoserStats,dwl,by=c("ID"="ID"))
+```
+
+```{r correlation}
+corr.test
 ```
 

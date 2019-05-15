@@ -1,0 +1,43 @@
+---
+title: "Box-Cox Transformation"
+author: "Ken Harmon"
+date: "`r format(Sys.time(), '%Y %B %d')`"
+output:
+  html_document:  
+    keep_md: true
+    code_folding: hide
+    fig_height: 6
+    fig_width: 12
+    fig_align: 'center'
+editor_options: 
+  chunk_output_type: console
+---
+
+# {.tabset .tabset-fade}
+
+```{r, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
+library(ggplot2)
+library(tidyverse)
+library(mosaic)
+library(mosaicData)
+library(stringr)
+```
+
+## Background
+
+```{r setup, include=FALSE}
+library(faraway)
+?butterfat
+data(butterfat)
+fullmodel = lm(Butterfat ~ Breed * Age, data = butterfat)
+plot(fullmodel)
+```
+
+```{r bc}
+bc = boxcox(fullmodel,lambda = seq(-3,3))
+best.lam = bc$x[which(bc$y == max(bc$y))]
+fullmodel.inv = lm((Butterfat)^best.lam ~ Breed*Age, data = butterfat)
+plot(fullmodel.inv)
+```
+

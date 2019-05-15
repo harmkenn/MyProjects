@@ -21,7 +21,7 @@ library(ggplot2)
 library(tidyverse)
 library(mosaic)
 library(mosaicData)
-library(stringr)
+library(stringr) 
 ```
 
 ## Background

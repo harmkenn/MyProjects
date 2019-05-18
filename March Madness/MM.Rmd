@@ -31,12 +31,12 @@ library(psych)
 knitr::opts_chunk$set(echo = TRUE)
 all_Games <- as_tibble(read.csv("All_NCAA_Tournament_Games.csv"))
 SeasonStats <- as_tibble(read.csv("NCAASeasonTeamStats.csv"))
-
+Rankings <- as_tibble(read.csv("NCAARankings.csv"))
 ```
 
 ```{r Cds}
-Games2000_19 <- all_Games %>% filter(Year > 1999) %>% tibble::rowid_to_column("ID")
-wss <- SeasonStats %>% mutate(Year = as.integer(str_extract(Season, "^.{4}")) + 1) %>% setNames(paste0("w_",names(.)))
+Games2000_19 <- all_Games %>% filter(Year > 2000) %>% tibble::rowid_to_column("ID") %>% as_tibble()
+wss <- SeasonStats %>% mutate(Year = as.integer(str_extract(Season, "^.{4}")) + 1) %>% setNames(paste0("h_",names(.)))
 lss <- SeasonStats %>% mutate(Year = as.integer(str_extract(Season, "^.{4}")) + 1) %>% setNames(paste0("l_",names(.)))
 JoinedWinnerStats <- left_join(Games2000_19,wss,by = c("Year" = "w_Year","Winner" = "w_Team"))
 JoinedLoserStats <- left_join(JoinedWinnerStats,lss,by = c("Year" = "l_Year","Loser" = "l_Team"))
@@ -49,11 +49,18 @@ GWSLSDS2000_19 <- left_join(JoinedLoserStats,dwl,by = c("ID" = "ID"))
 
 ```{r correlation}
 bestfit <- GWSLSDS2000_19 %>% select(MV,starts_with("d_"))%>%select(1,6:7)
-chart.Correlation(bestfit,histogram=TRUE, pch=19)
+bestfit$split <- rnorm(nrow(bestfit)) > -1
+buildfit <- bestfit %>% filter(split)
+chart.Correlation(buildfit,histogram=TRUE, pch=19)
 ```
 
 ```{r lm}
-mmlm <- lm(MV~d_SRS +d_SOS, bestfit)
+mmlm <- lm(MV~d_SRS +d_SOS, buildfit)
 summary(mmlm)
+```
+
+```{r predict}
+testfit <- bestfit %>% filter(!split)
+testfit$pred <- predict(mmlm, testfit)
 ```
 

@@ -29,38 +29,41 @@ library(psych)
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
-all_Games <- as_tibble(read.csv("All_NCAA_Tournament_Games.csv"))
+all_Games <- as_tibble(read.csv("withRanking.csv"))
 SeasonStats <- as_tibble(read.csv("NCAASeasonTeamStats.csv"))
-Rankings <- as_tibble(read.csv("NCAARankings.csv"))
 ```
 
 ```{r Cds}
-Games2000_19 <- all_Games %>% filter(Year > 2000) %>% tibble::rowid_to_column("ID") %>% as_tibble()
-wss <- SeasonStats %>% mutate(Year = as.integer(str_extract(Season, "^.{4}")) + 1) %>% setNames(paste0("h_",names(.)))
-lss <- SeasonStats %>% mutate(Year = as.integer(str_extract(Season, "^.{4}")) + 1) %>% setNames(paste0("l_",names(.)))
-JoinedWinnerStats <- left_join(Games2000_19,wss,by = c("Year" = "w_Year","Winner" = "w_Team"))
-JoinedLoserStats <- left_join(JoinedWinnerStats,lss,by = c("Year" = "l_Year","Loser" = "l_Team"))
-ws <- JoinedLoserStats %>% select(starts_with("w_")) %>% select(3:33)
-ls <- JoinedLoserStats %>% select(contains("l_")) %>% select(3:33)
-dwl <- ws - ls
-dwl <- dwl %>% rename_all(funs(str_replace(., "w_", "d_"))) %>% tibble::rowid_to_column("ID")
-GWSLSDS2000_19 <- left_join(JoinedLoserStats,dwl,by = c("ID" = "ID"))
+fss <- SeasonStats %>% mutate(Year = as.integer(str_extract(Season, "^.{4}")) + 1) %>% setNames(paste0("F.",names(.)))
+uss <- SeasonStats %>% mutate(Year = as.integer(str_extract(Season, "^.{4}")) + 1) %>% setNames(paste0("U.",names(.)))
+
+JoinedFavoredStats <- left_join(all_Games,fss,by = c("Year" = "F.Year","F.Team" = "F.Team"))
+
+JoinedUnderdogStats <- left_join(JoinedFavoredStats,uss,by = c("Year" = "U.Year","U.Team" = "U.Team"))
+
+fs <- JoinedUnderdogStats %>% select(starts_with("F.")) %>% select(1:3,5,8:38)
+us <- JoinedUnderdogStats %>% select(contains("U.")) %>% select(1:3,5,8:38)
+dfu <- fs - us
+dfu <- dfu %>% rename_all(funs(str_replace(., "F.", "D."))) %>% tibble::rowid_to_column("ID")
+AGwDS <- left_join(all_Games,dfu,by = c("ID" = "ID"))
 ```
 
 ```{r correlation}
-bestfit <- GWSLSDS2000_19 %>% select(MV,starts_with("d_"))%>%select(1,6:7)
-bestfit$split <- rnorm(nrow(bestfit)) > -1
+bestfit <- AGwDS %>% select(starts_with("D.")) %>% select(4,9,19)
+bestfit$split <- rnorm(nrow(bestfit)) > -1.4
 buildfit <- bestfit %>% filter(split)
 chart.Correlation(buildfit,histogram=TRUE, pch=19)
 ```
 
 ```{r lm}
-mmlm <- lm(MV~d_SRS +d_SOS, buildfit)
+mmlm <- lm(D.Score~D.SRS+D.MP, buildfit)
 summary(mmlm)
 ```
 
 ```{r predict}
 testfit <- bestfit %>% filter(!split)
 testfit$pred <- predict(mmlm, testfit)
+testfit$result <- sign(testfit$D.Score)==sign(testfit$pred)
+table(testfit$result)
 ```
 

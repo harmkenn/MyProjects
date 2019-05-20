@@ -64,6 +64,10 @@ summary(mmlm)
 testfit <- bestfit %>% filter(!split)
 testfit$pred <- predict(mmlm, testfit)
 testfit$result <- sign(testfit$D.Score)==sign(testfit$pred)
-table(testfit$result)
+
+df <- data.frame(table(testfit$result))
+colnames(df) <- c('Hit','Freq')
+df$Perc <- df$Freq / sum(df$Freq) * 100
+df
 ```
 

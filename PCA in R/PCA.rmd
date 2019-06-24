@@ -1,0 +1,51 @@
+---
+title: "Principal Component Analysis in R"
+author: "Ken Harmon"
+date: "`r format(Sys.time(), '%Y %B %d')`"
+output:
+  html_document: 
+    code_folding: hide
+    fig_align: center
+    fig_height: 6
+    fig_width: 12
+    keep_md: yes
+editor_options: 
+  chunk_output_type: console
+---
+
+# {.tabset .tabset-fade}
+
+```{r, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
+library(ggplot2)
+library(tidyverse)
+library(mosaic)
+library(PerformanceAnalytics)
+library(stringr)
+library(psych) 
+#library(devtools)
+#install_github("vqv/ggbiplot")
+library(ggbiplot)
+```
+
+https://www.datacamp.com/community/tutorials/pca-analysis-r
+
+## Background
+
+* This is the first principal component, the straight line that shows the most substantial variance in the data.
+
+
+```{r step1}
+#prcomp is principal component analysis
+
+mtcars.pca <- prcomp(mtcars[,c(1:7,10,11)], center = TRUE,scale. = TRUE)
+
+summary(mtcars.pca)
+
+str(mtcars.pca)
+
+ggbiplot(mtcars.pca)
+
+ggbiplot(mtcars.pca, labels=rownames(mtcars))
+```
+

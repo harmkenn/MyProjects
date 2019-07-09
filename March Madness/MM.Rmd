@@ -23,6 +23,9 @@ library(mosaic)
 library(PerformanceAnalytics)
 library(stringr)
 library(psych) 
+library(ggfortify)
+library(factoextra)
+
 ```
 
 ## Background
@@ -44,8 +47,8 @@ JFS <- left_join(JFS, fpake, by = c("F.Team"="F.TEAM"))
 JUS <- left_join(JFS,uss,by = c("Year" = "U.Year","U.Team" = "U.Team"))
 JUS <- left_join(JUS, upake, by = c("U.Team"="U.TEAM"))
 
-fs <- JUS %>% select(starts_with("F.")) %>% select(1:3,5,8:40)
-us <- JUS %>% select(contains("U.")) %>% select(1:3,5,8:40)
+fs <- JUS %>% dplyr::select(contains("F.")) %>% dplyr::select(1:3,5,8:40)
+us <- JUS %>% dplyr::select(contains("U.")) %>% dplyr::select(1:3,5,8:40)
 dfu <- fs - us
 dfu <- dfu %>% rename_all(funs(str_replace(., "F.", "D."))) %>% tibble::rowid_to_column("ID")
 AGwDS <- left_join(all_Games,dfu,by = c("ID" = "ID"))
@@ -72,5 +75,33 @@ df <- data.frame(table(testfit$result))
 colnames(df) <- c('Hit','Freq')
 df$Perc <- df$Freq / sum(df$Freq) * 100
 df
+```
+
+```{r PCA}
+# Grab just the D. data
+Ddata <- AGwDS %>% select(starts_with("D.")) %>% select(1:18,20:34,36:37) %>% filter(complete.cases(.))
+apply(is.na(Ddata),2,which) 
+prcomp(Ddata)
+summary(prcomp(Ddata))
+```
+
+```{r stage2}
+D2data<- Ddata%>% select(17:35)
+prcomp(D2data)
+summary(prcomp(D2data))
+```
+
+```{r stage3}
+D3data<- D2data%>% select(1:4,13)
+prcomp(D3data)
+summary(prcomp(D3data))
+```
+
+```{r Plot}
+fviz_pca_var(prcomp(D3data),
+             col.var = "contrib", # Color by contributions to the PC
+             gradient.cols = c("#00AFBB", "#E7B800", "#FC4E07"),
+             repel = TRUE     # Avoid text overlapping
+             )
 ```
 

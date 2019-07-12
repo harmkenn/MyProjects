@@ -32,33 +32,44 @@ library( caret )
 theme_set(theme_bw())
 ```
 
-## The Dataset
+## The MMdata
+
+NCAA Season Stats: https://www.sports-reference.com/cbb/seasons/
+
+All Tournament Game Results:
+
+  From which I can get Seed Expectations
+  From Which I can get each teams PASE
+  
+Kenpom Rankings: https://kenpom.com/index.php?s=TeamName
+
+
 
 ```{r first}
-# Load dataset of all games and the differences of season stats
+# Load MMdata of all games and the differences of season stats
 AGwDS = read.csv( "AGwDS.csv", stringsAsFactor = FALSE )
 
+MMdata <- AGwDS[,22:58] %>% mutate(result = D.Score) %>% transform(result = ifelse (result > 0 ,1,0))%>% dplyr::select(-c(4,19)) %>% na.omit()
 
+#MMdata <-MMdata%>%dplyr::select(c(1,8,9,16:19,21,22,24,25,27:36))
 
-# Transform dataset
+#check for na
 
-dataset = data %>% 
-            filter( class == "bus" | class == "saab" ) %>%
-            transform( class = ifelse( class == "saab", 0, 1 ) )
-dataset = as.data.frame( sapply( dataset, as.numeric ) )
+#apply(is.na(MMdata),2,which)
 
-# Spliting training and testing dataset
-index = sample( 1:nrow( dataset ), nrow( dataset ) * 0.6, replace = FALSE ) 
+  
+# Spliting training and testing MMdata
+index = sample( 1:nrow(MMdata), nrow(MMdata) * 0.8, replace = FALSE ) 
 
-trainset = dataset[ index, ]
-test = dataset[ -index, ]
-testset = test[1:18]
+trainset = MMdata[index,]
+test = MMdata[-index,]
+testset = test[1:ncol(test)-1]  # all variables without the class
 
 # Building a neural network (NN)
 
 n = names( trainset )
-f = as.formula( paste( "class ~", paste( n[!n %in% "class"], collapse = "+" ) ) )
-nn = neuralnet( f, trainset, hidden = 4, linear.output = FALSE, threshold = 0.01 )
+f = as.formula( paste( "result ~", paste( n[!n %in% "result"], collapse = "+" ) ) )
+nn = neuralnet( f, trainset, hidden = 6, linear.output = FALSE, threshold = 0.01 )
 
 plot( nn, rep = "best" )
 ```
@@ -67,7 +78,7 @@ plot( nn, rep = "best" )
 # Testing the result output
 nn.results = compute( nn, testset )
 
-results = data.frame( actual = test$class, prediction = round( nn.results$net.result ) )
+results = data.frame( actual = test$result, prediction = round( nn.results$net.result ) )
 
 # Confusion matrix
 
@@ -76,9 +87,9 @@ print( confusionMatrix( t ) )
 ```
 
 ```{r testing with PCA}
-pca_trainset = trainset[1:17]
+pca_trainset = trainset[1:ncol(trainset)-1]  # all variables without the class
 pca_testset = testset
-pca = prcomp( pca_trainset, scale = T )
+pca = prcomp( pca_trainset, center = F, scale. = F )
 
 # variance
 pr_var = ( pca$sdev )^2 
@@ -96,18 +107,19 @@ plot( cumsum( prop_varex ), xlab = "Principal Component",
 ```
 
 ```{r prediction with PCA}
-# Creating a new dataset
-train = data.frame( class = trainset$class, pca$x )
+# Creating a new MMdata
+train = data.frame( result = trainset$result, pca$x )
 t = as.data.frame( predict( pca, newdata = pca_testset ) )
 
-new_trainset = train[, 1:9]
-new_testset =  t[, 1:8]
+PCs <- 4
+new_trainset = train[, 1:(PCs+1)] # class on front and PCs to use
+new_testset =  t[, 1:PCs] # Just PCs to use
 
 # Build the neural network (NN)
 
 n = names( new_trainset )
-f = as.formula( paste( "class ~", paste( n[!n %in% "class" ], collapse = "+" ) ) )
-nn = neuralnet( f, new_trainset, hidden = 4, linear.output = FALSE, threshold=0.01 )
+f = as.formula( paste( "result ~", paste( n[!n %in% "result" ], collapse = "+" ) ) )
+nn = neuralnet( f, new_trainset, hidden = 6, linear.output = FALSE, threshold=0.01 )
 
 # Plot the NN
 plot( nn, rep = "best" )
@@ -118,7 +130,7 @@ plot( nn, rep = "best" )
 nn.results = compute( nn, new_testset )
 
 # Results
-results = data.frame( actual = test$class, 
+results = data.frame( actual = test$result, 
                       prediction = round( nn.results$net.result ) )
 
 # Confusion Matrix

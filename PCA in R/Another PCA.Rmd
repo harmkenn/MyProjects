@@ -1,0 +1,112 @@
+---
+title: "Another PCA"
+author: "Ken Harmon"
+date: "`r format(Sys.time(), '%Y %B %d')`"
+output:
+  html_document:  
+    keep_md: true
+    code_folding: hide
+    fig_height: 6
+    fig_width: 12
+    fig_align: 'center'
+editor_options: 
+  chunk_output_type: console
+---
+
+# {.tabset .tabset-fade}
+
+```{r, echo=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
+```
+
+```{r load_libraries, include=FALSE}
+# Use this R-Chunk to load all your libraries!
+#install.packages("tidyverse") # run this line once in console to get package
+
+library(tidyverse)
+theme_set(theme_bw())
+```
+
+## The Dataset
+
+https://www.analyticsvidhya.com/blog/2016/03/practical-guide-principal-component-analysis-python/
+
+```{r data}
+#load train and test file
+train <- read.csv("TrainBMS.csv")
+test <- read.csv("TestBMS.csv")
+
+#add a column
+test$Item_Outlet_Sales <- 1
+
+#combine the data set
+combi <- rbind(train, test)
+
+#impute missing values (item weight) with median weight
+combi$Item_Weight[is.na(combi$Item_Weight)] <- median(combi$Item_Weight, na.rm = TRUE)
+
+#impute 0 with median
+combi$Item_Visibility <- ifelse(combi$Item_Visibility == 0, median(combi$Item_Visibility),combi$Item_Visibility)
+
+#find mode and impute
+table(combi$Outlet_Size, combi$Outlet_Type)
+levels(combi$Outlet_Size)[1] <- "Other"
+```
+
+Till here, we’ve imputed missing values. Now we are left with removing the dependent (response) variable and other identifier variables( if any). As we said above, we are practicing an unsupervised learning technique, hence response variable must be removed.
+
+```{r slim}
+#remove the dependent and identifier variables
+my_data <- subset(combi, select = -c(Item_Identifier, Outlet_Identifier, Item_Outlet_Sales))
+```
+
+Sadly, 6 out of 9 variables are categorical in nature. We have some additional work to do now. We’ll convert these categorical variables into numeric using one hot encoding.
+
+```{r Categoricaltonum}
+library(dummies)
+#create a dummy data frame
+new_my_data <- dummy.data.frame(my_data, names = c("Item_Fat_Content","Item_Type","Outlet_Establishment_Year","Outlet_Size","Outlet_Location_Type","Outlet_Type"))
+```
+
+```{r tt}
+#divide the new data
+pca.train <- new_my_data[1:nrow(train),]
+pca.test <- new_my_data[-(1:nrow(train)),]
+```
+
+```{r pca}
+#principal component analysis
+prin_comp <- prcomp(pca.train, scale. = T)
+names(prin_comp)
+#outputs the mean of variables
+prin_comp$center
+
+#outputs the standard deviation of variables
+prin_comp$scale
+
+prin_comp$rotation
+
+prin_comp$rotation[1:5,1:4]
+
+dim(prin_comp$x)
+
+biplot(prin_comp, scale = 0)
+
+```
+
+```{r}
+train.data <- data.frame(Item_Outlet_Sales = train$Item_Outlet_Sales, prin_comp$x)
+train.data <- train.data[,1:31]
+
+library(rpart)
+rpart.model <- rpart(Item_Outlet_Sales ~ .,data = train.data, method = "anova")
+rpart.model
+
+test.data <- predict(prin_comp, newdata = pca.test)
+test.data <- as.data.frame(test.data)
+test.data <- test.data[,1:30]
+
+rpart.prediction <- predict(rpart.model, test.data)
+```
+
+

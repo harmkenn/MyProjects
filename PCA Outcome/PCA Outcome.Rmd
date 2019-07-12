@@ -55,13 +55,13 @@ index = sample( 1:nrow( dataset ), nrow( dataset ) * 0.6, replace = FALSE )
 
 trainset = dataset[ index, ]
 test = dataset[ -index, ]
-testset = test[1:18]
+testset = test[1:18]    # all variables without the class
 
 # Building a neural network (NN)
 
 n = names( trainset )
 f = as.formula( paste( "class ~", paste( n[!n %in% "class"], collapse = "+" ) ) )
-nn = neuralnet( f, trainset, hidden = 4, linear.output = FALSE, threshold = 0.01 )
+nn = neuralnet( f, trainset, hidden = 8, linear.output = FALSE, threshold = 0.01 )
 
 plot( nn, rep = "best" )
 ```
@@ -79,7 +79,7 @@ print( confusionMatrix( t ) )
 ```
 
 ```{r testing with PCA}
-pca_trainset = trainset[1:17]
+pca_trainset = trainset[1:18]  # all variables without the class
 pca_testset = testset
 pca = prcomp( pca_trainset, scale = T )
 
@@ -103,14 +103,14 @@ plot( cumsum( prop_varex ), xlab = "Principal Component",
 train = data.frame( class = trainset$class, pca$x )
 t = as.data.frame( predict( pca, newdata = pca_testset ) )
 
-new_trainset = train[, 1:9]
+new_trainset = train[, 1:9] # class on front and PCs to use
 new_testset =  t[, 1:8]
 
 # Build the neural network (NN)
 
 n = names( new_trainset )
 f = as.formula( paste( "class ~", paste( n[!n %in% "class" ], collapse = "+" ) ) )
-nn = neuralnet( f, new_trainset, hidden = 4, linear.output = FALSE, threshold=0.01 )
+nn = neuralnet( f, new_trainset, hidden = 8, linear.output = FALSE, threshold=0.01 )
 
 # Plot the NN
 plot( nn, rep = "best" )

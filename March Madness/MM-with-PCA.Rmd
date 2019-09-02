@@ -17,7 +17,6 @@ editor_options:
 
 ```{r, echo=FALSE}
 knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
-setwd(dirname(rstudioapi::getSourceEditorContext()$path))
 ```
 
 ```{r load_libraries, include=FALSE}
@@ -211,10 +210,10 @@ table(validate_actual, validate_predicted)
 accuracy(validate_actual, validate_predicted)
 
 # Calculate the precision
-precision(as.factor(validate_actual), as.factor(validate_predicted))
+precision(validate_actual, validate_predicted)
 
 # Calculate the recall
-recall(as.factor(validate_actual), as.factor(validate_predicted))
+recall(validate_actual, validate_predicted)
 ```
 
 Prepare for cross-validated performance

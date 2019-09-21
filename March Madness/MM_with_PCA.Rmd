@@ -17,8 +17,15 @@ editor_options:
 
 ```{r, echo=FALSE}
 knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
-setwd(dirname(rstudioapi::getSourceEditorContext()$path))
+#
 ```
+
+```{r fto, include=FALSE}
+#setwd(dirname(rstudioapi::getSourceEditorContext()$path))
+```
+
+
+
 
 ```{r load_libraries, include=FALSE}
 # Use this R-Chunk to load all your libraries!

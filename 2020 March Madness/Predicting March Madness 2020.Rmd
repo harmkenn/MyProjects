@@ -1,0 +1,121 @@
+---
+title: "Predicting March Madness 2020"
+author: "Ken Harmon"
+date: "`r format(Sys.time(), '%Y %B %d')`"
+output:
+  html_document:  
+    keep_md: true
+    code_folding: hide
+    fig_height: 6
+    fig_width: 12
+    fig_align: 'center'
+editor_options: 
+  chunk_output_type: console
+---
+
+# {.tabset .tabset-fade}
+
+```{r, echo=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
+```
+
+```{r load_libraries, include=FALSE}
+# Use this R-Chunk to load all your libraries!
+pacman::p_load(tidyverse, DT, rpart, DMwR, caret, rpart.plot, rattle)
+theme_set(theme_bw())
+```
+
+```{r swd, eval=FALSE, echo=FALSE}
+# this is set to not run during the knit process
+# this sets the working directory to the file location
+setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
+```
+
+## NCAARock
+
+NCAA Season Stats: https://www.sports-reference.com/cbb/seasons/
+
+All Tournament Game Results:
+
+  From which I can get Seed Expectations
+  From Which I can get each teams PASE
+  
+Kenpom Rankings: https://kenpom.com/index.php?s=TeamName
+
+### 2002 to 2019 Games
+
+```{r DT}
+# Load NCAARock of all games and the differences of season stats
+NCAARock <- read.csv( "NCAARock.csv", stringsAsFactor = FALSE ) 
+
+NCAARock <- NCAARock %>% mutate(result = Fscore - Uscore)
+
+#If you want to see where the NAs are
+#sapply(NCAARock, function(x) sum(is.na(x)))
+# pull out just the Numeric columns
+temp <- NCAARock %>% select(10:42)
+
+#Fill in all of the NAs with the K nearest neighbor
+temp <- knnImputation(temp, k = 10, scale = T, meth = "weighAvg", distData = NULL)
+
+#pull of the front columns not in temp
+Front <- NCAARock %>% select(1:9)
+
+NCAARock <- cbind(Front,temp)
+
+#binomial the difference in Score
+bresult <- ifelse(NCAARock$result > 0, "F", "U")
+NCAARock$bresult <- as.factor(bresult)
+
+datatable(NCAARock, extensions = "Responsive",options=list(lengthMenu = c(10,25,68)))
+```
+
+## Train and Test
+
+```{r tt}
+# Get the number of observations
+n_obs <- nrow(NCAARock)
+
+# Shuffle row indices: permuted_rows
+permuted_rows <- sample(n_obs)
+
+# Randomly order data: Sonar
+NCAA_shuffled <- NCAARock[permuted_rows, ]
+
+# Identify row to split on: split
+split <- round(n_obs * 0.6)
+
+# Create train
+train <- NCAA_shuffled[1:split, ]
+
+# Create test
+test <- NCAA_shuffled[(split + 1):n_obs, ]
+
+nrow(train)/nrow(NCAARock)
+```
+
+## Logistic Regression
+
+```{r lr}
+# Fit glm model: model
+model <- glm(bresult ~ ., family = "binomial", train %>% select(10:41,43))
+
+# Predict on test: p
+p <- predict(model, test, type = "response")
+```
+
+## Confusion Matrix
+
+```{r ccm}
+# If p exceeds threshold of 0.5, M else R: m_or_r
+F_or_U <- ifelse(p < .5, "F", "U")
+
+
+# Convert to factor: p_class
+p_class <- factor(F_or_U, levels = levels(test[["bresult"]]))
+
+# Create confusion matrix
+confusionMatrix(p_class, test$bresult)
+```
+
+## T

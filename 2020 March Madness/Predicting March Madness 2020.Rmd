@@ -170,3 +170,10 @@ class_prediction <- predict(object = NCAA_model, newdata = NCAA_test, type = "cl
                             
 # Calculate the confusion matrix for the test set
 confusionMatrix(data = class_prediction, reference = NCAA_test$bresult) 
+```
+
+
+
+
+
+

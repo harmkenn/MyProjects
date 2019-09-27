@@ -118,4 +118,55 @@ p_class <- factor(F_or_U, levels = levels(test[["bresult"]]))
 confusionMatrix(p_class, test$bresult)
 ```
 
-## T
+## Tree
+
+Build a classification tree
+
+```{r bct}
+# Create the model
+pred_model <- rpart(formula = bresult ~ ., data = NCAARock %>% select(1:3,6,10:41,43), method = "class", model=TRUE)
+
+# Display the results
+rpart.plot(x = pred_model, yesno = 2, type = 0, extra = 0)
+```
+
+Train/test split
+
+```{r tts}
+
+# Total number of rows in the NCAA data frame
+n <- nrow(NCAARock)
+
+# Number of rows for the training set (80% of the dataset)
+n_train <- round(.8 * n) 
+
+# Create a vector of indices which is an 80% random sample
+set.seed(123)
+train_indices <- sample(1:n, n_train)
+
+# Subset the NCAA data frame to training indices only
+NCAA_train <- NCAARock[train_indices, ]  
+  
+# Exclude the training indices to create the test set
+NCAA_test <- NCAARock[-train_indices, ] 
+```
+
+Train a classification tree model
+
+```{r tctm}
+# Train the model (to predict 'default')
+NCAA_model <- rpart(formula = bresult ~ ., data = NCAA_train %>% select(1:3,6,10:41,43), method = "class", model = TRUE)
+
+# Look at the model output                      
+print(NCAA_model)
+```
+
+Compute confusion matrix
+
+```{r ccm}
+# Generate predicted classes using the model object
+
+class_prediction <- predict(object = NCAA_model, newdata = NCAA_test, type = "class")  
+                            
+# Calculate the confusion matrix for the test set
+confusionMatrix(data = class_prediction, reference = NCAA_test$bresult) 

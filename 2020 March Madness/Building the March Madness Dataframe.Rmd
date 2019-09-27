@@ -91,17 +91,40 @@ datatable(KP02, rownames = FALSE ,extensions = "Responsive",options=list(lengthM
 ```
 
 
-## Result
+## Favored
 
-Here is the combination of all data
+Brake the data into Favored and Underdog
 
-```{r result}
+```{r fvu}
 all02 <- left_join(games85,KP02, by = c("Winner"="Team", "Year"="Year"))%>%filter(Year>2001)
-all02 <- left_join(all02,PASE, by = c("Winner"="TEAM"))
-all02 <- left_join(all02,teamstats00, by = c("Winner"="Team", "Year"="Year")) %>% select(1:12,15:45)
 all02 <- left_join(all02,KP02, by = c("Loser"="Team", "Year"="Year"))
-all02 <- left_join(all02,PASE, by = c("Loser"="TEAM"))
-all02 <- left_join(all02,teamstats00, by = c("Loser"="Team", "Year"="Year")) %>% select(1:47,50:80)
-#colnames(all02)[9:43] <- paste("w.", colnames(all02[,c(9:43)]), sep = "")
+write.csv(all02, "gameswkp.csv", row.names = FALSE)
 ```
+
+## Reload
+
+Here are all the games by Favored and Underdog with stats
+
+```{r rg}
+FUstats <- read.csv("FUGames02.csv", na.strings=c("","NA"))
+
+FUstats <- left_join(FUstats,PASE, by = c("Favored"="TEAM"))
+FUstats <- left_join(FUstats,teamstats00, by = c("Favored"="Team", "Year"="Year")) 
+FUstats <- left_join(FUstats,PASE, by = c("Underdog"="TEAM"))
+
+FUstats <- left_join(FUstats,teamstats00, by = c("Underdog"="Team", "Year"="Year")) %>% select(1:11,14:46,49:79)
+#colnames(all02)[9:43] <- paste("w.", colnames(all02[,c(9:43)]), sep = "")
+datatable(FUstats, rownames = FALSE ,extensions = "Responsive",options=list(lengthMenu = c(10,25,68)))
+```
+
+## Final Out
+
+Here is the final Output Set
+
+```{r export}
+#write.csv(FUstats, "Prediff.csv", row.names = FALSE)
+
+```
+
+
 

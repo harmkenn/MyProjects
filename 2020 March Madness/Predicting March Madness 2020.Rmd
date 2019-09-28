@@ -21,7 +21,7 @@ knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
 
 ```{r load_libraries, include=FALSE}
 # Use this R-Chunk to load all your libraries!
-pacman::p_load(tidyverse, DT, rpart, DMwR, caret, rpart.plot, rattle, ModelMetrics)
+pacman::p_load(tidyverse, DT, rpart, DMwR, caret, rpart.plot, rattle, Metrics)
 theme_set(theme_bw())
 confusionMatrix <- caret::confusionMatrix
 ```
@@ -207,4 +207,50 @@ ce(actual = NCAA_test$bresult,
 
 ## Regression Trees
 
+Split the Data
+
+```{r std}
+
+# Set seed and create assignment
+set.seed(1)
+assignment <- sample(1:3, size = nrow(NCAARock), prob = c(.7,.15,.15), replace = TRUE)
+
+# Create a train, validation and tests from the original data frame 
+NCAA_train <- NCAARock[assignment == 1, ]    # subset NCAA to training indices only
+NCAA_valid <- NCAARock[assignment == 2, ]  # subset NCAA to validation indices only
+NCAA_test <- NCAARock[assignment == 3, ]   # subset NCAA to test indices only
+```
+
+Train the Regression Tree Model
+
+```{r trtm}
+# Train the model
+NCAA_model <- rpart(formula = result ~ ., 
+                     data = NCAA_train %>% select(1:3,6,10:41,42),
+                     method = "anova")
+
+# Look at the model output                      
+print(NCAA_model)
+
+# Plot the tree model
+rpart.plot(x = NCAA_model, yesno = 2, type = 0, extra = 0)
+```
+
+Evaluate the Regression Tree Model
+
+```{r ertm}
+# Generate predictions on a test set
+pred <- predict(object = NCAA_model,   # model object 
+                newdata = NCAA_test %>% select(1:3,6,10:41,42))  # test dataset
+
+# Compute the RMSE
+rmse(actual = NCAA_test$result, 
+     predicted = pred)
+```
+
+Tuning the Model
+
+```{r ttm}
+
+```
 

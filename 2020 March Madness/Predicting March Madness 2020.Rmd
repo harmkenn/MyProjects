@@ -251,6 +251,103 @@ rmse(actual = NCAA_test$result,
 Tuning the Model
 
 ```{r ttm}
+# Plot the "CP Table"
+plotcp(NCAA_model)
 
+# Print the "CP Table"
+print(NCAA_model$cptable)
+
+# Retrieve optimal cp value based on cross-validated error
+opt_index <- which.min(NCAA_model$cptable[, "xerror"])
+cp_opt <- NCAA_model$cptable[opt_index, "CP"]
+
+# Prune the model (to optimized cp value)
+NCAA_model_opt <- prune(tree = NCAA_model, cp = cp_opt)
+                          
+# Plot the optimized model
+rpart.plot(x = NCAA_model_opt, yesno = 2, type = 0, extra = 0, roundint = FALSE)
 ```
+
+Generate a grid of hyperparameter values
+
+```{r gghv}
+# Establish a list of possible values for minsplit and maxdepth
+minsplit <- seq(1, 4, 1)
+maxdepth <- seq(1, 6, 1)
+
+# Create a data frame containing all combinations 
+hyper_grid <- expand.grid(minsplit = minsplit, maxdepth = maxdepth)
+
+# Check out the grid
+head(hyper_grid)
+
+# Print the number of grid combinations
+nrow(hyper_grid)
+```
+
+Generate a grid of models
+
+```{r ggm}
+# Number of potential models in the grid
+num_models <- nrow(hyper_grid)
+
+# Create an empty list to store models
+NCAA_models <- list()
+
+# Write a loop over the rows of hyper_grid to train the grid of models
+for (i in 1:num_models) {
+
+    # Get minsplit, maxdepth values at row i
+    minsplit <- hyper_grid$minsplit[i]
+    maxdepth <- hyper_grid$maxdepth[i]
+
+    # Train a model and store in the list
+    NCAA_models[[i]] <- rpart(formula = result ~ ., 
+                               data = NCAA_train%>% select(1:3,6,10:41,42), 
+                               method = "anova",
+                               minsplit = minsplit,
+                               maxdepth = maxdepth)
+}
+```
+
+Evaluate the Grid
+
+```{r etg}
+
+# Number of potential models in the grid
+num_models <- length(NCAA_models)
+
+# Create an empty vector to store RMSE values
+rmse_values <- c()
+
+# Write a loop over the models to compute validation RMSE
+for (i in 1:num_models) {
+
+    # Retrieve the i^th model from the list
+    model <- NCAA_models[[i]]
+    
+    # Generate predictions on NCAA_valid 
+    pred <- predict(object = model,
+                    newdata = NCAA_valid %>% select(1:3,6,10:41,42))
+    
+    # Compute validation RMSE and add to the 
+    rmse_values[i] <- rmse(actual = NCAA_valid$result, 
+                           predicted = pred)
+}
+
+# Identify the model with smallest validation set RMSE
+best_model <- NCAA_models[[which.min(rmse_values)]]
+
+# Print the model paramters of the best model
+best_model$control
+
+# Compute test set RMSE on best_model
+pred <- predict(object = best_model,
+                newdata = NCAA_test %>% select(1:3,6,10:41,42))
+rmse(actual = NCAA_test$result, 
+     predicted = pred)
+```
+
+
+
 

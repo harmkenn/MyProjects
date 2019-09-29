@@ -164,7 +164,7 @@ print(NCAA_model)
 
 Compute confusion matrix
 
-```{r ccm}
+```{r ccm2}
 # Generate predicted classes using the model object
 
 class_prediction <- predict(object = NCAA_model, newdata = NCAA_test, type = "class")  

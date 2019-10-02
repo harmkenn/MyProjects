@@ -21,7 +21,7 @@ knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
 
 ```{r load_libraries, include=FALSE}
 # Use this R-Chunk to load all your libraries!
-pacman::p_load(tidyverse, DT, rpart, DMwR, caret, rpart.plot, rattle, Metrics)
+pacman::p_load(tidyverse, DT, rpart, DMwR, caret, rpart.plot, rattle, Metrics, ipred)
 theme_set(theme_bw())
 confusionMatrix <- caret::confusionMatrix
 ```
@@ -105,7 +105,7 @@ model <- glm(bresult ~ ., family = "binomial", train %>% select(10:41,43))
 p <- predict(model, test, type = "response")
 ```
 
-## Confusion Matrix
+### Confusion Matrix
 
 ```{r ccm}
 # If p exceeds threshold of 0.5, M else R: m_or_r
@@ -119,7 +119,7 @@ p_class <- factor(F_or_U, levels = levels(test[["bresult"]]))
 confusionMatrix(p_class, test$bresult)
 ```
 
-## Tree
+## Trees
 
 Build a classification tree
 
@@ -347,6 +347,77 @@ pred <- predict(object = best_model,
 rmse(actual = NCAA_test$result, 
      predicted = pred)
 ```
+
+Plot Results
+
+```{r pr}
+plot(NCAA_test$result,pred)
+```
+
+## Bagging Trees
+
+Train a Bootstraping Tree Model
+
+```{r tbtm}
+
+# Bagging is a randomized model, so let's set a seed (123) for reproducibility
+set.seed(123)
+
+# Train a bagged model
+NCAA_model <- bagging(formula = result ~ ., 
+                        data = NCAA_train %>% select(1:3,6,10:41,42),
+                        coob = TRUE)
+
+# Print the model
+print(NCAA_model)
+```
+
+Prediction and confusion matrix
+
+```{r pcm}
+
+# Train a bagged model
+NCAA_model <- bagging(formula = bresult ~ ., 
+                        data = NCAA_train %>% select(1:3,6,10:41,43),
+                        coob = TRUE)
+
+# Generate predicted classes using the model object
+class_prediction <- predict(object = NCAA_model, 
+                            newdata = NCAA_test,  
+                            type = "class")         # return classification labels
+# Print the predicted classes
+print(class_prediction)
+                            
+# Calculate the confusion matrix for the test set
+confusionMatrix(data = class_prediction,         
+                reference = NCAA_test$bresult)  
+```
+
+Predict on a test set and compute AUC
+
+```{r pts c AUC}
+# Generate predictions on the test set
+pred <- predict(object = NCAA_model, 
+                newdata = NCAA_test,
+                type = "prob")
+
+# `pred` is a matrix
+class(pred)
+                
+# Look at the pred format
+head(pred)                
+
+# Compute the AUC (`actual` must be a binary vector)
+auc(actual = ifelse(NCAA_test$bresult == "F", 1, 0), 
+    predicted = pred[,"F"])   
+
+# A zero AUC (Area under the curve) means your predictions are completely wrong in every case
+
+# A .5 AUC means your model is just as good as a random guess
+
+# A 1 AUC means your model is perfect.
+```
+
 
 
 

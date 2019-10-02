@@ -383,7 +383,7 @@ NCAA_model <- bagging(formula = bresult ~ .,
 
 # Generate predicted classes using the model object
 class_prediction <- predict(object = NCAA_model, 
-                            newdata = NCAA_test,  
+                            newdata = NCAA_test %>% select(1:3,6,10:41,43),  
                             type = "class")         # return classification labels
 # Print the predicted classes
 print(class_prediction)
@@ -418,7 +418,61 @@ auc(actual = ifelse(NCAA_test$bresult == "F", 1, 0),
 # A 1 AUC means your model is perfect.
 ```
 
+Cross-validate a bagged tree model in caret
+
+```{r cvbtmc}
+# Specify the training configuration
+ctrl <- trainControl(method = "cv",     # Cross-validation
+                     number = 5,        # 5 folds
+                     classProbs = TRUE,                  # For AUC
+                     summaryFunction = twoClassSummary)  # For AUC
+
+# Cross validate the credit model using "treebag" method; 
+# Track AUC (Area under the ROC curve)
+set.seed(1)  # for reproducibility
+NCAA_caret_model <- train(bresult ~ ., 
+                            data = NCAA_train %>% select(1:3,6,10:41,43), 
+                            method = "treebag",
+                            metric = "ROC",
+                            trControl = ctrl)
+                      
+# Look at the model object
+print(NCAA_caret_model)
+
+# Inspect the contents of the model list 
+names(NCAA_caret_model)
+
+# Print the CV AUC
+NCAA_caret_model$results[,"ROC"]
+```
+
+Generate predictions from the caret model
+Generate predictions on a test set for the caret model.
+
+Instructions
+100 XP
+First generate predictions on the credit_test data frame using the credit_caret_model object.
+After generating test set predictions, use the auc() function from the Metrics package to compute AUC.
+
+```{r gpcm}
+# Generate predictions on the test set
+pred <- predict(object = NCAA_caret_model, 
+                newdata = NCAA_test %>% select(1:3,6,10:41,43),
+                type = "prob")
+
+# Compute the AUC (`actual` must be a binary (or 1/0 numeric) vector)
+auc(actual = ifelse(NCAA_test$bresult == "F", 1, 0), predicted = pred[,"F"])
 
 
+# Generate predicted classes using the model object
+class_prediction <- predict(object = NCAA_model, 
+                            newdata = NCAA_test %>% select(1:3,6,10:41,43),  
+                            type = "class")         # return classification
 
+# Calculate the confusion matrix for the test set
+confusionMatrix(data = class_prediction,         
+                reference = NCAA_test$bresult)
+```
+
+## Random Forest
 

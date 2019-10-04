@@ -21,7 +21,7 @@ knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
 
 ```{r load_libraries, include=FALSE}
 # Use this R-Chunk to load all your libraries!
-pacman::p_load(tidyverse, DT, rpart, DMwR, caret, rpart.plot, rattle, Metrics, ipred)
+pacman::p_load(tidyverse, DT, rpart, DMwR, caret, rpart.plot, rattle, Metrics, ipred, randomForest)
 theme_set(theme_bw())
 confusionMatrix <- caret::confusionMatrix
 ```
@@ -475,4 +475,16 @@ confusionMatrix(data = class_prediction,
 ```
 
 ## Random Forest
+
+Train a Random Forest Model
+
+```{r trfm}
+# Train a Random Forest
+set.seed(1)  # for reproducibility
+NCAA_model <- randomForest(formula = bresult ~ ., 
+                             data = NCAA_train %>% select(1,3,6,10:41,43))
+                             
+# Print the model output                             
+print(NCAA_model)
+```
 

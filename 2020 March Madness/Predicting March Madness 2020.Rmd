@@ -526,9 +526,85 @@ paste0("Test Accuracy: ", cm$overall[1])
 paste0("OOB Accuracy: ", 1 - oob_err)
 ```
 
+Evaluate test set AUC
 
+```{r ets AUC}
+# Generate predictions on the test set
+pred <- predict(object = NCAA_model, 
+                newdata = NCAA_test %>% select(1,3,6,10:51,53),
+                type = "prob")
 
+# `pred` is a matrix
+class(pred)
+                
+# Look at the pred format
+head(pred)                
+                
+# Compute the AUC (`actual` must be a binary 1/0 numeric vector)
+auc(actual = ifelse(NCAA_test$bresult == "F", 1, 0), 
+    predicted = pred[,"F"])   
+```
 
+Tuning a Random Forest via mtry
+
+```{r trfwm}
+# Execute the tuning process
+set.seed(1)              
+res <- tuneRF(x = subset(NCAA_train %>% select(1,3,6,10:51,53), select = -bresult), y = NCAA_train$bresult, ntreeTry = 500)
+               
+# Look at results
+print(res)
+
+# Find the mtry value that minimizes OOB Error
+mtry_opt <- res[,"mtry"][which.min(res[,"OOBError"])]
+print(mtry_opt)
+
+# If you just want to return the best RF model (rather than results)
+# you can set `doBest = TRUE` in `tuneRF()` to return the best RF model
+# instead of a set performance matrix.
+```
+
+Tuning a Random Forest via tree depth
+In Chapter 2, we created a manual grid of hyperparameters using the expand.grid() function and wrote code that trained and evaluated the models of the grid in a loop. In this exercise, you will create a grid of mtry, nodesize and sampsize values. In this example, we will identify the "best model" based on OOB error. The best model is defined as the model from our grid which minimizes OOB error.
+
+Keep in mind that there are other ways to select a best model from a grid, such as choosing the best model based on validation AUC. However, for this exercise, we will use the built-in OOB error calculations instead of using a separate validation set.
+
+Instructions
+100 XP
+Create a grid of mtry, nodesize and sampsize values.
+Write a simple loop to train all the models and choose the best one based on OOB error.
+Print the set of hyperparameters which produced the best model.
+
+```{r trfvtd}
+# Establish a list of possible values for mtry, nodesize and sampsize
+mtry <- seq(4, ncol(NCAA_train %>% select(1,3,6,10:51,53)) * 0.8, 2)
+nodesize <- seq(3, 8, 2)
+sampsize <- nrow(NCAA_train) * c(0.7, 0.8)
+
+# Create a data frame containing all combinations 
+hyper_grid <- expand.grid(mtry = mtry, nodesize = nodesize, sampsize = sampsize)
+
+# Create an empty vector to store OOB error values
+oob_err <- c()
+
+# Write a loop over the rows of hyper_grid to train the grid of models
+for (i in 1:nrow(hyper_grid)) {
+
+    # Train a Random Forest model
+    model <- randomForest(formula = bresult ~ ., 
+                          data = NCAA_train %>% select(1,3,6,10:51,53),
+                          mtry = hyper_grid$mtry[i],
+                          nodesize = hyper_grid$nodesize[i],
+                          sampsize = hyper_grid$sampsize[i])
+                          
+    # Store OOB error for the model                      
+    oob_err[i] <- model$err.rate[nrow(model$err.rate), "OOB"]
+}
+
+# Identify optimal set of hyperparmeters based on OOB error
+opt_i <- which.min(oob_err)
+print(hyper_grid[opt_i,])
+```
 
 
 

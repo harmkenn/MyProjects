@@ -41,16 +41,16 @@ https://www.r-bloggers.com/drawing-beautiful-maps-programmatically-with-r-sf-and
 Grabbing the Background Map
 
 ```{r gbm}
-wy <- c(lon = 44, lat = 17)
+wy <- c(lon = 44.3, lat = 17.6)
 
 # Get map at zoom level 5: map_5
-map_5 <- get_map(wy, zoom = 5, scale = 1)
+map_5 <- get_map(wy, zoom = 12, scale = 1)
 
 # Plot map at zoom level 5
 ggmap(map_5)
 
-# Get map at zoom level 13: corvallis_map
-wy_map <- get_map(wy, zoom = 8, scale = 1)
+# Get map at zoom level 13: wy_map
+wy_map <- get_map(wy, zoom = 12, scale = 1)
 
 # Plot map at zoom level 13
 ggmap(wy_map)
@@ -58,4 +58,91 @@ ggmap(wy_map)
 
 
 ```
+
+Putting it all together
+
+```{r piat}
+sales <- read.csv("Najran.csv") %>% as_tibble()
+
+# Look at head() of sales
+head(sales)
+
+# Swap out call to ggplot() with call to ggmap()
+ggmap(wy_map) +
+  geom_point(aes(lon, lat), data = sales)
+```
+
+Insight through aesthetics
+
+```{r itta}
+# Map color to year_built
+ggmap(wy_map) +
+    geom_point(aes(lon, lat, color = year_built), data = sales)
+# Map size to bedrooms
+ggmap(wy_map) +
+    geom_point(aes(lon, lat, size = bedrooms), data = sales)
+# Map color to price / finished_squarefeet
+ggmap(wy_map) +
+    geom_point(aes(lon, lat, color = price / finished_squarefeet), data = sales)
+```
+
+Different maps
+The default Google map downloaded by get_map() is useful when you need major roads, basic terrain, and places of interest, but visually it can be a little busy. You want your map to add to your data, not distract from it, so it can be useful to have other "quieter" options.
+
+Sometimes you aren't really interested in the roads and places, but more what's on the ground (e.g. grass, trees, desert, or snow), in which case switching to a satellite view might be more useful. You can get Google satellite images by changing the maptype argument to "satellite".
+
+You can grab Stamen Maps by using source = "stamen" in get_map(), along with specifying a maptype argument. You can see all possible values for the maptype argument by looking at ?get_map, but they correspond closely to the "flavors" described on the Stamen Maps site. I like the "toner" variations, as they are greyscale and a bit simpler than the Google map.
+
+Let's try some other maps for your plot of house sales.
+
+Instructions 2/2
+50 XP
+Edit your original call to get_map() to get a "satellite" image from Google by adding a maptype argument.
+Display a plot of house sales coloured by year_built using the satellite map.
+Edit your original call to get_map() to get a toner map from Stamen by adding a source argument and a maptype argument.
+Display a plot of house sales coloured by year_built using the toner map.
+
+```{r dm}
+# Add a maptype argument to get a satellite map
+wy_map_sat <- get_map(wy, zoom = 12, maptype = "satellite")
+ 
+ 
+# Edit to display satellite map
+ggmap(wy_map_sat) +
+  geom_point(aes(lon, lat, color = year_built), data = sales)
+
+# Add source and maptype to get toner map from Stamen Maps
+wy_map_bw <- get_map(wy, zoom = 12, source = "stamen", maptype = "toner")
+
+# Edit to display toner map
+ggmap(wy_map_bw) +
+  geom_point(aes(lon, lat, color = year_built), data = sales)
+```
+
+Leverage ggplot Strengths
+
+
+```{r lgs}
+# Use base_layer argument to ggmap() to specify data and x, y mappings
+
+  ggmap(wy_map_bw, 
+    base_layer = ggplot(sales, aes(lon, lat))) +
+  geom_point(aes(color = year_built))
+
+# Use base_layer argument to ggmap() and add facet_wrap()
+  ggmap(wy_map_bw, 
+    base_layer = ggplot(sales, aes(lon, lat))) +
+  geom_point(aes(color = class)) +
+  facet_wrap(vars(class))
+```
+
+A Quick Alternative
+
+```{r aqa}
+# Plot house sales using qmplot()
+qmplot(lon, lat, data = sales, 
+       geom = "point", color = bedrooms) +
+  facet_wrap(~ month)
+```
+
 

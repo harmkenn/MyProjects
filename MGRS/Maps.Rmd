@@ -1,0 +1,104 @@
+---
+title: "Working with Maps"
+author: "Ken Harmon"
+date: "`r format(Sys.time(), '%Y %B %d')`"
+output:
+  html_document:  
+    keep_md: true
+    code_folding: hide
+    fig_height: 6
+    fig_width: 12
+    fig_align: 'center'
+editor_options: 
+  chunk_output_type: console
+---
+
+# {.tabset .tabset-fade}
+
+```{r, echo=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
+```
+
+```{r load_libraries, include=FALSE}
+# Use this R-Chunk to load all your libraries!
+# devtools::install_gitlab("hrbrmstr/mgrs")
+
+pacman::p_load(tidyverse, mgrs, hrbrthemes, geosphere, "cowplot", "googleway", "ggplot2", "ggrepel", "ggspatial", sf, "rworldmap", "rworldxtra")
+theme_set(theme_bw())
+
+```
+
+```{r swd, eval=FALSE, echo=FALSE}
+# this is set to not run during the knit process
+# this sets the working directory to the file location
+setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
+```
+
+https://www.r-bloggers.com/drawing-beautiful-maps-programmatically-with-r-sf-and-ggplot2-part-1-basics/
+
+## Build the map
+
+```{r btm}
+world <- getMap(resolution = "high")
+class(world)
+world <- st_as_sf(world)
+class(world)
+
+# First Big Map
+ggplot(data = world) + geom_sf()
+
+# Labels on the Big Map
+ggplot(data = world) +
+    geom_sf() +
+    xlab("Longitude") + ylab("Latitude") +
+    ggtitle("World map", subtitle = paste0("(", length(unique(world$NAME)), " countries)"))
+
+# Turn The Map Green
+ggplot(data = world) + 
+    geom_sf(color = "black", fill = "lightgreen")
+
+# Color by population
+ggplot(data = world) +
+    geom_sf(aes(fill = POP_EST)) +
+    scale_fill_viridis_c(option = "plasma", trans = "sqrt")
+
+# Pole Projection
+ggplot(data = world) +
+    geom_sf() +
+    coord_sf(crs = "+proj=laea +lat_0=52 +lon_0=10 +x_0=4321000 +y_0=3210000 +ellps=GRS80 +units=m +no_defs ")
+
+ggplot(data = world) +
+    geom_sf() +
+    coord_sf(xlim = c(-102.15, -74.12), ylim = c(7.65, 33.97), expand = FALSE)
+```
+
+```{r more}
+
+# North Arrow and Scale
+ggplot(data = world) +
+    geom_sf() +
+    annotation_scale(location = "bl", width_hint = 0.5) +
+    annotation_north_arrow(location = "bl", which_north = "true", 
+        pad_x = unit(0.75, "in"), pad_y = unit(0.5, "in"),
+        style = north_arrow_fancy_orienteering) +
+    coord_sf(xlim = c(-102.15, -74.12), ylim = c(7.65, 33.97))
+
+# Final Map
+ggplot(data = world) +
+    geom_sf(fill = "antiquewhite1") +
+    geom_text(aes(LON, LAT, label = NAME), size = 4, hjust = "left",
+        color = "darkblue", fontface = "bold", check_overlap = TRUE) +
+    annotate(geom = "text", x = -90, y = 26, label = "Gulf of Mexico", 
+        fontface = "italic", color = "grey22", size = 6) +
+    annotation_scale(location = "bl", width_hint = 0.5) +
+    annotation_north_arrow(location = "bl", which_north = "true", 
+        pad_x = unit(0.75, "in"), pad_y = unit(0.5, "in"),
+        style = north_arrow_fancy_orienteering) +
+    coord_sf(xlim = c(-102.15, -74.12), ylim = c(7.65, 33.97), expand = FALSE) +
+    xlab("Longitude") + ylab("Latitude") +
+    ggtitle("Map of the Gulf of Mexico and the Caribbean Sea") +
+    theme(panel.grid.major = element_line(color = gray(.5),
+        linetype = "dashed", size = 0.5),
+        panel.background = element_rect(fill = "aliceblue"))
+```
+

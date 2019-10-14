@@ -1,0 +1,67 @@
+---
+title: "Working with Maps"
+author: "Ken Harmon"
+date: "`r format(Sys.time(), '%Y %B %d')`"
+output:
+  html_document:  
+    keep_md: true
+    code_folding: hide
+    fig_height: 6
+    fig_width: 12
+    fig_align: 'center'
+editor_options: 
+  chunk_output_type: console
+---
+
+# {.tabset .tabset-fade}
+
+```{r, echo=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
+```
+
+```{r load_libraries, include=FALSE}
+# Use this R-Chunk to load all your libraries!
+# devtools::install_gitlab("hrbrmstr/mgrs")
+
+pacman::p_load(tidyverse, mgrs, hrbrthemes, geosphere, "cowplot", "googleway", "ggplot2", "ggrepel", "ggspatial", sf, "rworldmap", "rworldxtra")
+theme_set(theme_bw())
+
+```
+
+```{r swd, eval=FALSE, echo=FALSE}
+# this is set to not run during the knit process
+# this sets the working directory to the file location
+setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
+```
+
+https://www.r-bloggers.com/drawing-beautiful-maps-programmatically-with-r-sf-and-ggplot2-part-1-basics/
+
+## Build the map
+
+```{r btm}
+world <- getMap(resolution = "high")
+class(world)
+world <- st_as_sf(world)
+class(world)
+
+
+
+# Final Map
+ggplot(data = world) +
+    geom_sf(fill = "antiquewhite1") +
+    geom_text(aes(LON, LAT, label = NAME), size = 4, hjust = "left",
+        color = "darkblue", fontface = "bold", check_overlap = TRUE)  +
+    annotate(geom = "text", x = -90, y = 26, label = "Gulf of Mexico", 
+        fontface = "italic", color = "grey22", size = 6) +
+    annotation_scale(location = "bl", width_hint = 0.5) +
+    annotation_north_arrow(location = "bl", which_north = "true", 
+        pad_x = unit(0.75, "in"), pad_y = unit(0.5, "in"),
+        style = north_arrow_fancy_orienteering) +
+    coord_sf(xlim = c(38, 50), ylim = c(11, 27), expand = FALSE) +
+    xlab("Longitude") + ylab("Latitude") +
+    ggtitle("AO for Site Q") +
+    theme(panel.grid.major = element_line(color = gray(.5),
+        linetype = "dashed", size = 0.5),
+        panel.background = element_rect(fill = "blue"))
+```
+

@@ -22,7 +22,7 @@ knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
 ```{r load_libraries, include=FALSE}
 # Use this R-Chunk to load all your libraries!
 devtools::install_gitlab("hrbrmstr/mgrs")
-pacman::p_load(tidyverse, mgrs, hrbrthemes)
+pacman::p_load(tidyverse, mgrs, hrbrthemes, geosphere)
 
 theme_set(theme_bw())
 
@@ -165,5 +165,27 @@ mgrs_to_latlng(mgrs_state_centers) %>%
   geom_point(shape=22, size=2, color="black", fill="white") +
   coord_map("polyconic") +
   theme_ft_rc(grid="XY")
+```
+
+## Find Distance
+
+```{r FD}
+
+IF_MGRS <- latlng_to_mgrs(43.46659851,-112.033996582)
+IF_lat <- 43.46659851
+IF_lon <- -112.033996582
+Sdny_lat <- -33.86790085
+Sdny_lon <- -151.2070007
+Char_lat <- 35.227087
+Char_lon <- -80.843127
+
+IF_lat_lon <- mgrs_to_latlng(IF_MGRS)
+ 
+distm(c(IF_lon, IF_lat), c(Sdny_lon, Sdny_lat), fun = distGeo)
+distGeo(c(0,0),c(0,90))
+distGeo(c(-112.033996582,43.46659851), c(-151.2070007, -33.86790085))
+
+distGeo(c(IF_lon,IF_lat), c(Sdny_lon,Sdny_lat))
+distGeo(c(IF_lon,IF_lat), c(Char_lon,Char_lat))
 ```
 

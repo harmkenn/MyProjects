@@ -1,0 +1,10 @@
+name: Publish Document
+title:
+username:
+account: rpubs
+server: rpubs.com
+hostUrl: rpubs.com
+appId: https://api.rpubs.com/api/v1/document/512777/3ef14d568a2f48f7b7f9ef265d33a0cc
+bundleId: https://api.rpubs.com/api/v1/document/512777/3ef14d568a2f48f7b7f9ef265d33a0cc
+url: http://rpubs.com/harmkenn/512777
+when: 1563577317.9545

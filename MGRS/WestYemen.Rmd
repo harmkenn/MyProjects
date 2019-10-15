@@ -145,4 +145,25 @@ qmplot(lon, lat, data = sales,
   facet_wrap(~ month)
 ```
 
+Drawing polygons
 
+```{r dp}
+ward_sales <- read.csv("ward_sales.csv")
+
+# Add a point layer with color mapped to ward
+ggplot(ward_sales, aes(lon, lat)) +
+geom_point(aes(color = as.factor(ward)))
+
+# Add a point layer with color mapped to group
+
+ggplot(ward_sales, aes(lon, lat)) +
+geom_point(aes(color = as.factor(group)))
+
+# Add a path layer with group mapped to group
+ggplot(ward_sales, aes(lon, lat)) +
+geom_path(aes(group = as.factor(group)))
+
+# Add a polygon layer with fill mapped to ward, and group to group
+ggplot(ward_sales, aes(lon, lat)) +
+geom_polygon(aes(fill = as.factor(ward), group = as.factor(group)))
+```

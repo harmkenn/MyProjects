@@ -1,0 +1,106 @@
+---
+title: "SIGACTS Western Yemen"
+author: "Ken Harmon"
+date: "`r format(Sys.time(), '%Y %B %d')`"
+output:
+  html_document:  
+    keep_md: true
+    code_folding: hide
+    fig_height: 6
+    fig_width: 12
+    fig_align: 'center'
+editor_options: 
+  chunk_output_type: console
+---
+
+# {.tabset .tabset-fade}
+
+```{r, echo=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE,fig.width=12, fig.height=8)
+```
+
+```{r load_libraries, include=FALSE}
+# Use this R-Chunk to load all your libraries!
+# devtools::install_gitlab("hrbrmstr/mgrs")
+
+pacman::p_load(tidyverse, ggmap)
+theme_set(theme_bw())
+register_google(key = "AIzaSyAfnLNZjvYdMx-cyga_qA1oJ6P36dRGalA") 
+```
+
+```{r swd, eval=FALSE, echo=FALSE}
+# this is set to not run during the knit process
+# this sets the working directory to the file location
+setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
+```
+
+
+## Build the map
+
+Grabbing the Background Map
+
+```{r gbm}
+wy <- c(lon = 44, lat = 17)
+
+# Get map at zoom level 5: map_5
+WY_8 <- get_map(wy, zoom = 8, scale = 1)
+
+# Plot map at zoom level 5
+ggmap(WY_8)
+
+# Get map at zoom level 13: wy_map
+wy_map <- get_map(wy, zoom = 7, scale = 1)
+
+# Plot map at zoom level 13
+ggmap(wy_map)
+```
+
+Putting it all together
+
+```{r piat}
+sigacts <- read.csv("global terrorism 1970-2017.csv") %>% as_tibble() %>% filter(iyear > 2010)
+
+
+# Look at head() of sigacts
+#head(sigacts)
+
+# Swap out call to ggplot() with call to ggmap()
+ggmap(wy_map) +
+  geom_point(aes(lon, lat), data = sigacts)
+```
+
+
+```{r dm}
+# Add a maptype argument to get a satellite map
+wy_map_sat <- get_map(wy, zoom = 7, maptype = "satellite")
+ 
+ 
+# Edit to display satellite map
+ggmap(wy_map_sat) +
+  geom_point(aes(lon, lat, color = iyear), data = sigacts)
+
+# Add source and maptype to get toner map from Stamen Maps
+wy_map_bw <- get_map(wy, zoom = 7, source = "stamen", maptype = "toner")
+
+# Edit to display toner map
+ggmap(wy_map_bw) +
+  geom_point(aes(lon, lat, color = iyear), data = sigacts)
+```
+
+Leverage ggplot Strengths
+
+
+```{r lgs}
+# Use base_layer argument to ggmap() to specify data and x, y mappings
+
+  ggmap(wy_map_bw, 
+    base_layer = ggplot(sigacts, aes(lon, lat))) +
+  geom_point(aes(color = iyear))
+
+# Use base_layer argument to ggmap() and add facet_wrap()
+  ggmap(wy_map, 
+    base_layer = ggplot(sigacts, aes(lon, lat))) +
+  geom_point(aes(color = as.factor(iyear), size = nkill)) +
+  facet_wrap(vars(attacktype1_txt))
+```
+

@@ -1,0 +1,136 @@
+---
+title: "US Census Maps"
+author: "Ken Harmon"
+date: "`r format(Sys.time(), '%Y %B %d')`"
+output:
+  html_document:  
+    keep_md: true
+    code_folding: hide
+    fig_height: 6
+    fig_width: 12
+    fig_align: 'center'
+editor_options: 
+  chunk_output_type: console
+---
+
+# {.tabset .tabset-fade}
+
+```{r, echo=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE,fig.width=12, fig.height=8)
+```
+
+https://www.census.gov/data/academy/courses/choroplethr.html
+
+```{r load_libraries, include=FALSE}
+# Use this R-Chunk to load all your libraries!
+# devtools::install_gitlab("hrbrmstr/mgrs")
+
+pacman::p_load(tidyverse, choroplethr, choroplethrMaps, ggmap, mapproj)
+theme_set(theme_bw())
+register_google(key = "AIzaSyAfnLNZjvYdMx-cyga_qA1oJ6P36dRGalA") 
+```
+
+```{r swd, eval=FALSE, echo=FALSE}
+# this is set to not run during the knit process
+# this sets the working directory to the file location
+setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
+```
+
+## Module 2
+
+```{r data}
+data("df_pop_state")
+state_choropleth(df_pop_state)
+
+state_choropleth(df_pop_state,
+ title = "2012 State Population Estimates",
+ legend = "Population")
+
+state_choropleth(df_pop_state, num_colors = 8)
+
+state_choropleth(df_pop_state,
+ zoom = c("california", "oregon", "washington"))
+
+state_choropleth(df_pop_state,
+ num_colors = 1,
+ zoom = c("california", "oregon", "washington"),
+ reference_map = TRUE)
+```
+
+## Module 3
+
+```{r m3}
+data(df_state_demographics) 
+
+df_state_demographics$value <- df_state_demographics$per_capita_income
+
+state_choropleth(df_state_demographics,
+ num_colors = 2,
+ title = "2013 State Per Capita Income Estimates",
+ legend = "Dollars")
+```
+
+### Get more data
+
+https://api.census.gov/data/key_signup.html
+
+```{r aki}
+api.key.install("793ff6b5dd433d27298863e6bda0d62e2ff4ab8e")
+
+state_demo_2010 <- get_state_demographics(endyear = 2010)
+state_demo_2015 <- get_state_demographics(endyear = 2015)
+
+state_demo_2015$value <- state_demo_2015$per_capita_income
+state_choropleth(state_demo_2015)
+```
+
+### Percent Change
+
+```{r pc}
+merge <- base::merge
+
+
+state_demo_2010_2015 <- left_join(state_demo_2010,state_demo_2015, by = "region", copy = FALSE, suffix = c(".x", ".y")) %>% select(c("region","per_capita_income.x","per_capita_income.y")) %>% mutate(value = (per_capita_income.y - per_capita_income.x) / per_capita_income.x * 100)
+
+state_choropleth(state_demo_2010_2015)
+
+state_choropleth(state_demo_2010_2015, num_colors = 0)
+
+state_choropleth(state_demo_2010_2015,
+ num_colors=0,
+ title = "Percent Change in Estimated Per-Capita Income, 2010-2015",
+ legend="Percent") 
+```
+
+## Census Survey Estimates
+
+https://factfinder.census.gov/faces/affhelp/jsf/pages/metadata.xhtml?lang=en&type=survey&id=survey.en.ACS_ACS
+
+```{r gad}
+B19301 <- get_acs_data("B19301", "state", endyear = 2015, span = 5, include_moe = TRUE)
+
+B19301[[2]]
+
+PCI2015 <- B19301[[1]]
+
+state_choropleth(PCI2015)
+```
+
+## By County
+
+```{r bc}
+data(df_county_demographics) 
+
+df_county_demographics$value <- df_county_demographics$per_capita_income
+
+county_choropleth(df_county_demographics,
+ num_colors = 9,
+ title = "2013 State Per Capita Income Estimates",
+ legend = "Dollars")
+```
+
+
+
+
+
+

@@ -3,13 +3,14 @@ title: "Western Yemen"
 author: "Ken Harmon"
 date: "`r format(Sys.time(), '%Y %B %d')`"
 output:
-  html_document:  
-    keep_md: true
+  pdf_document: default
+  html_document:
     code_folding: hide
+    fig_align: center
     fig_height: 6
     fig_width: 12
-    fig_align: 'center'
-editor_options: 
+    keep_md: yes
+editor_options:
   chunk_output_type: console
 ---
 

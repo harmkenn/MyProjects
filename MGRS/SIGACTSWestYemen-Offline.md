@@ -1,7 +1,7 @@
 ---
 title: "SIGACTS Western Yemen"
 author: "Ken Harmon"
-date: "`r format(Sys.time(), '%Y %B %d')`"
+date: "2019 October 29"
 output:
   html_document:
     code_folding: hide
@@ -16,9 +16,7 @@ editor_options:
 
 # {.tabset .tabset-fade}
 
-```{r, echo=FALSE}
-knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE,fig.width=12, fig.height=8)
-```
+
 
 
 maptools: a set of tools for reading and handling spatial objects. In particular, it will be used to read .shp files, a common format used by geographic information systems software.
@@ -26,25 +24,15 @@ ggplot2: one of the powerful graphics engines available to R users
 ggmap: a package for spatial visualization using popular on-line mapping systems, such as GoogleMaps or OpenStreetMap.
 
 
-```{r load_libraries, include=FALSE}
-# Use this R-Chunk to load all your libraries!
-# devtools::install_gitlab("hrbrmstr/mgrs")
-
-pacman::p_load(tidyverse, ggmap, sp, tmap, maps, maptools, raster, rgdal, PBSmapping)
-theme_set(theme_bw())
-register_google(key = "AIzaSyAfnLNZjvYdMx-cyga_qA1oJ6P36dRGalA") 
-```
-
-```{r swd, eval=FALSE, echo=FALSE}
-# this is set to not run during the knit process
-# this sets the working directory to the file location
-setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
-```
 
 
 
 
-```{r lgs}
+
+
+
+
+```r
 load(file = "sigacts.rda")
 load(file = "wy_map.rda")
 load(file = "countries_spdf.rda")
@@ -56,13 +44,18 @@ load(file = "WY_8.rda")
     base_layer = ggplot(sigacts %>% filter(attacktype1 == 3), aes(lon, lat))) +
     #geom_polygon(data = countries_spdf_df, aes(x = long, y = lat, group = group, alpha = .1, color = "id")) +
   geom_point(aes(color = as.factor(iyear), size = nkill)) #+
+```
+
+![](SIGACTSWestYemen-Offline_files/figure-html/lgs-1.png)<!-- -->
+
+```r
   #scale_x_continuous(limits = c(43, 44), expand = c(0, 0)) #+
   #scale_y_continuous(limits = c(10, 20), expand = c(0, 0)) +
   #facet_wrap(vars(attacktype1_txt))
-    
 ```
 
-```{r wcm}
+
+```r
 library(broom)
 countries_spdf_df <- tidy(countries_spdf)
 
@@ -72,6 +65,7 @@ countries_spdf_df <- merge(countries_spdf_df, countries_spdf, by.x = "id", by.y 
 
 ggmap(wy_map) +
   geom_polygon(data = countries_spdf_df, aes(x = long, y = lat, group = group, alpha = .1 ))
-
 ```
+
+![](SIGACTSWestYemen-Offline_files/figure-html/wcm-1.png)<!-- -->
 

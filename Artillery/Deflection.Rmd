@@ -1,0 +1,89 @@
+---
+title: "Building Web Applications in R with Shiny: Case Studies"
+author: "Ken Harmon"
+date: "`r format(Sys.time(), '%Y %B %d')`"
+output:
+  pdf_document: default
+  html_document:
+    code_folding: hide
+    fig_align: center
+    fig_height: 6
+    fig_width: 12
+    keep_md: yes
+editor_options:
+  chunk_output_type: console
+---
+
+# {.tabset .tabset-fade}
+
+```{r, echo=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
+```
+
+```{r load_libraries, include=FALSE}
+# Use this R-Chunk to load all your libraries!
+pacman::p_load(tidyverse, shiny, ggmap, mgrs)
+
+theme_set(theme_bw())
+```
+
+```{r swd, eval=FALSE, echo=FALSE}
+# this is set to not run during the knit process
+# this sets the working directory to the file location
+setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
+```
+
+## Base Map
+
+```{r bm}
+library(ggmap)
+register_google(key = "AIzaSyAfnLNZjvYdMx-cyga_qA1oJ6P36dRGalA") 
+
+```
+
+
+## Shiny
+
+```{r shiny}
+startll <- mgrs_to_latlng("11TNH7000080000")
+centerll <- startll
+ui <- fluidPage(
+  h1("Compute Deflection"),
+  sidebarLayout(
+    sidebarPanel(
+       radioButtons(inputId = "maptype",label = "Pick a Map Type",choices = c("terrain","satellite","roadmap","hybrid")),
+       textInput("MGRS","Center MGRS", "11TNH7000080000"),
+       textOutput("Lat_Lon"),
+       actionButton(inputId = "get_map", label = "Get Map"),
+       numericInput("aof","Azimuth of Fire",2000,min = 0,max = 6399)
+    ),
+    mainPanel(
+     
+     plotOutput("mapd", click = "clickMap", width = "600px", height = "600px")
+              )
+  )
+)
+
+
+server <- function(input, output) {
+
+  
+      output$mapd <- renderPlot({
+        input$get_map
+        isolate({
+          centerll <- mgrs_to_latlng(input$MGRS)
+          output$Lat_Lon <- renderText({ 
+    paste("Center Latitude Longitude:",centerll$lat,centerll$lng, sep=" ")
+  })
+          map <- get_map(location = input$MGRS, maptype=input$maptype ,scale=4, zoom =10)
+          ggmap(map) + ggtitle(input$maptype) +
+                geom_point(aes(centerll$lng, centerll$lat), size = 5)
+          
+                })
+        
+    })
+}
+
+shinyApp(ui, server)
+```
+

@@ -1,5 +1,5 @@
 ---
-title: "Artillery Deflection"
+title: "Artillery Deflection Steps"
 author: "Ken Harmon"
 date: "`r format(Sys.time(), '%Y %B %d')`"
 output:

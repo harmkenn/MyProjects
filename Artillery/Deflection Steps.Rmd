@@ -22,7 +22,7 @@ knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
 
 ```{r load_libraries, include=FALSE}
 # Use this R-Chunk to load all your libraries!
-pacman::p_load(tidyverse, shiny, ggmap, mgrs)
+pacman::p_load(tidyverse, shiny, ggmap, mgrs, geosphere)
 
 theme_set(theme_bw())
 ```
@@ -39,24 +39,28 @@ setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
 library(ggmap)
 register_google(key = "AIzaSyAfnLNZjvYdMx-cyga_qA1oJ6P36dRGalA") 
 octc <- get_map(location = "11TNH7000080000", maptype="terrain" ,scale=4, zoom =10)
-map <- octc
+
 ```
 
 
 ## Shiny
 
 ```{r shiny}
-startll <- mgrs_to_latlng("11TNH7000080000")
-centerll <- startll
+
 ui <- fluidPage(
   h1("Compute Deflection"),
   sidebarLayout(
     sidebarPanel(
        radioButtons(inputId = "maptype",label = "Pick a Map Type",choices = c("terrain","satellite","roadmap","hybrid")),
        textInput("MGRS","Center MGRS", "11TNH7000080000"),
-       textOutput("Lat_Lon"),
+       textOutput("Center"),
+       textOutput("Lon"),
+       textOutput("Lat"),
        actionButton(inputId = "get_map", label = "Get Map"),
-       numericInput("aof","Azimuth of Fire",2000,min = 0,max = 6399)
+       numericInput("aof","Azimuth of Fire",2000,min = 0,max = 6399),
+       textOutput("dist"),
+       textOutput("az"),
+       textOutput("defl")
     ),
     mainPanel(
      
@@ -65,110 +69,56 @@ ui <- fluidPage(
   )
 )
 server <- function(input, output) {
+
+map <- map  
+makeReactiveBinding("map")
   
-      output$mapd <- renderPlot({
-        input$get_map
-        isolate({
-          centerll <- mgrs_to_latlng(input$MGRS)
-          output$Lat_Lon <- renderText({ 
-    paste("Center Latitude Longitude:",centerll$lat,centerll$lng, sep=" ")
-  })
-          map <- get_map(location = input$MGRS, maptype=input$maptype ,scale=4, zoom =10)
-          ggmap(map) + ggtitle(input$maptype) +
-                geom_point(aes(centerll$lng, centerll$lat), size = 5)
-          
-                })
-        
-    })
-       observeEvent(input$clickMap, {
-        x <- input$clickMap$x
-        y <- input$clickMap$y
-        df <- data.frame(long = x, lat = y)
-        output$mapd <- renderPlot({
-            ggmap(map)  + ggtitle("without map projection") +
-                geom_point(data = df, aes(long, lat), color= "red" ,size = 5) +
-                geom_point(aes(centerll$lng, centerll$lat), color= "Blue", size = 5)
+  observeEvent(input$get_map, {  
+    centerll <- mgrs_to_latlng(input$MGRS)
+    output$Center <- renderText({"Center"})
+    output$Lon <- renderText({paste("Longitude: ",centerll$lng)})
+    output$Lat <- renderText({paste("Latitude: ",centerll$lat)})
+    map <- get_map(location = input$MGRS, maptype=input$maptype ,scale=4,
+                         zoom =10)
+    aoftip <- destPoint(c(centerll$lng,centerll$lat),input$aof/6400*360,
+                              10000)
+    output$mapd <- renderPlot({
+      ggmap(map) + ggtitle(input$maptype) +
+        geom_point(aes(centerll$lng, centerll$lat), size = 5) +
+        geom_segment(x=centerll$lng, y= centerll$lat, xend=aoftip[1,1], 
+                         yend = aoftip[1,2],size = 1, 
+                         arrow = arrow(length = unit(0.1, "inches")))
+          })
+        })
+  
+  observeEvent(input$clickMap, {
+    x <- input$clickMap$x
+    y <- input$clickMap$y
+    aof <- input$aof
+    df <- data.frame(long = x, lat = y)
+    aoftip <- destPoint(c(centerll$lng,centerll$lat),input$aof/6400*360,
+                              10000)
+    
+    dist <- trunc(distGeo(c(centerll$lng,centerll$lat),c(x,y)))
+    output$dist <- renderText({paste("Distance to Target: ", dist, "m")})
+    
+    az <- trunc(bearing(c(centerll$lng,centerll$lat),c(x,y))*6400/360)
+    if (az<0) {az <- az + 6400}
+    output$az <- renderText({paste("Azimuth to Target: ", az, "mils")})
+    
+    defl <- 3200+(aof-az)
+    if (defl < 0) {defl <- defl + 6400}
+    output$defl <- renderText({paste("Deflection to Target: ", defl,
+                                         "mils")})
+    output$mapd <- renderPlot({
+      ggmap(map)  + ggtitle("with target") +
+        geom_point(data = df, aes(long, lat), color= "red" ,size = 5) +
+        geom_point(aes(centerll$lng, centerll$lat), color= "Blue", size = 5) +
+        geom_segment(x=centerll$lng, y= centerll$lat, xend=aoftip[1,1], 
+                         yend = aoftip[1,2],size = 1, color = "blue",
+                         arrow = arrow(length = unit(0.1, "inches")))
         })
     })
 }
 shinyApp(ui, server)
 ```
-
-```{r other}
-points <- data.frame(lon=c(-122,-121.9,-121.8,-121.7),lat=c(37.2,37.2,37.2,37.2))
-map <- get_map(location = c(lon = mean(points$lon),lat = mean(points$lat)),
-               maptype="roadmap",scale=2, zoom =11)
-
-
-ui <- fluidPage (
-    plotOutput(outputId="mapOut",
-               ##########################################################
-               # force the ratio of the width and height so that the map
-               # appears as square
-               width=530, height=500,  
-               click = "plot_click"
-    ),
-    verbatimTextOutput(outputId="info"),
-    verbatimTextOutput(outputId="coords")
-
-)
-
-
-server <- function(input,output) {
-
-    output$mapOut <- renderPlot({
-        mapPoints <-  ggmap(map, extent = "normal") + 
-            geom_point(aes(x = lon, y = lat),size=8,colour="black", data=points)
-        #########################################################
-        # add coord_cartesian() to strip coord_map() from ggmap()
-        mapPoints + coord_cartesian()
-    })
-
-    output$info <- renderPrint({
-        ptClicked <- nearPoints(points, coordinfo = input$plot_click, 
-                                threshold = 10, maxpoints = 1, 
-                                xvar="lon", yvar="lat");
-        data.frame(lon=ptClicked$lon,lat=ptClicked$lat);
-
-    })
-
-    output$coords <- renderText({
-        paste0("x=", input$plot_click$x, "\ny=", input$plot_click$y)
-    })
-}
-
-shinyApp(server = server, ui = ui)
-```
-
-```{r pc}
-ui <- fluidPage(
-    column(
-        width = 6,
-        plotOutput("map", click = "clickMap", width = 385, height = 400)
-    )
-)
-
-server <- function(input, output) {
-    # initial plot with and without projection
-    output$map <- renderPlot({
-        ggmap(map) + ggtitle("without map projection")
-    })
-    
-    # plot after clicking on map with projection
-
-    
-    # plot after cliking on map without projection
-    observeEvent(input$clickMap, {
-        x <- input$clickMap$x
-        y <- input$clickMap$y
-        df <- data.frame(long = x, lat = y)
-        output$map <- renderPlot({
-            ggmap(map)  + ggtitle("without map projection") +
-                geom_point(data = df, aes(long, lat), size = 5)
-        })
-    })
-}
-
-shinyApp(ui, server)
-```
-

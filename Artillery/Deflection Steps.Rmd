@@ -39,7 +39,7 @@ setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
 library(ggmap)
 register_google(key = "AIzaSyAfnLNZjvYdMx-cyga_qA1oJ6P36dRGalA") 
 octc <- get_map(location = "11TNH7000080000", maptype="terrain" ,scale=4, zoom =10)
-
+map<-octc
 ```
 
 
@@ -56,11 +56,11 @@ ui <- fluidPage(
        textOutput("Center"),
        textOutput("Lon"),
        textOutput("Lat"),
-       actionButton(inputId = "get_map", label = "Get Map"),
        numericInput("aof","Azimuth of Fire",2000,min = 0,max = 6399),
        textOutput("dist"),
        textOutput("az"),
-       textOutput("defl")
+       textOutput("defl"),
+       actionButton(inputId = "get_map", label = "Get Map")
     ),
     mainPanel(
      
@@ -69,21 +69,18 @@ ui <- fluidPage(
   )
 )
 server <- function(input, output) {
-
-map <- map  
-makeReactiveBinding("map")
   
   observeEvent(input$get_map, {  
     centerll <- mgrs_to_latlng(input$MGRS)
     output$Center <- renderText({"Center"})
     output$Lon <- renderText({paste("Longitude: ",centerll$lng)})
     output$Lat <- renderText({paste("Latitude: ",centerll$lat)})
-    map <- get_map(location = input$MGRS, maptype=input$maptype ,scale=4,
-                         zoom =10)
     aoftip <- destPoint(c(centerll$lng,centerll$lat),input$aof/6400*360,
                               10000)
+    amap <- get_map(location = input$MGRS, maptype=input$maptype ,scale=4, 
+                    zoom =10)
     output$mapd <- renderPlot({
-      ggmap(map) + ggtitle(input$maptype) +
+      ggmap(amap) + ggtitle(input$maptype) +
         geom_point(aes(centerll$lng, centerll$lat), size = 5) +
         geom_segment(x=centerll$lng, y= centerll$lat, xend=aoftip[1,1], 
                          yend = aoftip[1,2],size = 1, 
@@ -110,8 +107,10 @@ makeReactiveBinding("map")
     if (defl < 0) {defl <- defl + 6400}
     output$defl <- renderText({paste("Deflection to Target: ", defl,
                                          "mils")})
+    amap <- get_map(location = input$MGRS, maptype=input$maptype ,scale=4, 
+                    zoom =10)
     output$mapd <- renderPlot({
-      ggmap(map)  + ggtitle("with target") +
+      ggmap(amap)  + ggtitle("with target") +
         geom_point(data = df, aes(long, lat), color= "red" ,size = 5) +
         geom_point(aes(centerll$lng, centerll$lat), color= "Blue", size = 5) +
         geom_segment(x=centerll$lng, y= centerll$lat, xend=aoftip[1,1], 

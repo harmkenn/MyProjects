@@ -1,0 +1,81 @@
+---
+title: "Interactive Maps with leaflet in R"
+author: "Ken Harmon"
+date: "`r format(Sys.time(), '%Y %B %d')`"
+output:
+  pdf_document: default
+  html_document:
+    code_folding: hide
+    fig_align: center
+    fig_height: 6
+    fig_width: 12
+    keep_md: yes
+editor_options:
+  chunk_output_type: console
+---
+
+# {.tabset .tabset-fade}
+
+```{r, echo=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
+```
+
+```{r load_libraries, include=FALSE}
+# Use this R-Chunk to load all your libraries!
+pacman::p_load(tidyverse, rgdal, leaflet, leaflet.extras, readr, plotKML, mapview)
+
+theme_set(theme_bw())
+```
+
+https://rpubs.com/cenuno/Mapping_CTA
+
+## Google Mapping API
+
+https://cloud.google.com/maps-platform/
+
+```{r swd, eval=FALSE, echo=FALSE}
+# this is set to not run during the knit process
+# this sets the working directory to the file location
+register_google(key = "AIzaSyAfnLNZjvYdMx-cyga_qA1oJ6P36dRGalA") 
+setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
+```
+
+## kml
+
+https://github.com/bhaskarvk/leaflet.extras/blob/master/inst/examples/KML.R
+
+```{r}
+
+
+BSkml <- readr::read_file("CTA_RailStations.kml")
+
+leaflet() %>% setView(-87.6369, 41.878, 10) %>%
+  addTiles() %>%
+  addWebGLKMLHeatmap(BSkml, size = 40, units = "px") %>%
+  addKML(
+    BSkml,
+    markerType = "circleMarker",
+    stroke = FALSE, fillColor = "black", fillOpacity = 1,
+    markerOptions = markerOptions(radius = 1))
+```
+
+https://www.epa.gov/frs/geospatial-data-download-service
+
+```{r epa}
+
+MCSkml <- read_file("Motorcycle_Seasonal.kml")
+
+send <- leaflet() %>% setView(-114.742, 44.068, 9) %>%
+  addTiles() %>%
+  addWebGLKMLHeatmap(MCSkml, size = 40, units = "px") %>%
+  addKML(
+    MCSkml,
+    markerType = "circleMarker",
+    stroke = FALSE, fillColor = "black", fillOpacity = 1,
+    markerOptions = markerOptions(radius = 1))
+```
+
+```{r 2kml}
+mapshot(send, url="MCS_out.html")
+```
+

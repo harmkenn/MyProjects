@@ -1,0 +1,112 @@
+---
+title: "Interactive Maps with leaflet in R"
+author: "Ken Harmon"
+date: "`r format(Sys.time(), '%Y %B %d')`"
+output:
+  pdf_document: default
+  html_document:
+    code_folding: hide
+    fig_align: center
+    fig_height: 6
+    fig_width: 12
+    keep_md: yes
+editor_options:
+  chunk_output_type: console
+---
+
+# {.tabset .tabset-fade}
+
+```{r, echo=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
+```
+
+```{r load_libraries, include=FALSE}
+# Use this R-Chunk to load all your libraries!
+pacman::p_load(tidyverse, rgdal, leaflet, leaflet.extras, readr, plotKML, mapview, raster, utils, sf, sp, proj4)
+
+theme_set(theme_bw())
+```
+
+https://rpubs.com/cenuno/Mapping_CTA
+
+## Google Mapping API
+
+https://cloud.google.com/maps-platform/
+
+```{r swd, eval=FALSE, echo=FALSE}
+# this is set to not run during the knit process
+# this sets the working directory to the file location
+register_google(key = "AIzaSyAfnLNZjvYdMx-cyga_qA1oJ6P36dRGalA") 
+setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
+```
+
+## Army Raster files merge to one
+
+
+
+
+```{r raster}
+setwd("E:/CEI OD Army/Targeting 131A/AFATDSPieces/Maps/Yemen/nitf/rpf/n17e044")
+rrr <- raster("00w70sba.i21")
+rrs <- raster("00w70t7a.i21")
+extent(rrr)
+extent(rrs)
+
+library(gdalUtils)
+library(rgdal)
+#Build list of all raster files you want to join (in your current working directory).
+
+Allfiles <- list.files()
+
+df <- data.frame(matrix(unlist(Allfiles), ncol = max(lengths(Allfiles)), byrow = TRUE))
+
+#df <- df %>% mutate(d <- NA)
+
+for (row in 1:nrow(df)) {
+  #row <- 1
+  fn<-list.files()[row]
+  df[row, 2] <- extent(raster(fn))@xmin
+  df[row, 3] <- extent(raster(fn))@xmax
+  df[row, 4] <- extent(raster(fn))@ymin
+  df[row, 5] <- extent(raster(fn))@ymax
+}
+
+names(df) <- c("File Name", "lng.min", "lng.max", "lat.min" , "lat.max")
+
+write.csv(df,file="rasterlist.csv",row.names = FALSE)
+
+  fn1 <- list.files()[1]
+  rfn1 <- raster(fn1)
+for (row in 1:70) {
+
+  fn2 <- list.files()[row]
+  rfn2 <- raster(fn2)
+  rfn1 <- mosaic(rfn1,rfn2,fun=min)
+}
+plot(rfn1)
+plot(rfn2)
+out<-
+plot(out)
+```
+
+```{r rpf}
+setwd("E:/CEI OD Army/Targeting 131A/AFATDSPieces/Maps/Yemen/nitf/rpf/n17e044")
+
+AllRasters <-list.files()
+
+extent(raster(AllRasters[1]))
+
+r <- raster(AllRasters[10])
+
+r <- st_transform(r, 3857)
+
+sections <- splitRaster(r, nx=2, ny = 1)
+
+r1 <-sections[[1]]
+r2 <- sections[[2]]
+
+leaflet() %>% addTiles() %>%
+  addRasterImageL(r)
+  
+```
+

@@ -70,6 +70,8 @@ ui <- fluidPage(
 )
 server <- function(input, output) {
   
+  passmap <- reactive({})
+  
   observeEvent(input$get_map, {  
     centerll <- mgrs_to_latlng(input$MGRS)
     output$Center <- renderText({"Center"})
@@ -107,10 +109,9 @@ server <- function(input, output) {
     if (defl < 0) {defl <- defl + 6400}
     output$defl <- renderText({paste("Deflection to Target: ", defl,
                                          "mils")})
-    amap <- get_map(location = input$MGRS, maptype=input$maptype ,scale=4, 
-                    zoom =10)
+
     output$mapd <- renderPlot({
-      ggmap(amap)  + ggtitle("with target") +
+      ggtitle("with target") +
         geom_point(data = df, aes(long, lat), color= "red" ,size = 5) +
         geom_point(aes(centerll$lng, centerll$lat), color= "Blue", size = 5) +
         geom_segment(x=centerll$lng, y= centerll$lat, xend=aoftip[1,1], 

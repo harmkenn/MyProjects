@@ -55,10 +55,9 @@ ui <- fluidPage(
   sidebarLayout(
     sidebarPanel(
        radioButtons(inputId = "maptype",label = "Pick a Map Type",choices = 
-                      c("roadmap"="",
-                        "terrain"="",
-                        "satellite"="",
-                        "hybrid"="")),
+                      c("roadmap"="OpenStreetMap.Mapnik",
+                        "terrain"="Stamen.Terrain",
+                        "satellite"="Esri.WorldImagery")),
        textInput("MGRS","Center MGRS", "11TNH7000080000"),
        numericInput("aof","Azimuth of Fire",2000,min = 0,max = 6399),
        actionButton(inputId = "get_map", label = "Get Map"),
@@ -96,7 +95,7 @@ server <- function(input, output) {
       
       m <- leaflet() %>% 
               setView(clng,clat,zoom=10) %>%
-              addTiles() %>%
+              addProviderTiles(input$maptype) %>%
               addCircleMarkers(lng = clng, lat = clat, radius = 5) %>%
               addPolylines(data = aofdf, ~lng, ~lat, group = "aof", 
                            color = "orange")

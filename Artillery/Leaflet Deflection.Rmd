@@ -46,12 +46,10 @@ map<-octc
 ## Shiny
 
 ```{r shiny}
-    mgrs <- mgrs_to_latlng("11TNH7000080000")
-    clat <- mgrs[[2]]
-    clng <- mgrs[[3]]
 
 ui <- fluidPage(
   h1("Compute Deflection"),
+  h2("by Ken Harmon"),
   sidebarLayout(
     sidebarPanel(
        radioButtons(inputId = "maptype",label = "Pick a Map Type",choices = 

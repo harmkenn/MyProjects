@@ -9,6 +9,11 @@
 
 library(tidyverse)
 library(shiny)
+if(!require("devtools"))
+    install.packages("devtools")
+devtools::install_github("rstudio/rsconnect")
+library(rsconnect)
+devtools::install_github("hrbrmstr/mgrs")
 library(mgrs)
 library(geosphere)
 library(sp)

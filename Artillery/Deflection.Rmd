@@ -22,7 +22,7 @@ knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
 
 ```{r load_libraries, include=FALSE}
 # Use this R-Chunk to load all your libraries!
-pacman::p_load(tidyverse, shiny, ggmap, mgrs)
+pacman::p_load(tidyverse, shiny, ggmap, mgrs, shinydashboard)
 
 theme_set(theme_bw())
 ```
@@ -170,5 +170,70 @@ server <- function(input, output) {
 }
 
 shinyApp(ui, server)
+```
+
+```{r leaf}
+library(shiny)
+library(sp)
+library(shinydashboard)
+library(leaflet)
+
+#### Make a spatial data frame 
+lats<-c(37.38,39)
+lons<-c(-94,-95,-96)
+df<-data.frame(cbind(lons,lats))
+coordinates(df)<-~lons+lats
+
+#### Define UI for application that draws a histogram
+ui <- dashboardPage(
+
+    dashboardHeader(
+    ),
+
+    # Sidebar layout with input and output definitions 
+    dashboardSidebar(
+    ),
+
+    # Main panel for displaying outputs 
+    dashboardBody(
+                     h2("My Map", align="center"),
+                     h5("Click anywhere to draw a circle", align="center"),
+                     leafletOutput("mymap", width="100%", height="500px")
+        ),
+    )
+
+
+
+#### Define server logic required to draw a histogram
+server <- function(input, output) {
+
+    output$mymap <- renderLeaflet({
+                 m = leaflet(df,width="100%",height="100%") %>% 
+                 addTiles()    %>%
+                 addCircleMarkers()
+    })
+
+
+    observeEvent(input$mymap_click, {
+
+        click <- input$mymap_click
+        text<-paste("Latitude ", round(click$lat,2), "Longtitude ", round(click$lng,2))
+
+        proxy <- leafletProxy("mymap")
+
+        ## This displays the pin drop circle
+        proxy %>% 
+            clearGroup("new_point") %>%
+            #clearMarkers(layerId=input$mymap_click$id) %>%
+            #addPopups(click$lng, click$lat) %>%
+            addCircles(click$lng, click$lat, radius=100, color="red", group = "new_point")
+
+    })
+
+
+}
+
+# Run the application 
+shinyApp(ui = ui, server = server)
 ```
 

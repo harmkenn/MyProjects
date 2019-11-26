@@ -80,6 +80,9 @@ server <- function(input, output) {
   
   
     output$mymap <- renderLeaflet({
+      if (input$get_map == 0) 
+        return()
+      isolate({
       mgrs <- mgrs_to_latlng(input$MGRS)
       clat <- mgrs[[2]]
       clng <- mgrs[[3]]
@@ -94,6 +97,7 @@ server <- function(input, output) {
               addCircleMarkers(lng = clng, lat = clat, radius = 5) %>%
               addPolylines(data = aofdf, ~lng, ~lat, group = "aof", 
                            color = "orange")
+      })
     })
     observeEvent(input$mymap_click, {
       click <- input$mymap_click

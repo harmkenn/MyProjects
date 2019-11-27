@@ -15,22 +15,18 @@ ui <- fluidPage(
       textOutput("Target"),
       textOutput("dist"),
       textOutput("az"),
-      textOutput("defl")
+      textOutput("defl"),
+      textInput("lookup","MGRS lookup"),
+      actionButton(inputId = "get_mgrs", label = "Get Grid"),
+      textOutput("lMGRS"),
+      textOutput("lLngLat")
     ),
     mainPanel(
-      
       leafletOutput("mymap", width = "600px", height = "600px")
     )
   )
 )
 server <- function(input, output) {
-  
-  mgrs <- reactive ({
-    mgrs <- mgrs_to_latlng(input$MGRS)
-    clat <- mgrs[[2]]
-    clng <- mgrs[[3]]
-  })
-  
   
   output$mymap <- renderLeaflet({
     if (input$get_map == 0) 
@@ -51,6 +47,18 @@ server <- function(input, output) {
         addPolylines(data = aofdf, ~lng, ~lat, group = "aof", 
                      color = "orange")
     })
+  })
+  observeEvent(input$get_mgrs, {
+    output$lMGRS <- renderText({paste(" ")})
+    output$lLngLat <- renderText({paste(" ")})
+    register_google(key = "AIzaSyAfnLNZjvYdMx-cyga_qA1oJ6P36dRGalA")
+    lLatLon <- geocode(input$lookup)
+    llng <- lLatLon$lon
+    llat <- lLatLon$lat
+    lmgrs <- latlng_to_mgrs(llat,llng)
+    output$lMGRS <- renderText({paste("MGRS: ", lmgrs)})
+    output$lLngLat <- renderText({paste("Longitude: ", llng, 
+                                        "Latitude: ", llat)})
   })
   observeEvent(input$mymap_click, {
     click <- input$mymap_click

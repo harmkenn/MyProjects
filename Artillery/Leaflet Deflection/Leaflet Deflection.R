@@ -1,4 +1,13 @@
-pacman::p_load(tidyverse, shiny, ggmap, mgrs, geosphere, sp, leaflet)
+
+library(rsconnect)
+library(tidyverse)
+library(shiny)
+library(ggmap)
+library(mgrs)
+library(geosphere)
+library(sp)
+library(leaflet)
+
 
 ui <- fluidPage(
   h1("Compute Deflection"),
@@ -32,7 +41,7 @@ server <- function(input, output) {
     if (input$get_map == 0) 
       return()
     isolate({
-      mgrs <- mgrs_to_latlng(input$MGRS)
+      mgrs <- mgrs::mgrs_to_latlng(input$MGRS)
       clat <- mgrs[[2]]
       clng <- mgrs[[3]]
       aof <- input$aof
@@ -55,7 +64,7 @@ server <- function(input, output) {
     lLatLon <- geocode(input$lookup)
     llng <- lLatLon$lon
     llat <- lLatLon$lat
-    lmgrs <- latlng_to_mgrs(llat,llng)
+    lmgrs <- mgrs::latlng_to_mgrs(llat,llng)
     output$lMGRS <- renderText({paste("MGRS: ", lmgrs)})
     output$lLngLat <- renderText({paste("Longitude: ", llng, 
                                         "Latitude: ", llat)})
@@ -64,13 +73,13 @@ server <- function(input, output) {
     click <- input$mymap_click
     tlng <- click$lng
     tlat <- click$lat
-    mgrs <- mgrs_to_latlng(input$MGRS)
+    mgrs <- mgrs::mgrs_to_latlng(input$MGRS)
     clat <- mgrs[[2]]
     clng <- mgrs[[3]]
     text<-paste("Latitude ", round(clat,2), "Longtitude ",
                 round(clng,2))
     output$Target <-  renderText({paste("Target: ", 
-                                        latlng_to_mgrs(click$lat,click$lng))})
+                                        mgrs::latlng_to_mgrs(click$lat,click$lng))})
     
     dist <- trunc(distGeo(c(clng,clat),c(tlng,tlat)))
     output$dist <- renderText({paste("Distance to Target: ", dist, "m")})

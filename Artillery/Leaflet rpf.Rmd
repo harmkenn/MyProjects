@@ -1,0 +1,73 @@
+---
+title: "Interactive Maps with leaflet in R"
+author: "Ken Harmon"
+date: "`r format(Sys.time(), '%Y %B %d')`"
+output:
+  pdf_document: default
+  html_document:
+    code_folding: hide
+    fig_align: center
+    fig_height: 6
+    fig_width: 12
+    keep_md: yes
+editor_options:
+  chunk_output_type: console
+---
+
+# {.tabset .tabset-fade}
+
+```{r, echo=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
+```
+
+```{r load_libraries, include=FALSE}
+# Use this R-Chunk to load all your libraries!
+pacman::p_load(tidyverse, rgdal, leaflet, leaflet.extras, readr, plotKML, mapview, raster)
+
+theme_set(theme_bw())
+```
+
+https://rpubs.com/cenuno/Mapping_CTA
+
+## Google Mapping API
+
+https://cloud.google.com/maps-platform/
+
+```{r swd, eval=FALSE, echo=FALSE}
+# this is set to not run during the knit process
+# this sets the working directory to the file location
+register_google(key = "AIzaSyAfnLNZjvYdMx-cyga_qA1oJ6P36dRGalA") 
+setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
+```
+
+## rpf
+
+```{r}
+setwd("D:/AFATDSPieces/Maps/Yemen/nitf/rpf/n17e044")
+
+#addRasterImageL <- addRasterImage
+
+#fix(addRasterImageL)
+
+AllRasters <- list.files()
+
+extent(raster(AllRasters[1]))
+
+r <- raster(AllRasters[1])
+
+
+leaflet() %>% addTiles() %>%
+  addLayer(r)
+
+rmap <- leaflet() %>% addTiles()
+
+for (i in 1:70){
+  r <- raster(AllRasters[i])
+
+   rmap <- rmap %>% addRasterImageL(r)
+}
+rmap
+```
+
+
+

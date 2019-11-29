@@ -41,10 +41,10 @@ LL2UTM2mgrs<-function(lng,lat){
   if (northing < 0){northing <- 10000000 + northing}
   northing <- f_pad_zero(northing, width = 7, pad.char = "0")
   zone <- f_pad_zero(zone, width = 2, pad.char = "0")
-  final <- as.data.frame(c(LL, easting,northing,paste(zone,lz[1,2], sep = ""), 
+  final <- as.data.frame(c(LL, easting,northing,zone, 
               paste(zone,lz[1,2],esql,nsql,f_pad_zero(east, width = 5, pad.char = "0"),
                     f_pad_zero(north, width = 5, pad.char = "0"), sep = "")))
-  colnames(final) <- c("Long","Lat","Easting","Northing","Gridzone","MGRS")
+  colnames(final) <- c("Long","Lat","Easting","Northing","zone","MGRS")
   return(final)
 }
 
@@ -59,12 +59,12 @@ samplell <- data.frame(cbind(longv,latv))
 
 samplell$UTME <- NA
 samplell$UTMN <- NA
+samplell$gz <- NA
 samplell$mgrs <- NA
-samplell$check <- NA
 
 for (i in 1:nrow(samplell)){
   samplell$UTME[i] <- as.matrix(LL2UTM2mgrs(samplell$longv[i],samplell$latv[i]))[3]
   samplell$UTMN[i] <- as.matrix(LL2UTM2mgrs(samplell$longv[i],samplell$latv[i]))[4]
+  samplell$gz[i] <- as.matrix(LL2UTM2mgrs(samplell$longv[i],samplell$latv[i]))[5]
   samplell$mgrs[i] <- as.matrix(LL2UTM2mgrs(samplell$longv[i],samplell$latv[i]))[6]
-  samplell$check[i] <- mgrs::latlng_to_mgrs(samplell$latv[i],samplell$longv[i])
 }

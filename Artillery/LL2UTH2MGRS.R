@@ -1,9 +1,4 @@
-library(sp)
-library(rgdal)
-library(mgrs)
-library(tidyverse)
-library(numbers)
-library(numform)
+pacman::p_load(tidyverse, sp, rgdal, mgrs, numbers, numform)
 
 nzones <- c("C","D","E","F","G","H","J","K","L","M","N","P","Q","R","S","T","U","V","W","X")
 nnzone <- c(3:22)

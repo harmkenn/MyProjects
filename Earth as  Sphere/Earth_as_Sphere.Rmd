@@ -1,0 +1,400 @@
+---
+title: "Earth as a Perfect Spheroid"
+author: "Ken Harmon"
+date: "`r format(Sys.time(), '%Y %B %d')`"
+output:
+  html_document:
+    code_folding: hide
+    fig_align: center
+    fig_height: 6
+    fig_width: 12
+    keep_md: yes
+editor_options:
+  chunk_output_type: console
+---
+
+# {.tabset .tabset-fade}
+
+```{r, echo=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
+```
+
+```{r load_libraries, include=FALSE}
+# Use this R-Chunk to load all your libraries!
+pacman::p_load(tidyverse, mgrs, DT, numbers,numform)
+
+theme_set(theme_bw())
+```
+
+```{r swd, eval=FALSE, echo=FALSE}
+# this is set to not run during the knit process
+# this sets the working directory to the file location
+setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
+```
+
+### What if I assume the earth is a perfent spheroid?
+
+## Premise
+
+Then I should not be able to convert Longitude and Latitude coordinates to MGRS with any type of accuracy. The geologic science people tell me this cannot be done.
+
+Challenge accepted.
+
+## Dataset
+
+Here is my initial dataset of random points around the globe. THese are true UTM and MGRS coordinates associated with each latitude and longitude.
+
+My task is to regenerate these same UTM and MGRS coordinates by ignoring the facts of Datums, Shereoids, geodesics, and other projections.
+
+I am going to assume that the earth is a perfect Spheroid.
+
+* Equator Circumference: 40008000 meters
+* Polar Circumference:   40075000 meters
+
+```{r dataset}
+rlng <- (sample.int(36000,size=500,replace=TRUE)-1)/100-180
+rlat <- (sample.int(16000,size=500,replace=TRUE)-1)/100-80
+samplell <- data.frame(cbind(rlng,rlat))
+
+samplell$UTME <- NA
+samplell$UTMN <- NA
+samplell$z <- NA
+samplell$h <- NA
+samplell$mgrs <- NA
+
+for (i in 1:nrow(samplell)){
+  samplell$mgrs[i] <- latlng_to_mgrs(samplell[i,2],samplell[i,1])
+  samplell$UTME[i] <- as.matrix(mgrs_to_utm(samplell[i,7]))[4]
+  samplell$UTMN[i] <- as.matrix(mgrs_to_utm(samplell[i,7]))[5]
+  samplell$z[i] <- as.matrix(mgrs_to_utm(samplell[i,7]))[2]
+  samplell$h[i] <- as.matrix(mgrs_to_utm(samplell[i,7]))[3]
+}
+
+datatable(samplell)
+```
+
+## Square Peg; Round Hole
+
+### Facts about UTM and MGRS
+
+The two coordinate systems are very similar in that they are trying to overlay a rectangular coordinate system onto a sphere.
+
+1. sldkfsldkfj
+2. sdsssssssss
+  + aaaaa
+  + bbbbb
+
+## Easting
+
+### Converting a Longitude into an Easting
+
+```{r easting}
+# first go at predicting Easting from Longitude
+# with dmod which is a deviation in longitude 
+# from the center of the gridzone (-3 to 3 degress)
+
+samplell <- samplell %>% mutate(latRad = cos(rlatr)*40008000,
+                                dmod = rlng%%6-3,
+                                e1 = dmod*latRad/360+500000,
+                                e_err1 = e1 - as.numeric(UTME))
+
+# samplell <- samplell[-c(253,436),] removed weird extreme data
+
+samplell %>%
+  ggplot() +
+    geom_point(aes(rlat,e_err1,color = dmod)) +
+    geom_point(aes(rlat,(-150*sin(rlat*pi/140)*sin(rlat*pi/70)-600)), 
+               color = "orange")
+
+samplell <- samplell %>% mutate(
+  e2 = e1 - dmod/3*(-150*sin(rlat*pi/140)*sin(rlat*pi/70)-600),
+                                e_err2 = e2 - as.numeric(UTME))
+
+samplell %>%
+  ggplot() +
+    geom_point(aes(rlat,e_err2,color = dmod)) +
+    geom_point(aes(rlat,(100*sin(rlat*pi/140)*sin(rlat*pi/70)-100)), 
+               color = "orange")
+
+samplell <- samplell %>% mutate(
+  e3 = e2 - dmod/3*(35*cos(rlat*pi/42)/cos(rlat*pi/168)+100),
+  e_err3 = e3 - as.numeric(UTME))
+
+samplell %>%
+  ggplot() +
+    geom_point(aes(rlat,e_err3,color = dmod)) +
+    geom_point(aes(rlat,0), 
+               color = "orange")
+
+sd(samplell$e_err3)
+```
+
+
+
+## Northing
+
+### Converting a Latitude into a Northing
+
+```{r northing}
+
+# first go at predicting Northing from Latitude
+# with dmod which is a deviation in longitude 
+# from the center of the gridzone (-3 to 3 degress)
+
+samplell <- samplell %>% mutate(n1 = rlat*40075000/360 +
+                                  ifelse(h =="N",0,10000000),
+                                n_err1 = n1 - as.numeric(UTMN))
+
+# First try at Northing Error
+
+a<-28000
+p<-118
+samplell %>%
+  ggplot() +
+    geom_point(aes(rlat,n_err1,color = dmod)) +
+    geom_point(aes(rlat,(a*sin(rlat*pi/p))), color = "orange")
+
+samplell <- samplell %>% mutate(
+  n2 = n1 - (a*sin(rlat*pi/p)),
+  n_err2 = n2 - as.numeric(UTMN))
+
+samplell %>%
+  ggplot() +
+    geom_point(aes(rlat,n_err2,color = dmod)) +
+    geom_point(aes(rlat,(1000*sin(rlat*pi/55))), color = "orange")
+
+
+```
+
+## WGS84
+
+https://en.wikipedia.org/wiki/Universal_Transverse_Mercator_coordinate_system
+
+```{r wgs84}
+# αβγδεζηθικλμνξοπρςστυφχψω k0
+
+E0 <- 500000
+k0 <- .9996
+f <- 1/298.257223563
+n <- f/(2-f)
+a <- 6378137
+A <- a/(1-n)*(n^2/4)/(1-n/2)
+
+
+ll2UTM2MGRS <- function(lng,lat){
+  
+}
+
+lng <- 50
+lat <- -40
+N0 <- 0
+if (lat < 0) {N0 <- 10000000}
+t <- sinh(atanh(sin(lat))-2*sqrt(n)/(1+n)*atanh(2*sqrt(n)/(1+n)*sin(lat)))
+nt <- atanh(sin(lng)/sqrt(1-t))
+Xi <- atan(t/cos(lng))
+myFun <- function(i) return(expk(i) * arfit$ar[i])
+tmp2 <- sum(vapply(seq_along(arfit$ar), myFun, complex(1)))
+easting = E0+k0*A*(nt+1)
+
+```
+
+## WGS84
+
+```{r LL2UTM}
+
+lng <- 45.72
+lat <- -3.96
+lngr <- lng*pi/180 # Longitude in radians
+latr <- lat*pi/180 # Latitude in radians
+
+# Lets go find Easting
+
+sin1 <- pi/(180*3600) #One Second
+a <- 6378137 # Equitorial Radius
+b <- 6356752.3142 #Polar Radius
+k0 <- .9996 #Scalar Factor Constant
+zone <- floor(1/6*lng)+31 #Longitude Zone
+Czone <- 6*zone - 183 #Longitude of the center of the zone
+dlng <- lng - Czone # Longitude from the center of the zone
+p <- dlng*3600/10000 #Hecta seconds?
+e <- sqrt(1-(b/a)^2) #eccentricity
+e1sq <- e^2/(1-e^2)
+nu <- a/sqrt(1-(e*sin(latr))^2) #r curv 2
+Kiv <- nu*cos(latr)*sin1*k0*10000 #Coef for UTM 4
+Kv <- (sin1*cos(latr))^3*(nu/6)*
+  (1-tan(latr)^2+e1sq*cos(latr)^2)*k0*10^12 #Coef for UTM 5
+Easting <- 500000+Kiv*p+Kv*p^3
+
+# Now let's go find Northing
+n <- (a-b)/(a+b)
+A0 <- a*(1-n+(5*n^2/4)*(1-n)+(81*n^4/64)*(1-n)) # Meridional Arc Length
+B0 <- (3*a*n/2)*(1-n-(7*n^2/8)*(1-n)+55*n^4/64) # Meridional Arc Length
+C0 <- (15*a*n^2/16)*(1-n+(3*n^2/4)*(1-n)) # Meridional Arc Length
+D0 <- (35*a*n^3/48)*(1-n+11*n^2/16) # Meridional Arc Length
+E0 <- (315*a*n^4/51)*(1-n) # Meridional Arc Length
+S <- A0*latr - B0*sin(2*latr) + C0*sin(4*latr) - D0*sin(6*latr) + E0*sin(8*latr) # Meridional Arc
+Ki <- S*k0 #Coef for UTM 1
+Kii <- nu*sin(latr)*cos(latr)*sin1^2*k0*100000000/2 #Coef for UTM 2
+Kiii <- ((sin1^4*nu*sin(latr)*cos(latr)^3)/24)*(5-tan(latr)^2+9*e1sq*cos(latr)^2*cos(latr)^4)*k0*10^16 #Coef for UTM 2
+Northing <- Ki + Kii * p^2 + Kiii * p^4 
+if (lat < 0) {Northing <- 10000000 + Northing} # In the Southern Hemisphere is Northing is measured from the south pole instead of from the equator
+
+Easting <- round(Easting,0)
+Northing <- round(Northing,0)
+
+
+## Now let's turn UTM into MGRS
+
+#Latitude gridzone letters
+lgzl <- c("C","D","E","F","G","H","J","K","L","M","N","P","Q","R","S","T","U","V","W","X")
+
+# 100km grid Square easting letter
+esqls <- as.matrix(rbind(c("A","B","C","D","E","F","G","H"),
+                         c("J","K","L","M","N","P","Q","R"),
+                         c("S","T","U","V","W","X","Y","Z")))
+colnames(esqls) <- 1:8
+rownames(esqls) <- c(1,2,0)
+
+nsqls <- c("B","C","D","E","F","G","H","J","K","L","M","N","P","Q","R","S","T","U","V","A","B","C","D","E","F","G","H","J","K","L","M","N","P","Q","R","S","T","U","V","A","B","C","D","E","F","G","H","J","K","L","M","N","P","Q","R","S","T","U","V","A","B","C","D","E","F","G","H","J","K","L","M","N","P","Q","R","S","T","U","V","A","B","C","D","E","F","G","H","J","K","L","M","N","P","Q","R","S","T","U","V")
+
+lzc <- (lat+80-(lat+80)%%8)/8+1 # LAtitude letter zone count
+lz <- lgzl[lzc]
+esq <- plyr::round_any(Easting,100000,floor)/100000 #Grab the first digit off of easting
+emod <- mod(zone,3) # Zone mod 3 for 100km lookup
+if (emod == 0) {emod <- 3} #turn mod zero into row 3
+esql <- esqls[emod,esq] #Here is the 100km easting grid letter
+nsq <-  plyr::round_any(Northing,100000,floor)/100000 #Grab off the first two digits off the Northing
+  if((zone %% 2) == 0) {nsq <- nsq +5} #Even grid zones increase the letter by 5
+  if(nsq>99){nsq <- nsq - 20} #If it goes over the top then cycle back to "A"
+nsql <- nsqls[nsq]
+east <- plyr::round_any(Easting,1) - plyr::round_any(Easting,100000,floor) #Snatch the right 5 digits off the easting
+easting5 <- f_pad_zero(round(east,0), width = 5, pad.char = "0") #fill the front with zeros if needed
+north <- plyr::round_any(Northing,1) - plyr::round_any(Northing,100000,floor) #Snatch the right 5 digits off the northing
+northing5 <- f_pad_zero(north, width = 5, pad.char = "0") #fill the front with zeros if needed
+
+utmz <- f_pad_zero(zone, width = 2, pad.char = "0") #pad the zone with a zero, if needed
+MGRS <- paste(utmz,lz,esql,nsql,easting5,northing5,sep = "") #Paste all six pieces together
+hem <- "N"
+if (lat < 0) {hem <- "S"}
+
+check <- latlng_to_mgrs(lat,lng)
+  
+final <- as.data.frame(rbind(c(lng,lat, Easting,Northing,utmz,hem,MGRS,check))) 
+colnames(final) <- c("Long","Lat","Easting","Northing","zone","Hemisphere","MGRS","Check")              
+
+final
+
+```
+
+## Function LL2UTM2MGRS
+
+```{r ll2UTM2MGRS}
+pacman::p_load(tidyverse, numform)
+
+#Function
+LL2UTM2mgrs<-function(lng,lat){
+  lngr <- lng*pi/180 # Longitude in radians
+  latr <- lat*pi/180 # Latitude in radians
+  
+  # Lets go find Easting
+  
+  sin1 <- pi/(180*3600) #One Second
+  a <- 6378137 # Equitorial Radius
+  b <- 6356752.3142 #Polar Radius
+  k0 <- .9996 #Scalar Factor Constant
+  zone <- floor(1/6*lng)+31 #Longitude Zone
+  Czone <- 6*zone - 183 #Longitude of the center of the zone
+  dlng <- lng - Czone # Longitude from the center of the zone
+  p <- dlng*3600/10000 #Hecta seconds?
+  e <- sqrt(1-(b/a)^2) #eccentricity
+  e1sq <- e^2/(1-e^2)
+  nu <- a/sqrt(1-(e*sin(latr))^2) #r curv 2
+  Kiv <- nu*cos(latr)*sin1*k0*10000 #Coef for UTM 4
+  Kv <- (sin1*cos(latr))^3*(nu/6)*
+    (1-tan(latr)^2+e1sq*cos(latr)^2)*k0*10^12 #Coef for UTM 5
+  Easting <- 500000+Kiv*p+Kv*p^3
+  
+  # Now let's go find Northing
+  n <- (a-b)/(a+b)
+  A0 <- a*(1-n+(5*n^2/4)*(1-n)+(81*n^4/64)*(1-n)) # Meridional Arc Length
+  B0 <- (3*a*n/2)*(1-n-(7*n^2/8)*(1-n)+55*n^4/64) # Meridional Arc Length
+  C0 <- (15*a*n^2/16)*(1-n+(3*n^2/4)*(1-n)) # Meridional Arc Length
+  D0 <- (35*a*n^3/48)*(1-n+11*n^2/16) # Meridional Arc Length
+  E0 <- (315*a*n^4/51)*(1-n) # Meridional Arc Length
+  S <- A0*latr - B0*sin(2*latr) + C0*sin(4*latr) - D0*sin(6*latr) + E0*sin(8*latr) # Meridional Arc
+  Ki <- S*k0 #Coef for UTM 1
+  Kii <- nu*sin(latr)*cos(latr)*sin1^2*k0*100000000/2 #Coef for UTM 2
+  Kiii <- ((sin1^4*nu*sin(latr)*cos(latr)^3)/24)*(5-tan(latr)^2+9*e1sq*cos(latr)^2*cos(latr)^4)*k0*10^16 #Coef for UTM 2
+  Northing <- Ki + Kii * p^2 + Kiii * p^4 
+  if (lat < 0) {Northing <- 10000000 + Northing} # In the Southern Hemisphere is Northing is measured from the south pole instead of from the equator
+  
+  Easting <- round(Easting,0)
+  Northing <- round(Northing,0)
+
+  ## Now let's turn UTM into MGRS
+  
+  #Latitude gridzone letters
+  lgzl <- c("C","D","E","F","G","H","J","K","L","M","N","P","Q","R","S","T","U","V","W","X")
+  
+  # 100km grid Square easting letter
+  esqls <- as.matrix(rbind(c("A","B","C","D","E","F","G","H"),
+                           c("J","K","L","M","N","P","Q","R"),
+                           c("S","T","U","V","W","X","Y","Z")))
+  colnames(esqls) <- 1:8
+  rownames(esqls) <- c(1,2,0)
+  
+  nsqls <- c("B","C","D","E","F","G","H","J","K","L","M","N","P","Q","R","S","T","U","V","A","B","C","D","E","F","G","H","J","K","L","M","N","P","Q","R","S","T","U","V","A","B","C","D","E","F","G","H","J","K","L","M","N","P","Q","R","S","T","U","V","A","B","C","D","E","F","G","H","J","K","L","M","N","P","Q","R","S","T","U","V","A","B","C","D","E","F","G","H","J","K","L","M","N","P","Q","R","S","T","U","V")
+  
+  lzc <- (lat+80-(lat+80)%%8)/8+1 # LAtitude letter zone count
+  lz <- lgzl[lzc]
+  esq <- plyr::round_any(Easting,100000,floor)/100000 #Grab the first digit off of easting
+  emod <- mod(zone,3) # Zone mod 3 for 100km lookup
+  if (emod == 0) {emod <- 3} #turn mod zero into row 3
+  esql <- esqls[emod,esq] #Here is the 100km easting grid letter
+  nsq <-  plyr::round_any(Northing,100000,floor)/100000 #Grab off the first two digits off the Northing
+  if((zone %% 2) == 0) {nsq <- nsq +5} #Even grid zones increase the letter by 5
+  if(nsq>99){nsq <- nsq - 20} #If it goes over the top then cycle back to "A"
+  nsql <- nsqls[nsq]
+  east <- plyr::round_any(Easting,1) - plyr::round_any(Easting,100000,floor) #Snatch the right 5 digits off the easting
+  easting5 <- f_pad_zero(round(east,0), width = 5, pad.char = "0") #fill the front with zeros if needed
+  north <- plyr::round_any(Northing,1) - plyr::round_any(Northing,100000,floor) #Snatch the right 5 digits off the northing
+  northing5 <- f_pad_zero(north, width = 5, pad.char = "0") #fill the front with zeros if needed
+  utmz <- f_pad_zero(zone, width = 2, pad.char = "0") #pad the zone with a zero, if needed
+  MGRS <- paste(utmz,lz,esql,nsql,easting5,northing5,sep = "") #Paste all six pieces together
+  
+  
+  hem <- "N"
+  if (lat < 0) {hem <- "S"}
+
+  final <- as.data.frame(rbind(c(lng,lat, Easting,Northing,utmz,hem,MGRS))) 
+  colnames(final) <- c("Long","Lat","Easting","Northing","zone","Hemisphere","MGRS")  
+  
+   return(final)
+}
+
+## Here is the function that turns
+
+LL2UTM2mgrs(-138.23,-34.55)
+
+longv <- (sample.int(36000,size=200,replace=TRUE)-1)/100-180
+latv <- (sample.int(16000,size=200,replace=TRUE)-1)/100-80
+samplell <- data.frame(cbind(longv,latv))
+
+
+samplell$UTME <- NA
+samplell$UTMN <- NA
+samplell$gz <- NA
+samplell$hem <- NA
+samplell$mgrs <- NA
+
+for (i in 1:nrow(samplell)){
+  samplell$UTME[i] <- as.matrix(LL2UTM2mgrs(samplell$longv[i],samplell$latv[i]))[3]
+  samplell$UTMN[i] <- as.matrix(LL2UTM2mgrs(samplell$longv[i],samplell$latv[i]))[4]
+  samplell$gz[i] <- as.matrix(LL2UTM2mgrs(samplell$longv[i],samplell$latv[i]))[5]
+  samplell$hem[i] <- as.matrix(LL2UTM2mgrs(samplell$longv[i],samplell$latv[i]))[6]
+  samplell$mgrs[i] <- as.matrix(LL2UTM2mgrs(samplell$longv[i],samplell$latv[i]))[7]
+}
+
+```
+
+## Conclusion

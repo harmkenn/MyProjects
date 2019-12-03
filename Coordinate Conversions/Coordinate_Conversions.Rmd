@@ -21,7 +21,7 @@ knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
 
 ```{r load_libraries, include=FALSE}
 # Use this R-Chunk to load all your libraries!
-pacman::p_load(tidyverse, numform, pracma, DT)
+pacman::p_load(tidyverse, numform, pracma, DT, plyr)
 
 theme_set(theme_bw())
 ```
@@ -37,9 +37,19 @@ setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
 Wikipedia formulas and coefficent
 
 ```{r ll2mgrsSteps}
-
 lng <- 45.72
 lat <- -3.96
+
+northdes <- read.csv("northing.csv")
+
+# 100km grid Square easting letter
+esqls <- as.matrix(rbind(c("A","B","C","D","E","F","G","H"),
+                         c("J","K","L","M","N","P","Q","R"),
+                         c("S","T","U","V","W","X","Y","Z")))
+colnames(esqls) <- 1:8
+rownames(esqls) <- c(1,2,0)
+
+
 lngr <- lng*pi/180 # Longitude in radians
 latr <- lat*pi/180 # Latitude in radians
 
@@ -49,8 +59,8 @@ sin1 <- pi/(180*3600) #One Second
 a <- 6378137 # Equitorial Radius
 b <- 6356752.31424518 #Polar Radius
 k0 <- .9996 #Scalar Factor Constant
-zone <- floor(1/6*lng)+31 #Longitude Zone
-Czone <- 6*zone - 183 #Longitude of the center of the zone
+gzn <- floor(1/6*lng)+31 #Longitude Zone
+Czone <- 6*gzn - 183 #Longitude of the center of the zone
 dlng <- lng - Czone # Longitude from the center of the zone
 p <- dlng*3600/10000 #Hecta seconds?
 e <- sqrt(1-(b/a)^2) #eccentricity
@@ -83,26 +93,14 @@ Northing <- round(Northing,0)
 
 ## Now let's turn UTM into MGRS
 
-#Latitude gridzone letters
-lgzl <- c("C","D","E","F","G","H","J","K","L","M","N","P","Q","R","S","T","U","V","W","X")
-
-# 100km grid Square easting letter
-esqls <- as.matrix(rbind(c("A","B","C","D","E","F","G","H"),
-                         c("J","K","L","M","N","P","Q","R"),
-                         c("S","T","U","V","W","X","Y","Z")))
-colnames(esqls) <- 1:8
-rownames(esqls) <- c(1,2,0)
-
-nsqls <- c("B","C","D","E","F","G","H","J","K","L","M","N","P","Q","R","S","T","U","V","A","B","C","D","E","F","G","H","J","K","L","M","N","P","Q","R","S","T","U","V","A","B","C","D","E","F","G","H","J","K","L","M","N","P","Q","R","S","T","U","V","A","B","C","D","E","F","G","H","J","K","L","M","N","P","Q","R","S","T","U","V","A","B","C","D","E","F","G","H","J","K","L","M","N","P","Q","R","S","T","U","V")
-
 lzc <- (lat+80-(lat+80)%%8)/8+1 # LAtitude letter zone count
 lz <- lgzl[lzc]
 esq <- plyr::round_any(Easting,100000,floor)/100000 #Grab the first digit off of easting
-emod <- mod(zone,3) # Zone mod 3 for 100km lookup
+emod <- mod(gzn,3) # gzn mod 3 for 100km lookup
 if (emod == 0) {emod <- 3} #turn mod zero into row 3
 esql <- esqls[emod,esq] #Here is the 100km easting grid letter
 nsq <-  plyr::round_any(Northing,100000,floor)/100000 #Grab off the first two digits off the Northing
-  if((zone %% 2) == 0) {nsq <- nsq +5} #Even grid zones increase the letter by 5
+  if((gzn %% 2) == 0) {nsq <- nsq +5} #Even grid zones increase the letter by 5
   if(nsq>99){nsq <- nsq - 20} #If it goes over the top then cycle back to "A"
 nsql <- nsqls[nsq]
 east <- plyr::round_any(Easting,1) - plyr::round_any(Easting,100000,floor) #Snatch the right 5 digits off the easting
@@ -110,7 +108,7 @@ easting5 <- f_pad_zero(round(east,0), width = 5, pad.char = "0") #fill the front
 north <- plyr::round_any(Northing,1) - plyr::round_any(Northing,100000,floor) #Snatch the right 5 digits off the northing
 northing5 <- f_pad_zero(north, width = 5, pad.char = "0") #fill the front with zeros if needed
 
-utmz <- f_pad_zero(zone, width = 2, pad.char = "0") #pad the zone with a zero, if needed
+utmz <- f_pad_zero(gzn, width = 2, pad.char = "0") #pad the zone with a zero, if needed
 MGRS <- paste(utmz,lz,esql,nsql,easting5,northing5,sep = "") #Paste all six pieces together
 hem <- "N"
 if (lat < 0) {hem <- "S"}
@@ -139,8 +137,8 @@ LL2UTM2mgrs<-function(lng,lat){
   a <- 6378137 # Equitorial Radius
   b <- 6356752.3142 #Polar Radius
   k0 <- .9996 #Scalar Factor Constant
-  zone <- floor(1/6*lng)+31 #Longitude Zone
-  Czone <- 6*zone - 183 #Longitude of the center of the zone
+  gzn <- floor(1/6*lng)+31 #Longitude Zone
+  Czone <- 6*gzn - 183 #Longitude of the center of the zone
   dlng <- lng - Czone # Longitude from the center of the zone
   p <- dlng*3600/10000 #Hecta seconds?
   e <- sqrt(1-(b/a)^2) #eccentricity
@@ -185,18 +183,18 @@ LL2UTM2mgrs<-function(lng,lat){
   lzc <- (lat+80-(lat+80)%%8)/8+1 # LAtitude letter zone count
   lz <- lgzl[lzc]
   esq <- plyr::round_any(Easting,100000,floor)/100000 #Grab the first digit off of easting
-  emod <- mod(zone,3) # Zone mod 3 for 100km lookup
+  emod <- mod(gzn,3) # Zone mod 3 for 100km lookup
   if (emod == 0) {emod <- 3} #turn mod zero into row 3
   esql <- esqls[emod,esq] #Here is the 100km easting grid letter
   nsq <-  plyr::round_any(Northing,100000,floor)/100000 #Grab off the first two digits off the Northing
-  if((zone %% 2) == 0) {nsq <- nsq +5} #Even grid zones increase the letter by 5
+  if((gzn %% 2) == 0) {nsq <- nsq +5} #Even grid zones increase the letter by 5
   if(nsq>99){nsq <- nsq - 20} #If it goes over the top then cycle back to "A"
   nsql <- nsqls[nsq]
   east <- plyr::round_any(Easting,1) - plyr::round_any(Easting,100000,floor) #Snatch the right 5 digits off the easting
   easting5 <- f_pad_zero(round(east,0), width = 5, pad.char = "0") #fill the front with zeros if needed
   north <- plyr::round_any(Northing,1) - plyr::round_any(Northing,100000,floor) #Snatch the right 5 digits off the northing
   northing5 <- f_pad_zero(north, width = 5, pad.char = "0") #fill the front with zeros if needed
-  utmz <- f_pad_zero(zone, width = 2, pad.char = "0") #pad the zone with a zero, if needed
+  utmz <- f_pad_zero(gzn, width = 2, pad.char = "0") #pad the zone with a zero, if needed
   MGRS <- paste(utmz,lz,esql,nsql,easting5,northing5,sep = "") #Paste all six pieces together
   
   
@@ -213,8 +211,8 @@ LL2UTM2mgrs<-function(lng,lat){
 
 LL2UTM2mgrs(-138.23,-34.55)
 
-longv <- (sample.int(36000,size=200,replace=TRUE)-1)/100-180
-latv <- (sample.int(16000,size=200,replace=TRUE)-1)/100-80
+longv <- (sample.int(36000,size=5000,replace=TRUE)-1)/100-180
+latv <- (sample.int(16000,size=5000,replace=TRUE)-1)/100-80
 samplell <- data.frame(cbind(longv,latv))
 
 
@@ -239,18 +237,29 @@ datatable(samplell)
 
 ```{r mgrs2llsteps}
 
-MGRS <- "38MNA7993062259"
+MGRS <- "44CNB4888277928"
 
-Easting <- 393477
-Northing <- 6869162
-zone <- 13
-hem <- "N"
+gl <- gsub("[^a-zA-Z]", "", MGRS)
+gll <- str_locate(MGRS, gl)
+gzn <- as.numeric(substr(MGRS, 1, gll[1]-1))
+gzl <- substr(MGRS, gll[1],gll[1])
+gsel <- substr(MGRS, gll[1]+1,gll[1]+1)
+gsnl <- substr(MGRS, gll[1]+2,gll[1]+2)
+hem <- "S"
+if (grepl(gzl, "NPQRSTUVWX")){hem <- "N"}
+
+east5 <- as.numeric(substr(MGRS, gll[1]+3,gll[1]+7))
+Easting <- east5 + 100000*which(esqls == gsel,arr.ind=T)[2]
+north5 <- as.numeric(substr(MGRS, gll[1]+8,gll[1]+12))
+alln <- data.frame(hem = NA, gzn = gzn, gzl = gzl, gsnl = gsnl, ngsn = NA)
+fulln<-match_df(northdes,alln,on=c("gzn","gzl","gsnl"))
+Northing <- 100000*fulln[1,5]+north5
 
 NfEQ <- Northing
 if (hem == "S"){NfEQ <- Northing - 10000000}
 Fi <- (NfEQ)/(6366197.724*k0)
 Ni <- (c/(1+e1sq*(cos(Fi))^2)^(1/2))*k0
-Czone <- 6*zone-183
+Czone <- 6*gzn-183
 dln <- (Easting-500000)/Ni
 A1 <- sin(2*Fi)
 A2 <- A1*(cos(Fi))^2
@@ -272,7 +281,8 @@ FiR <- Fi+(1+e1sq*(cos(Fi))^2-(3/2)*e1sq*sin(Fi)*cos(Fi)*(Tau-Fi))*(Tau-Fi)
 LAT <- FiR/pi*180
 LNG <- dLam/pi*180+Czone 
 
-paste(LAT, LNG)
+as.data.frame(rbind(c("MGRS"=MGRS,"Easting"=Easting,"Northing"=Northing,"Zone"=gzn,"Hemisphere"=hem,"Latitude"=round(LAT,2),"Longitude"=round(LNG,2))))
+
 
 ```
 

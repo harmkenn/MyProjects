@@ -1,0 +1,148 @@
+---
+title: "Compute Distance from Lat Long"
+author: "Ken Harmon"
+date: "`r format(Sys.time(), '%Y %B %d')`"
+output:
+  html_document:
+    code_folding: hide
+    fig_align: center
+    fig_height: 6
+    fig_width: 12
+    keep_md: yes
+editor_options:
+  chunk_output_type: console
+---
+
+# {.tabset .tabset-fade}
+
+```{r, echo=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
+```
+
+```{r load_libraries, include=FALSE}
+# Use this R-Chunk to load all your libraries!
+pacman::p_load(tidyverse, numform, pracma, DT, plyr, pander)
+
+theme_set(theme_bw())
+```
+
+```{r swd, eval=FALSE, echo=FALSE}
+# this is set to not run during the knit process
+# this sets the working directory to the file location
+setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
+```
+
+## Point to Point Direction Steps
+
+```{r shot_ll steps}
+#Points
+lat1d <- -30
+lng1d <- -40
+lat2d <- 40
+lng2d <- 30
+
+#in Radians
+lat1r <- lat1d*pi/180 
+lng1r <- lng1d*pi/180
+lat2r <- lat2d*pi/180 
+lng2r <- lng2d*pi/180
+
+beta <- lng2r - lng1r
+
+#Central angle between points
+theta <- acos(cos(lat1r)*cos(lat2r)*cos(beta)+sin(lat1r)*sin(lat2r)) 
+er <-6371 #mean radius of the earth in km
+
+#Distance between points
+dist <- theta*er
+
+#Bearing of the shot in radians
+shotr <- atan2(sin(lng2r-lng1r)*cos(lat2r),
+               cos(lat1r)*sin(lat2r)-sin(lat1r)*cos(lat2r)*cos(lng2r-lng1r))
+#Bearing of the shot in degrees
+shotd <- shotr*180/pi
+
+#Bearing of the impact in radians
+impr <- pi + atan2(sin(lng1r-lng2r)*cos(lat1r),
+               cos(lat2r)*sin(lat1r)-sin(lat2r)*cos(lat1r)*cos(lng1r-lng2r))
+#Bearing of the impact in degrees
+impd <- impr*180/pi
+
+# Compute midpoint
+Bx <- cos(lat2r)*cos(lng2r-lng1r)
+By <- cos(lat2r)*sin(lng2r-lng1r)
+latmr <- atan2(sin(lat1r) + sin(lat2r), sqrt((cos(lat1r)+Bx)^2+By^2))
+lngmr <- lng1r + atan2(By, cos(lat1r) + Bx)
+
+latmd <- latmr*180/pi
+lngmd <- lngmr*180/pi
+
+
+points <- data.frame("Launch Latitude" = lat1d, "Launch Longitude" = lng1d, 
+                     "Landing Latitude" = lat2d, "Landing Longitude" = lng2d)
+pander(points)
+
+stats <- data.frame("Distance" = paste(round(dist,0),"km"),
+                    "Launch Bearing" = paste(round(shotd,2)),
+                    "Landing Bearing" = paste(round(impd,2)),
+                    "Midpoint Lat" = round(latmd,2),
+                    "Midpoint Lng" = round(lngmd,2))
+pander(stats)
+```
+
+## Point to Point Direction Function
+
+```{r shot_ll func}
+
+shot_ll <- function(lat1d,lng1d,lat2d,lng2d){
+#in Radians
+lat1r <- lat1d*pi/180 
+lng1r <- lng1d*pi/180
+lat2r <- lat2d*pi/180 
+lng2r <- lng2d*pi/180
+
+beta <- lng2r - lng1r
+
+#Central angle between points
+theta <- acos(cos(lat1r)*cos(lat2r)*cos(beta)+sin(lat1r)*sin(lat2r)) 
+er <-6371 #mean radius of the earth in km
+
+#Distance between points
+dist <- theta*er
+
+#Bearing of the shot in radians
+shotr <- atan2(sin(lng2r-lng1r)*cos(lat2r),
+               cos(lat1r)*sin(lat2r)-sin(lat1r)*cos(lat2r)*cos(lng2r-lng1r))
+#Bearing of the shot in degrees
+shotd <- shotr*180/pi
+
+#Bearing of the impact in radians
+impr <- pi + atan2(sin(lng1r-lng2r)*cos(lat1r),
+               cos(lat2r)*sin(lat1r)-sin(lat2r)*cos(lat1r)*cos(lng1r-lng2r))
+#Bearing of the impact in degrees
+impd <- impr*180/pi
+
+# Compute midpoint
+Bx <- cos(lat2r)*cos(lng2r-lng1r)
+By <- cos(lat2r)*sin(lng2r-lng1r)
+latmr <- atan2(sin(lat1r) + sin(lat2r), sqrt((cos(lat1r)+Bx)^2+By^2))
+lngmr <- lng1r + atan2(By, cos(lat1r) + Bx)
+
+latmd <- latmr*180/pi
+lngmd <- lngmr*180/pi
+
+
+data.frame("Launch Latitude" = lat1d, "Launch Longitude" = lng1d, 
+                     "Landing Latitude" = lat2d, "Landing Longitude" = lng2d,
+           "Distance" = paste(round(dist,0),"km"),
+                    "Launch Bearing" = paste(round(shotd,2)),
+                    "Landing Bearing" = paste(round(impd,2)),
+                    "Midpoint Lat" = round(latmd,2),
+                    "Midpoint Lng" = round(lngmd,2))
+}
+```
+
+```{r test}
+shot_ll(-30,-40,40,30)
+```
+

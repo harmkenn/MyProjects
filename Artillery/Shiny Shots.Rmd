@@ -1,5 +1,5 @@
 ---
-title: "Artillery Deflection Steps"
+title: "Shint Shots"
 author: "Ken Harmon"
 date: "`r format(Sys.time(), '%Y %B %d')`"
 output:
@@ -32,16 +32,6 @@ theme_set(theme_bw())
 # this sets the working directory to the file location
 setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
 ```
-
-## Base Map
-
-```{r bm}
-library(ggmap)
-register_google(key = "AIzaSyAfnLNZjvYdMx-cyga_qA1oJ6P36dRGalA") 
-octc <- get_map(location = "11TNH7000080000", maptype="terrain" ,scale=4, zoom =10)
-map<-octc
-```
-
 
 ## Shiny
 
@@ -96,12 +86,14 @@ server <- function(input, output) {
     if (input$get_map == 0) 
       return()
     isolate({
-      mgrs <- mgrs::mgrs_to_latlng(input$MGRS)
-      clat <- mgrs[[2]]
-      clng <- mgrs[[3]]
+      mgrs <- MGRS2UTM2LL(input$MGRS)
+      clat <- as.numeric(as.vector(mgrs[1,6]))
+      clng <- as.numeric(as.vector(mgrs[1,7]))
       aof <- input$aof
-      aoftip <- polar_ll(clat,clng,10,input$aof/6400*360)
-      aofdf <- data.frame(lng = c(clng,aoftip[[1]]),lat = c(clat,aoftip[[2]]))
+      aoftip <- polar_ll(clat,clng,30,input$aof/6400*360)
+      aoftiplat <- as.numeric(as.vector(aoftip[1,5]))
+      aoftiplng <- as.numeric(as.vector(aoftip[1,6]))
+      aofdf <- data.frame(lng = c(clng,aoftiplng),lat = c(clat,aoftiplat))
       
       
       m <- leaflet() %>% 
@@ -128,9 +120,9 @@ server <- function(input, output) {
     click <- input$mymap_click
     tlng <- click$lng
     tlat <- click$lat
-    mgrs <- mgrs::mgrs_to_latlng(input$MGRS)
-    clat <- mgrs[[2]]
-    clng <- mgrs[[3]]
+    mgrs <- MGRS2UTM2LL(input$MGRS)
+    clat <- as.numeric(as.vector(mgrs[1,6]))
+    clng <- as.numeric(as.vector(mgrs[1,7]))
     text<-paste("Latitude ", round(clat,2), "Longtitude ",
                 round(clng,2))
     output$Target <-  renderText({paste("Target: ", 
@@ -141,7 +133,7 @@ server <- function(input, output) {
     
     aof <- input$aof
     
-    polar <- polar_ll(clat,clng,)
+    az <- shot[6]
     if (az<0) {az <- az + 6400}
     output$az <- renderText({paste("Azimuth to Target: ", az, "mils")})
     

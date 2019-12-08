@@ -37,7 +37,7 @@ ui <- fluidPage(
                      )
                  )
         ),
-        tabPanel("Table", tableOutput("table")
+        tabPanel("Point to Point", tableOutput("table")
         )
     )
 )

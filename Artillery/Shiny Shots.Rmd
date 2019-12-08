@@ -125,15 +125,16 @@ server <- function(input, output) {
     clng <- as.numeric(as.vector(mgrs[1,7]))
     text<-paste("Latitude ", round(clat,2), "Longtitude ",
                 round(clng,2))
+    
     output$Target <-  renderText({paste("Target: ", 
-                                  LL2UTM2mgrs(click$lat,click$lng))})
+                                  LL2UTM2mgrs(clat,clng)[1,7])})
     
     shot <- shot_ll(clat,clng,tlat,tlng)
-    output$dist <- renderText({paste("Distance to Target: ", shot[5], "m")})
+    output$dist <- renderText({paste("Distance to Target: ", shot[5])})
     
     aof <- input$aof
     
-    az <- shot[6]
+    az <- shot[6]*6400/360
     if (az<0) {az <- az + 6400}
     output$az <- renderText({paste("Azimuth to Target: ", az, "mils")})
     

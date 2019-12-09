@@ -1,7 +1,7 @@
-#library(rsconnect)
+library(numform)
 #library(tidyverse)
 library(shiny)
-#library(ggmap)
+library(ggmap)
 #library(mgrs)
 #library(geosphere)
 #library(sp)
@@ -136,10 +136,12 @@ server <- function(input, output) {
       mlat <- as.numeric(as.vector(shot[1,8]))
       mlng <- as.numeric(as.vector(shot[1,9]))
       dist <- as.numeric(as.vector(shot[1,5]))
+      zoom <- 15.3-log(dist,2)
       leaflet() %>% 
-        setView(mlng,mlat,zoom=10) %>%
+        setView(mlng,mlat,zoom=zoom) %>%
         addProviderTiles(input$maptype2) %>%
-        addCircleMarkers(lng = flng, lat = flat, radius = 5, color = "Brown")
+        addCircleMarkers(lng = flng, lat = flat, radius = 5, color = "Blue") %>%
+        addCircleMarkers(lng = tlng, lat = tlat, radius = 5, color = "Brown")
     })
   })
   observeEvent(input$get_mgrs2, {

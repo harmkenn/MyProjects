@@ -3,7 +3,7 @@ library(numform)
 library(shiny)
 library(ggmap)
 #library(mgrs)
-#library(geosphere)
+library(geosphere)
 #library(sp)
 library(leaflet)
 library(EarthPoints)
@@ -137,9 +137,12 @@ server <- function(input, output) {
       mlng <- as.numeric(as.vector(shot[1,9]))
       dist <- as.numeric(as.vector(shot[1,5]))
       zoom <- 15.3-log(dist,2)
+      gcroute <- df2 <- gcIntermediate(c(flng,flat),c(tlng,tlat), breakAtDateLine = T, n = 100, 
+                                       addStartEnd = TRUE, sp = T)
       leaflet() %>% 
         setView(mlng,mlat,zoom=zoom) %>%
         addProviderTiles(input$maptype2) %>%
+        addPolylines(data = gcroute, weight = 1) %>%
         addCircleMarkers(lng = flng, lat = flat, radius = 5, color = "Blue") %>%
         addCircleMarkers(lng = tlng, lat = tlat, radius = 5, color = "Brown")
     })

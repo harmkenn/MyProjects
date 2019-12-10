@@ -56,6 +56,7 @@ ui <- fluidPage(
           textOutput("lLngLat2") 
         ),
         mainPanel(
+          textOutput("shot"),
           leafletOutput("mymap2", width = "600px", height = "600px")
         )
       )
@@ -138,12 +139,15 @@ server <- function(input, output) {
       mlng <- as.numeric(as.vector(shot[1,9]))
       dist <- as.numeric(as.vector(shot[1,5]))
       zoom <- 15.3-log(dist,2)
-      gcroute <- df2 <- gcIntermediate(c(flng,flat),c(tlng,tlat), breakAtDateLine = T, n = 100, 
+      gcroute <- gcIntermediate(c(flng,flat),c(tlng,tlat), breakAtDateLine = T, n = 100, 
                                        addStartEnd = TRUE, sp = T)
+      output$shot <- renderText({paste("Distance: ", round(dist,1), "km  Launch Bearing: ",
+                                       as.numeric(as.vector(shot[1,6])),
+                                       "    Landing Bearing: ", as.numeric(as.vector(shot[1,7])))})
       leaflet() %>% 
         setView(mlng,mlat,zoom=zoom) %>%
         addProviderTiles(input$maptype2) %>%
-        addPolylines(data = gcroute, weight = 1) %>%
+        addPolylines(data = gcroute, weight = 2, color = "orange") %>%
         addCircleMarkers(lng = flng, lat = flat, radius = 5, color = "Blue") %>%
         addCircleMarkers(lng = tlng, lat = tlat, radius = 5, color = "Brown")
     })

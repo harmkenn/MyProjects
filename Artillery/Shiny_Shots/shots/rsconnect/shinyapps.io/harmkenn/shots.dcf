@@ -5,9 +5,9 @@ account: harmkenn
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 1583973
-bundleId: 2655424
+bundleId: 2661864
 url: https://harmkenn.shinyapps.io/shots/
-when: 1575981426.76451
+when: 1576157253.34104
 asMultiple: FALSE
 asStatic: FALSE
-ignoredFiles: ShinyShots.R
+ignoredFiles: ShinyShots.R|tinker.R

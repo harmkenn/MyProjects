@@ -4,10 +4,10 @@ box <- shinydashboard::box
 library(tidyverse)
 library(rhandsontable)
 library(ggplot2)
-library(pander)
+library(cowplot)
 theme_set(theme_bw())
 
-data.discr <- data.frame(matrix(NA_real_, nrow = 500, ncol = 1))
+data.discr <- data.frame(as.numeric(matrix(, nrow=500, ncol=1)))
 colnames(data.discr) <- "A"
 binwidth <- 1
 
@@ -47,7 +47,8 @@ ui <- dashboardPage(
           column(width = 5,
             box(
               title = "Histogram", width = NULL,
-              plotOutput("hist")
+              plotOutput("hist"),
+              plotOutput("boxp")
             ), #Ebox
           ), #Ecolumn
           column(width = 4,
@@ -92,15 +93,37 @@ server <- function(input, output) {
     bins <- ceiling(1+3.322*log10(count))
       if (count > 2) {binwidth <- (max(hist.x)-min(hist.x)+2)/(bins-2)}
       hist.df <- data.frame(hist.x)
+      if(!is.null(tryCatch(ggplot(hist.df), error = function(e){}))){
+        dd1 <- hist.df %>%
+          ggplot() + 
+          geom_histogram(aes(x=hist.df[,1]),color="darkblue", fill="lightblue",binwidth=binwidth)+
+          labs(x="A") + xlim(c(min(hist.x)-binwidth,max(hist.x)+binwidth))
+      } #Eif
+      if(!is.null(tryCatch(ggplot(hist.df), error = function(e){}))){
+        dd2 <- hist.df %>%
+          ggplot(aes(x="", y = hist.df[,1])) +
+          geom_boxplot(color="darkblue", fill="lightblue", outlier.colour="red", outlier.shape=8, outlier.size=4) + 
+          geom_jitter(width = .1) +
+          coord_flip() +
+          theme_classic() +
+          labs(x="", y="A" ) + ylim(c(min(hist.x)-binwidth,max(hist.x)+binwidth))
+      } #Eif
       output$hist <- renderPlot({
-        if(!is.null(tryCatch(ggplot(hist.df), error = function(e){}))){
-          hist.df %>%
-            ggplot(aes(x=hist.df[,1])) + 
-            geom_histogram(color="darkblue", fill="lightblue",binwidth=binwidth)
-        } #Eif
+        plot_grid(dd1, dd2, ncol = 1, rel_heights = c(2, 1),align = 'v', axis = 'lr') 
       }) #Eoutput$hist
-      dss <- matrix(c(length(hist.x),mean(hist.x)),ncol=1,nrow=2)
-      rownames(dss) <- c("Count","Mean")
+      
+      output$boxp <- renderPlot({
+
+      }) #Eoutput$boxp
+      sx <- summary(hist.x)
+      sxe <- quantile(hist.x, c(0.25, 0.75), type = 1)
+      dsse <- matrix(formatC(c("","","","","",sxe[2],"",sxe[1],""),
+                             format="f",digits = 7,drop0trailing = TRUE),ncol=1,nrow=9)
+      dss <- matrix(formatC(c(length(hist.x),sx[4],sd(hist.x),var(hist.x),
+                              sx[6],sx[5],sx[3],sx[2],sx[1]),
+                            format="f",digits = 7,drop0trailing = TRUE),ncol=1,nrow=9)
+      dss <- cbind(dss,dsse)
+      rownames(dss) <- c("Count","Mean","Standard Dev","Variance","Max","3rd Quartile","Median","1st Quartile","Min")
       output$dss <- renderTable({dss},rownames = TRUE,colnames=FALSE)
     }#Eif
   }) #EobserveEvent

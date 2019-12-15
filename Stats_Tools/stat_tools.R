@@ -4,6 +4,7 @@ box <- shinydashboard::box
 library(tidyverse)
 library(rhandsontable)
 library(ggplot2)
+library(qqplotr)
 library(cowplot)
 theme_set(theme_bw())
 
@@ -37,7 +38,7 @@ ui <- dashboardPage(
     tabItems(
       tabItem("ds",
         fluidRow(
-          column(width = 3,
+          column(width = 2,
             box(
               title = "Data Input", width = NULL, status = "primary",
               actionButton("clear","Clear"),
@@ -47,18 +48,17 @@ ui <- dashboardPage(
           column(width = 5,
             box(
               title = "Histogram", width = NULL,
-              plotOutput("hist"),
-              plotOutput("boxp")
+              plotOutput("hist")
             ), #Ebox
           ), #Ecolumn
-          column(width = 4,
+          column(width = 5,
             box(
               title = "Summary Statistics", width = NULL, solidHeader = TRUE,
               tableOutput("dss")
             ), #Ebox
             box(
-              title = "Title 6", width = NULL, background = "maroon",
-              "A box with a solid maroon background"
+              title = "qq-plot", width = NULL, background = "maroon",
+              plotOutput("qqplot")
             ) #Ebox
           ) #Ecolumn
         ) #EfluidRow
@@ -112,9 +112,13 @@ server <- function(input, output) {
         plot_grid(dd1, dd2, ncol = 1, rel_heights = c(2, 1),align = 'v', axis = 'lr') 
       }) #Eoutput$hist
       
-      output$boxp <- renderPlot({
-
-      }) #Eoutput$boxp
+      output$qqplot <- renderPlot({
+        hist.df %>% ggplot(mapping = aes(sample = hist.x)) +
+          stat_qq_band() +
+          stat_qq_line() +
+          stat_qq_point() +
+          labs(x = "Theoretical Quantiles", y = "Sample Quantiles")
+      }) #Eoutput$qqplot
       sx <- summary(hist.x)
       sxe <- quantile(hist.x, c(0.25, 0.75), type = 1)
       dsse <- matrix(formatC(c("","","","","",sxe[2],"",sxe[1],""),

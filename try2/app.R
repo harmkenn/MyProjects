@@ -1,65 +1,76 @@
-library(shiny)
-library(shinydashboard)
-library(RWeather)
+#' Shiny App to Demonstrate One-Sample Z-Test
+#'
+#' @name shiny_onesampz
+#' @aliases shiny_onesampz
+#' @description An interactive Shiny app to demonstrate one-sample Z-test.
+#' @usage shiny_onesampz()
+#'
+#' @details The interactive Shiny app demonstrates the principles of the hypothesis testing of means
+#'     in a one-sample design where the population variance is known.
+#'     The true population parameters are provided by the user.
+#'     The user changes the hypothesised population mean and other features and explores
+#'     how the Z-test compares the hypothesised mean
+#'     with the mean of the sample randomly drawn from the population.
+#'
+#'     The left panel includes the user inputs for \strong{Simulation Features}, \strong{Population Parameters},
+#'     \strong{Sample Characteristics}, and \strong{Distribution Function}.
+#'     To use the app at first instance, just click the \code{Update} button.
+#'     To alter the input values, edit the text box or move the point on the slider and
+#'     explore the changes in different tabs (see below).
+#'
+#'     To obtain identical outcomes in a separate run of the app,
+#'     set a common seed value at the bottom of the left panel and click \code{Update}.
+#'     All subsequent updates will produce identical results provided other inputs are identical.
+#'     The seed value is ignored when the option \code{check the box to update instantly} is selected.
+#'
+#' @return The outcomes are presented in several tabs.
+#'     \item{Population}{contains the density plots of the population and
+#'     rug plots of the sample units randomly drawn from the population.
+#'     It also includes the population parameter values chosen by the user.}
+#'     \item{Sample}{contains the dot plot and box plot of the sample drawn
+#'     randomly from the population and rug plot of the sample units.
+#'     It also includes the mean and standard deviation of the random sample.}
+#'     \item{Test Statistic}{contains the plot showing the mean difference
+#'     between the sample mean and hypothesised mean and corresponding 95\% confidence intervals (CI).
+#'     The tab also contains the distribution of the test statistic \code{t}
+#'     with the observed value of the test statistic and probabilities under the given value of the Type 1 error}
+#'     \item{Summary}{includes the summary of the sampled data and outcomes
+#'     from the one-sample Z-test. Different sections are:
+#'     (1) Hypothesis, highlighting the null and alternative hypothesis;
+#'     (2) Sample, tabulating the full sampled data;
+#'     (3) Summary Statistics, summarising the summary information of the sample;
+#'     (4) Test Statistic, presenting the outputs from the one-sample Z-test.
+#'     (5) Confidence Interval, highlighting the mean difference and corresponding 95\% confidence intervals (CI).}
+#'
+#' @note \url{https://shiny.abdn.ac.uk/Stats/apps/}
+#'
+#' @author Mintu Nath
 
-header <- dashboardHeader(title =  'Current weather')
-sidebar <- dashboardSidebar()
-boxCity <-
-    box(selectInput(
-        'station', 'City:', choices = c(
-            'Atlanta' = 'KATL',  'Chicago' = 'KORD', 'Fairbanks' = 'PAFA', 'New York' = 'KJFK', 'Phoenix' =
-                'KPHX'
-        ), selected = 'KATL'
-    ))
-boxCondition <-
-    box(title = 'Current conditions: ', textOutput('condition'), background = 'blue')
-boxTime <-  box(textOutput('time'))
-row1 <-  fluidRow(boxCity)
-row2 <-  fluidRow(boxCondition, boxTime)
-row3 <-  fluidRow(valueBoxOutput("vboxC"), valueBoxOutput("vboxF"))
-body <- dashboardBody(row1,row2,row3)
+#' @seealso Function in base R for normal distribution including
+#'          \code{\link{dnorm}}, \code{\link{pnorm}}, \code{\link{qnorm}}, \code{\link{rnorm}}.
+#'          The app \code{\link{shiny_onesampt}} performs the hypothesis testing of mean
+#'          when the population variance is known.
+#'
+#' @examples
+#' if(interactive()){
+#'     library(ggplot2)
+#'     library(shiny)
+#'     library(ABACUS)
+#'     # Run shiny app
+#'     shiny_onesampz()
+#' }
+#'
+#' @import shiny
+#' @import ggplot2
+#' @export
 
-ui <- dashboardPage(header,sidebar,body)
 
-server <- function(input, output) {
-    output$condition <-
-        renderText({
-            getWeatherFromNOAA(station_id = input$station, message = FALSE)$condition
-        })
-    output$time <-
-        renderText({
-            getWeatherFromNOAA(station_id = input$station, message = FALSE)$observation_time
-        })
-    output$vboxC <- renderValueBox({
-        t <-
-            as.numeric(getWeatherFromNOAA(station_id = input$station, message = FALSE)$temp_c)
-        if (t  > 30)
-        {
-            valueBox(t, width = 3, subtitle = 'C', color = 'red')
-        }
-        else if (t < 10)
-        {
-            valueBox(t, width = 3, subtitle = 'C', color = 'blue')
-        }
-        else {
-            valueBox(t, width = 3, subtitle = 'C', color = 'yellow')
-        }
-    })
-    output$vboxF <- renderValueBox({
-        t <-
-            as.numeric(getWeatherFromNOAA(station_id = input$station, message = FALSE)$temp_f)
-        if (t  > 86)
-        {
-            valueBox(t, width = 3, subtitle = 'F', color = 'red')
-        }
-        else if (t < 50)
-        {
-            valueBox(t, width = 3, subtitle = 'F', color = 'blue')
-        }
-        else {
-            valueBox(t, width = 3, subtitle = 'F', color = 'yellow')
-        }
-    })
+# Function
+
+shiny_onesampz <- function() {
+    
+    shiny::runApp(appDir = system.file("app_onesampz", package = "ABACUS"), launch.browser = TRUE)
+    Sys.setenv("shiny_onesampz" = "")
+    
 }
-
-shinyApp(ui, server)
+#Try the ABACUS package in your browser

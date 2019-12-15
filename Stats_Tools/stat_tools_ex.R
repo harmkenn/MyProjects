@@ -54,7 +54,7 @@ ui <- dashboardPage(
             box(
               title = "Percentile", width = NULL,
               splitLayout(
-                textInput("ptile","Percentile:",75,width="25%"),
+                textInput("ptile","Percentile:",width="25%"),
                 actionButton("goptile","Get"),
                 textOutput("pptile")
               ) #EsplitLayout
@@ -74,7 +74,39 @@ ui <- dashboardPage(
         ) #EfluidRow
       ), #EtabItem ds
       tabItem("zTest","zTest goes Here"), #EtabItem zTest
-      tabItem("tTestData","tTestData goes Here"), #EtabItem tTestData
+      tabItem("tTestData",
+        fluidRow(
+          column(width = 2,
+            box(title = "Data Input", width = NULL, status = "primary",
+              actionButton("cleart","Clear"),actionButton("plott","Plot"),
+              rHandsontableOutput("dtt")
+            ) #Ebox
+          ), #Ecolumn
+          column(width = 5,
+            box(title = "Summary Statistics", width = NULL, solidHeader = TRUE,
+              tableOutput("dsst")
+            ), #Ebox
+            box(title = "qqplot", width = NULL, background = "aqua",
+              plotOutput("qqplott"),
+              valueBoxOutput("qqalertt")
+            ) #Ebox
+          ), #Ecolumn
+          column(width = 5,
+            box(title = "Hypothesis Test", width = NULL,
+              splitLayout(
+                textInput("th0","Null:",0,width="50%"),
+                textInput("tAlpha","Alpha:",.05,width="50%"),
+                radioButtons("ttail","",c("Left Tail"="less","Two Tail"="two.sided","Right Tail"="greater"),inline = FALSE,width = "50%"),
+                actionButton("ttest","Test")
+              ), #EsplitLayout
+              tableOutput("ttr"),
+              plotOutput("ttgraph")
+            ), #Ebox
+            box(title = "Confidence Interval", width = NULL,
+            ) #Ebox
+          ) #Ecolumn
+        ) #EfluidRow
+      ), #EtabItem tTestData
       tabItem("tTestStats","tTestStats goes Here"), #EtabItem tTestData
       tabItem("Pairedt","Pairedt goes Here"), #EtabItem Pairedt
       tabItem("2tTestData","2tTestData goes Here"), #EtabItem 2tTestData
@@ -93,9 +125,9 @@ ui <- dashboardPage(
 server <- function(input, output) {
   data.in <- reactiveValues(values = data.discr)
   hist.x <- reactiveValues(values = data.discr)
-  output$dt <- renderRHandsontable({
-    rhandsontable(data.in$values)
-  })
+  t.x <- reactiveValues(values = data.discr)
+  output$dt <- renderRHandsontable({rhandsontable(data.in$values)})
+  output$dtt <- renderRHandsontable({rhandsontable(data.in$values)})
   observeEvent(eventExpr = input$plot, {
     data.in$values <- hot_to_r(input$dt)
     if(sum(!is.na(data.in$values[,1]))>1){
@@ -160,6 +192,45 @@ server <- function(input, output) {
     ptileout <- quantile(hist.x, as.numeric(input$ptile) / 100, type = 6)
     output$pptile <- renderText({paste("The ",input$ptile," percentile is: ",round(ptileout,2))})
   }) #EobserveEvent
+  observeEvent(eventExpr = input$plott, {
+    t.x$values <- hot_to_r(input$dtt)
+    if(sum(!is.na(t.x$values[,1]))>1){
+      t.x <- t.x$values[!is.na(t.x$values)]
+      t.df <- data.frame(t.x)
+      output$qqplott <- renderPlot({
+        t.df %>% ggplot(mapping = aes(sample = t.x)) +
+          stat_qq_band() +
+          stat_qq_line() +
+          stat_qq_point() +
+          labs(x = "Theoretical Quantiles", y = "Sample Quantiles")
+      }) #Eoutput$qqplot
+      good <- shapiro.test(t.x)
+      output$qqalertt <- renderValueBox({
+        valueBox(round(good$p.value,3), subtitle = "p-value",width = 5,color = if (good$p.value < .05) {"red"} else {"green"})
+      }) #Eoutput$qqalert
+      sx <- summary(t.x)
+      dss <- matrix(formatC(c(length(t.x),sx[4],sd(t.x)),
+                            format="f",digits = 7,drop0trailing = TRUE),ncol=3,nrow=1)
+      colnames(dss) <- c("Count","Mean","Standard Dev")
+      output$dsst <- renderTable({dss},rownames = FALSE,colnames=TRUE)
+      
+    }#Eif
+  }) #EobserveEvent
+  observeEvent(eventExpr = input$ttest, {
+    t.x$values <- hot_to_r(input$dtt)
+    if(sum(!is.na(t.x$values[,1]))>1){
+      t.x <- t.x$values[!is.na(t.x$values)]
+    } #Eif
+    alpha <- as.numeric(input$tAlpha)
+    mu <- as.numeric(input$th0)
+    tail <- input$ttail
+    if(input$ttail == "two.sided"){cl <- 1 - alpha}else{cl <- 1 - 2*alpha}
+    ttr <- t.test(t.x,alternative = tail,mu=mu, conf.level = cl)
+    ttt <- matrix(formatC(c(length(t.x)-1,ttr$statistic,ttr$p.value),
+                          format="f",digits = 7,drop0trailing = TRUE),ncol=3,nrow=1)
+    colnames(ttt) <- c("df","t-score","P-Value")
+    output$ttr <- renderTable({ttt},rownames = FALSE,colnames=TRUE)
+  })#EobserveEvent
 } #end of the server
 
 # Run the application 

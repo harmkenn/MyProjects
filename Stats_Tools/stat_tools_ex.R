@@ -11,6 +11,7 @@ theme_set(theme_bw())
 data.discr <- data.frame(as.numeric(matrix(, nrow=500, ncol=1)))
 colnames(data.discr) <- "A"
 binwidth <- 1
+gx <- 1
 
 # We'll save it in a variable `ui` so that we can preview it in the console
 ui <- dashboardPage(
@@ -50,6 +51,14 @@ ui <- dashboardPage(
               title = "Histogram", width = NULL,
               plotOutput("hist")
             ), #Ebox
+            box(
+              title = "Percentile", width = NULL,
+              splitLayout(
+                textInput("ptile","Percentile:",75,width="25%"),
+                actionButton("goptile","Get"),
+                textOutput("pptile")
+              ) #EsplitLayout
+            ) #Ebox
           ), #Ecolumn
           column(width = 5,
             box(
@@ -83,6 +92,7 @@ ui <- dashboardPage(
 #Start of the Server
 server <- function(input, output) {
   data.in <- reactiveValues(values = data.discr)
+  hist.x <- reactiveValues(values = data.discr)
   output$dt <- renderRHandsontable({
     rhandsontable(data.in$values)
   })
@@ -125,7 +135,7 @@ server <- function(input, output) {
         valueBox(round(good$p.value,3), subtitle = "p-value",width = 5,color = if (good$p.value < .05) {"red"} else {"green"})
       }) #Eoutput$qqalert
       sx <- summary(hist.x)
-      sxe <- quantile(hist.x, c(0.25, 0.75), type = 1)
+      sxe <- quantile(hist.x, c(0.25, 0.75), type = 6)
       dsse <- matrix(formatC(c("","","","","",sxe[2],"",sxe[1],""),
                              format="f",digits = 7,drop0trailing = TRUE),ncol=1,nrow=9)
       dss <- matrix(formatC(c(length(hist.x),sx[4],sd(hist.x),var(hist.x),
@@ -141,6 +151,14 @@ server <- function(input, output) {
     colnames(data.discr) <- "A"
     data.in <- reactiveValues(values = data.discr)
     output$dt <- renderRHandsontable({rhandsontable(data.in$values)})
+  }) #EobserveEvent
+  observeEvent(eventExpr = input$goptile, {
+    data.in$values <- hot_to_r(input$dt)
+    if(sum(!is.na(data.in$values[,1]))>1){
+      hist.x <- data.in$values[!is.na(data.in$values)]
+    }
+    ptileout <- quantile(hist.x, as.numeric(input$ptile) / 100, type = 6)
+    output$pptile <- renderText({paste("The ",input$ptile," percentile is: ",round(ptileout,2))})
   }) #EobserveEvent
 } #end of the server
 

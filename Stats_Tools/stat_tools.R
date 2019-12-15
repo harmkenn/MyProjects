@@ -41,7 +41,7 @@ ui <- dashboardPage(
           column(width = 2,
             box(
               title = "Data Input", width = NULL, status = "primary",
-              actionButton("clear","Clear"),
+              actionButton("clear","Clear"),actionButton("plot","Plot"),
               rHandsontableOutput("dt")
             ) #Ebox
           ), #Ecolumn

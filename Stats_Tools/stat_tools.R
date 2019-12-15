@@ -20,12 +20,12 @@ ui <- dashboardPage(
       menuItem("Descriptive Stats", tabName = "ds"),
       menuItem("z-Test", tabName = "zTest"),
       menuItem("One Sample t-Test", 
-        menuSubItem("Data", tabName = "tTestData"),
-        menuSubItem("Stats", tabName = "tTestStats")),
+               menuSubItem("Data", tabName = "tTestData"),
+               menuSubItem("Stats", tabName = "tTestStats")),
       menuItem("Paired t-Test", tabName = "Pairedt"),
       menuItem("Two Sample t-Test", 
-        menuSubItem("Data", tabName = "2tTestData"),
-        menuSubItem("Stats", tabName = "2tTestStats")),
+               menuSubItem("Data", tabName = "2tTestData"),
+               menuSubItem("Stats", tabName = "2tTestStats")),
       menuItem("ANOVA", tabName = "ANOVA"),
       menuItem("One Prop z-Test", tabName = "1pzt"),
       menuItem("Two Prop z-Test", tabName = "2pzt"),
@@ -37,31 +37,32 @@ ui <- dashboardPage(
   dashboardBody(
     tabItems(
       tabItem("ds",
-        fluidRow(
-          column(width = 2,
-            box(
-              title = "Data Input", width = NULL, status = "primary",
-              actionButton("clear","Clear"),actionButton("plot","Plot"),
-              rHandsontableOutput("dt")
-            ) #Ebox
-          ), #Ecolumn
-          column(width = 5,
-            box(
-              title = "Histogram", width = NULL,
-              plotOutput("hist")
-            ), #Ebox
-          ), #Ecolumn
-          column(width = 5,
-            box(
-              title = "Summary Statistics", width = NULL, solidHeader = TRUE,
-              tableOutput("dss")
-            ), #Ebox
-            box(
-              title = "qq-plot", width = NULL, background = "maroon",
-              plotOutput("qqplot")
-            ) #Ebox
-          ) #Ecolumn
-        ) #EfluidRow
+              fluidRow(
+                column(width = 2,
+                       box(
+                         title = "Data Input", width = NULL, status = "primary",
+                         actionButton("clear","Clear"),actionButton("plot","Plot"),
+                         rHandsontableOutput("dt")
+                       ) #Ebox
+                ), #Ecolumn
+                column(width = 5,
+                       box(
+                         title = "Histogram", width = NULL,
+                         plotOutput("hist")
+                       ), #Ebox
+                ), #Ecolumn
+                column(width = 5,
+                       box(
+                         title = "Summary Statistics", width = NULL, solidHeader = TRUE,
+                         tableOutput("dss")
+                       ), #Ebox
+                       box(
+                         title = "qqplot", width = NULL, background = "aqua",
+                         plotOutput("qqplot"),
+                         valueBoxOutput("qqalert")
+                       ) #Ebox
+                ) #Ecolumn
+              ) #EfluidRow
       ), #EtabItem ds
       tabItem("zTest","zTest goes Here"), #EtabItem zTest
       tabItem("tTestData","tTestData goes Here"), #EtabItem tTestData
@@ -88,9 +89,9 @@ server <- function(input, output) {
   observeEvent(eventExpr = input$plot, {
     data.in$values <- hot_to_r(input$dt)
     if(sum(!is.na(data.in$values[,1]))>1){
-    hist.x <- data.in$values[!is.na(data.in$values)]
-    count <- length(hist.x)
-    bins <- ceiling(1+3.322*log10(count))
+      hist.x <- data.in$values[!is.na(data.in$values)]
+      count <- length(hist.x)
+      bins <- ceiling(1+3.322*log10(count))
       if (count > 2) {binwidth <- (max(hist.x)-min(hist.x)+2)/(bins-2)}
       hist.df <- data.frame(hist.x)
       if(!is.null(tryCatch(ggplot(hist.df), error = function(e){}))){
@@ -119,6 +120,10 @@ server <- function(input, output) {
           stat_qq_point() +
           labs(x = "Theoretical Quantiles", y = "Sample Quantiles")
       }) #Eoutput$qqplot
+      good <- shapiro.test(hist.x)
+      output$qqalert <- renderValueBox({
+        valueBox(round(good$p.value,3), subtitle = "p-value",width = 5,color = if (good$p.value < .05) {"red"} else {"green"})
+      }) #Eoutput$qqalert
       sx <- summary(hist.x)
       sxe <- quantile(hist.x, c(0.25, 0.75), type = 1)
       dsse <- matrix(formatC(c("","","","","",sxe[2],"",sxe[1],""),

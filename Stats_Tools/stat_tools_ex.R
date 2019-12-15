@@ -57,8 +57,9 @@ ui <- dashboardPage(
               tableOutput("dss")
             ), #Ebox
             box(
-              title = "qq-plot", width = NULL, background = "maroon",
-              plotOutput("qqplot")
+              title = "qqplot", width = NULL, background = "aqua",
+              plotOutput("qqplot"),
+              valueBoxOutput("qqalert")
             ) #Ebox
           ) #Ecolumn
         ) #EfluidRow
@@ -119,6 +120,10 @@ server <- function(input, output) {
           stat_qq_point() +
           labs(x = "Theoretical Quantiles", y = "Sample Quantiles")
       }) #Eoutput$qqplot
+      good <- shapiro.test(hist.x)
+      output$qqalert <- renderValueBox({
+        valueBox(round(good$p.value,3), subtitle = "p-value",width = 5,color = if (good$p.value < .05) {"red"} else {"green"})
+      }) #Eoutput$qqalert
       sx <- summary(hist.x)
       sxe <- quantile(hist.x, c(0.25, 0.75), type = 1)
       dsse <- matrix(formatC(c("","","","","",sxe[2],"",sxe[1],""),

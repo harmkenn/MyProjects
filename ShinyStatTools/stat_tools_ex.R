@@ -2,16 +2,17 @@ library(shiny)
 library(shinydashboard)
 box <- shinydashboard::box
 library(tidyverse)
-library(rhandsontable)
+library(rhandsontable) 
 library(ggplot2)
-library(qqplotr)
+library(qqplotr) 
 library(cowplot)
 theme_set(theme_bw())
 
 data.discr <- data.frame(as.numeric(matrix(, nrow=500, ncol=1)))
 colnames(data.discr) <- "A"
 binwidth <- 1
-gx <- 1
+tcvl <- 0
+tcvr <- 0
 
 # We'll save it in a variable `ui` so that we can preview it in the console
 ui <- dashboardPage(
@@ -226,10 +227,26 @@ server <- function(input, output) {
     tail <- input$ttail
     if(input$ttail == "two.sided"){cl <- 1 - alpha}else{cl <- 1 - 2*alpha}
     ttr <- t.test(t.x,alternative = tail,mu=mu, conf.level = cl)
-    ttt <- matrix(formatC(c(length(t.x)-1,ttr$statistic,ttr$p.value),
-                          format="f",digits = 7,drop0trailing = TRUE),ncol=3,nrow=1)
-    colnames(ttt) <- c("df","t-score","P-Value")
+    df <- ttr$parameter
+    if (tail == "less"){tcvl <- qt(alpha,df)}else if(tail == "greater"){tcvr <- qt(1-alpha,df)}else{
+      tcvl <- qt(alpha/2,df)
+      tcvr <- qt(1-alpha/2,df)
+    }
+    ttt <- matrix(formatC(c(length(t.x)-1,ttr$statistic,ttr$p.value,tcv),
+                          format="f",digits = 7,drop0trailing = TRUE),ncol=4,nrow=1)
+    colnames(ttt) <- c("df","t-score","P-Value","Critical Value")
     output$ttr <- renderTable({ttt},rownames = FALSE,colnames=TRUE)
+    U <- max(abs(tcvl),tcvr,abs(ttr$statistic))+1
+    L <- -1*U
+    x <- seq(from = L, to = U, by = .01)
+    shade.df <- data.frame(x,y=dt(x,ttr$parameter))
+    output$ttgraph <- renderPlot({shade.df %>% ggplot(aes(x,y))+geom_line()+
+      
+      geom_area(data=subset(shade.df,x>=tcv),aes(y=y), fill ="red") +
+      scale_x_continuous(sec.axis = sec_axis(~.*sd(t.x)+mean(t.x))) +
+      theme(axis.title.y = element_blank(),axis.text.y = element_blank(),axis.ticks.y = element_blank())+
+      labs(x="Z")
+    })
   })#EobserveEvent
 } #end of the server
 

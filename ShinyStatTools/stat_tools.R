@@ -6,6 +6,7 @@ library(rhandsontable)
 library(ggplot2)
 library(qqplotr) 
 library(cowplot)
+library(grid)
 library(gridExtra)
 theme_set(theme_bw())
 
@@ -98,8 +99,6 @@ ui <- dashboardPage(
                            ), #EsplitLayout
                            plotOutput("ttgraph")
                        ), #Ebox
-                       box(title = "Confidence Interval", width = NULL,
-                       ) #Ebox
                 ) #Ecolumn
               ) #EfluidRow
       ), #EtabItem tTestData
@@ -263,7 +262,11 @@ server <- function(input, output) {
     tp <- tp + scale_x_continuous(sec.axis = sec_axis(~.*sd(t.x)+mu, name = "A")) +
       theme(axis.title.y = element_blank(),axis.text.y = element_blank(),axis.ticks.y = element_blank()) +
       labs(x = "Z")
-    output$ttgraph <- renderPlot({grid.arrange(tableGrob(ttt),tp,ncol=1)})
+    m.e <- abs(tcv) * sd(t.x)/sqrt(length(t.x))
+    upper <- mean(t.x)+m.e
+    lower <- mean(t.x)-m.e
+    CI.t <- paste(cl*100,"% confidence interval is (",lower,",",upper,")")
+    output$ttgraph <- renderPlot({grid.arrange(tableGrob(ttt),tp,textGrob(CI.t),ncol=1)})
   })#EobserveEvent
 } #end of the server
 

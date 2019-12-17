@@ -1,8 +1,11 @@
 library(shiny)
+devtools::install_github("hadley/shinySignals")
 library(shinySignals)   # devtools::install_github("hadley/shinySignals")
 library(dplyr)
 library(shinydashboard)
-library(bubbles)        # devtools::install_github("jcheng5/bubbles")
+devtools::install_github("jcheng5/bubbles")
+library(bubbles) # devtools::install_github("jcheng5/bubbles")
+library(egg)
 source("bloomfilter.R")
 
 # An empty prototype of the data frame we want to create

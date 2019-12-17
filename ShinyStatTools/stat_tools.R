@@ -2,16 +2,16 @@ library(shiny)
 library(shinydashboard)
 box <- shinydashboard::box
 library(tidyverse)
-library(rhandsontable)
+library(rhandsontable) 
 library(ggplot2)
-library(qqplotr)
+library(qqplotr) 
 library(cowplot)
+library(gridExtra)
 theme_set(theme_bw())
 
 data.discr <- data.frame(as.numeric(matrix(, nrow=500, ncol=1)))
 colnames(data.discr) <- "A"
 binwidth <- 1
-gx <- 1
 
 # We'll save it in a variable `ui` so that we can preview it in the console
 ui <- dashboardPage(
@@ -83,13 +83,10 @@ ui <- dashboardPage(
                        ) #Ebox
                 ), #Ecolumn
                 column(width = 5,
-                       box(title = "Summary Statistics", width = NULL, solidHeader = TRUE,
-                           tableOutput("dsst")
-                       ), #Ebox
-                       box(title = "qqplot", width = NULL, background = "aqua",
-                           plotOutput("qqplott"),
+                       box(title = "Summary Statistics", width = NULL, background = "olive",
+                           plotOutput("dsst"),
                            valueBoxOutput("qqalertt")
-                       ) #Ebox
+                       ), #Ebox
                 ), #Ecolumn
                 column(width = 5,
                        box(title = "Hypothesis Test", width = NULL,
@@ -99,7 +96,6 @@ ui <- dashboardPage(
                              radioButtons("ttail","",c("Left Tail"="less","Two Tail"="two.sided","Right Tail"="greater"),inline = FALSE,width = "50%"),
                              actionButton("ttest","Test")
                            ), #EsplitLayout
-                           tableOutput("ttr"),
                            plotOutput("ttgraph")
                        ), #Ebox
                        box(title = "Confidence Interval", width = NULL,
@@ -197,23 +193,20 @@ server <- function(input, output) {
     if(sum(!is.na(t.x$values[,1]))>1){
       t.x <- t.x$values[!is.na(t.x$values)]
       t.df <- data.frame(t.x)
-      output$qqplott <- renderPlot({
-        t.df %>% ggplot(mapping = aes(sample = t.x)) +
-          stat_qq_band() +
-          stat_qq_line() +
-          stat_qq_point() +
-          labs(x = "Theoretical Quantiles", y = "Sample Quantiles")
-      }) #Eoutput$qqplot
+      qqt <- t.df %>% ggplot(mapping = aes(sample = t.x)) +
+        stat_qq_band() +
+        stat_qq_line() +
+        stat_qq_point() +
+        labs(x = "Theoretical Quantiles", y = "Sample Quantiles")
       good <- shapiro.test(t.x)
       output$qqalertt <- renderValueBox({
         valueBox(round(good$p.value,3), subtitle = "p-value",width = 5,color = if (good$p.value < .05) {"red"} else {"green"})
-      }) #Eoutput$qqalert
+      }) #Eoutput$qqalert      
       sx <- summary(t.x)
       dss <- matrix(formatC(c(length(t.x),sx[4],sd(t.x)),
                             format="f",digits = 7,drop0trailing = TRUE),ncol=3,nrow=1)
       colnames(dss) <- c("Count","Mean","Standard Dev")
-      output$dsst <- renderTable({dss},rownames = FALSE,colnames=TRUE)
-      
+      output$dsst <- renderPlot({grid.arrange(tableGrob(dss),qqt,ncol =1)})
     }#Eif
   }) #EobserveEvent
   observeEvent(eventExpr = input$ttest, {
@@ -224,12 +217,53 @@ server <- function(input, output) {
     alpha <- as.numeric(input$tAlpha)
     mu <- as.numeric(input$th0)
     tail <- input$ttail
-    if(input$ttail == "two.sided"){cl <- 1 - alpha}else{cl <- 1 - 2*alpha}
-    ttr <- t.test(t.x,alternative = tail,mu=mu, conf.level = cl)
-    ttt <- matrix(formatC(c(length(t.x)-1,ttr$statistic,ttr$p.value),
-                          format="f",digits = 7,drop0trailing = TRUE),ncol=3,nrow=1)
-    colnames(ttt) <- c("df","t-score","P-Value")
-    output$ttr <- renderTable({ttt},rownames = FALSE,colnames=TRUE)
+    df <- length(t.x)-1
+    if (tail == "less"){
+      cl <- 1 - 2*alpha
+      tcv <- qt(alpha,df)
+      ttr <- t.test(t.x,alternative = tail,mu=mu, conf.level = cl)
+      t.s <- ttr$statistic
+      U <- max(abs(tcv),abs(t.s))+1
+      L <- -1*U
+      x <- seq(from = L, to = U, by = .01)
+      s.df <- data.frame(x,y=dt(x,df))
+      tp <- s.df %>% ggplot(aes(x,y))+geom_line()+
+        geom_area(data=subset(s.df,x<=tcv),aes(y=y), fill ="red", alpha = .5) +
+        geom_area(data=subset(s.df,x<=t.s),aes(y=y), fill ="blue", alpha = .5)
+    }else if(tail == "greater"){
+      cl <- 1 - 2*alpha
+      tcv <- qt(1-alpha,df)
+      ttr <- t.test(t.x,alternative = tail,mu=mu, conf.level = cl)
+      t.s <- ttr$statistic
+      U <- max(abs(tcv),abs(t.s))+1
+      L <- -1*U
+      x <- seq(from = L, to = U, by = .01)
+      s.df <- data.frame(x,y=dt(x,df))
+      tp <- s.df %>% ggplot(aes(x,y))+geom_line()+
+        geom_area(data=subset(s.df,x>=tcv),aes(y=y), fill ="red", alpha = .5) +
+        geom_area(data=subset(s.df,x>=t.s),aes(y=y), fill ="blue", alpha = .5)
+    }else{
+      cl <- 1 - alpha
+      tcv <- qt(alpha/2,df)
+      ttr <- t.test(t.x,alternative = tail,mu=mu, conf.level = cl)
+      t.s <- ttr$statistic
+      U <- max(abs(tcv),abs(t.s))+2
+      L <- -1*U
+      x <- seq(from = L, to = U, by = .01)
+      s.df <- data.frame(x,y=dt(x,df))
+      tp <- s.df %>% ggplot(aes(x,y))+geom_line()+
+        geom_area(data=subset(s.df,x <= -abs(tcv)),aes(y=y), fill ="red", alpha = .5) +
+        geom_area(data=subset(s.df,x >= abs(tcv)),aes(y=y), fill ="red", alpha = .5) +
+        geom_area(data=subset(s.df,x <= -abs(t.s)),aes(y=y), fill ="blue", alpha = .5) +
+        geom_area(data=subset(s.df,x >= abs(t.s)),aes(y=y), fill ="blue", alpha = .5)
+    }
+    ttt <- matrix(formatC(c(length(t.x)-1,ttr$statistic,ttr$p.value,tcv),
+                          format="f",digits = 7,drop0trailing = TRUE),ncol=4,nrow=1)
+    colnames(ttt) <- c("df","t-score","P-Value","Critical Value")
+    tp <- tp + scale_x_continuous(sec.axis = sec_axis(~.*sd(t.x)+mu, name = "A")) +
+      theme(axis.title.y = element_blank(),axis.text.y = element_blank(),axis.ticks.y = element_blank()) +
+      labs(x = "Z")
+    output$ttgraph <- renderPlot({grid.arrange(tableGrob(ttt),tp,ncol=1)})
   })#EobserveEvent
 } #end of the server
 

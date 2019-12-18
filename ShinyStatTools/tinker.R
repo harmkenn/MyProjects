@@ -6,14 +6,13 @@ library(rhandsontable)
 library(ggplot2)
 library(qqplotr) 
 library(cowplot)
+library(grid)
 library(gridExtra)
 theme_set(theme_bw())
 
 data.discr <- data.frame(as.numeric(matrix(, nrow=500, ncol=1)))
 colnames(data.discr) <- "A"
 binwidth <- 1
-tcvl <- 0
-tcvr <- 0
 
 # We'll save it in a variable `ui` so that we can preview it in the console
 ui <- dashboardPage(
@@ -21,14 +20,14 @@ ui <- dashboardPage(
   dashboardSidebar(
     sidebarMenu(
       menuItem("Descriptive Stats", tabName = "ds"),
-      menuItem("z-Test", tabName = "zTest"),
+      menuItem("Normal", tabName = "normal"),
       menuItem("One Sample t-Test", 
-        menuSubItem("Data", tabName = "tTestData"),
-        menuSubItem("Stats", tabName = "tTestStats")),
+               menuSubItem("Data", tabName = "tTestData"),
+               menuSubItem("Stats", tabName = "tTestStats")),
       menuItem("Paired t-Test", tabName = "Pairedt"),
       menuItem("Two Sample t-Test", 
-        menuSubItem("Data", tabName = "2tTestData"),
-        menuSubItem("Stats", tabName = "2tTestStats")),
+               menuSubItem("Data", tabName = "2tTestData"),
+               menuSubItem("Stats", tabName = "2tTestStats")),
       menuItem("ANOVA", tabName = "ANOVA"),
       menuItem("One Prop z-Test", tabName = "1pzt"),
       menuItem("Two Prop z-Test", tabName = "2pzt"),
@@ -40,74 +39,77 @@ ui <- dashboardPage(
   dashboardBody(
     tabItems(
       tabItem("ds",
-        fluidRow(
-          column(width = 2,
-            box(
-              title = "Data Input", width = NULL, status = "primary",
-              actionButton("clear","Clear"),actionButton("plot","Plot"),
-              rHandsontableOutput("dt")
-            ) #Ebox
-          ), #Ecolumn
-          column(width = 5,
-            box(
-              title = "Histogram", width = NULL,
-              plotOutput("hist")
-            ), #Ebox
-            box(
-              title = "Percentile", width = NULL,
-              splitLayout(
-                textInput("ptile","Percentile:",width="25%"),
-                actionButton("goptile","Get"),
-                textOutput("pptile")
-              ) #EsplitLayout
-            ) #Ebox
-          ), #Ecolumn
-          column(width = 5,
-            box(
-              title = "Summary Statistics", width = NULL, solidHeader = TRUE,
-              tableOutput("dss")
-            ), #Ebox
-            box(
-              title = "qqplot", width = NULL, background = "aqua",
-              plotOutput("qqplot"),
-              valueBoxOutput("qqalert")
-            ) #Ebox
-          ) #Ecolumn
-        ) #EfluidRow
+              fluidRow(
+                column(width = 2,
+                       box(
+                         title = "Data Input", width = NULL, status = "primary",
+                         actionButton("clear","Clear"),actionButton("plot","Plot"),
+                         rHandsontableOutput("dt")
+                       ) #Ebox
+                ), #Ecolumn
+                column(width = 5,
+                       box(
+                         title = "Histogram", width = NULL,
+                         plotOutput("hist")
+                       ), #Ebox
+                       box(
+                         title = "Percentile", width = NULL,
+                         splitLayout(
+                           textInput("ptile","Percentile:",width="25%"),
+                           actionButton("goptile","Get"),
+                           textOutput("pptile")
+                         ) #EsplitLayout
+                       ) #Ebox
+                ), #Ecolumn
+                column(width = 5,
+                       box(
+                         title = "Summary Statistics", width = NULL, solidHeader = TRUE,
+                         tableOutput("dss")
+                       ), #Ebox
+                       box(
+                         title = "qqplot", width = NULL, background = "aqua",
+                         plotOutput("qqplot"),
+                         valueBoxOutput("qqalert")
+                       ) #Ebox
+                ) #Ecolumn
+              ) #EfluidRow
       ), #EtabItem ds
-      tabItem("zTest","zTest goes Here"), #EtabItem zTest
+      tabItem("normal",
+              fluidRow(
+                column(width = 3,
+                  box(title = "Selections", width = NULL, solidHeader = TRUE,
+                    checkboxGroupInput("nsel", "Shade:",choices = c("Left", "Center", "Right")),
+                    checkboxInput("nsym","Symmetric")
+                  ) #Ebox 
+                ) #Ecolumn left
+              ) #EfluidRow Normal Tab
+      ), #EtabItem zTest
       tabItem("tTestData",
-        fluidRow(
-          column(width = 2,
-            box(title = "Data Input", width = NULL, status = "primary",
-              actionButton("cleart","Clear"),actionButton("plott","Plot"),
-              rHandsontableOutput("dtt")
-            ) #Ebox
-          ), #Ecolumn
-          column(width = 5,
-            box(title = "Summary Statistics", width = NULL, solidHeader = TRUE,
-              tableOutput("dsst")
-            ), #Ebox
-            box(title = "qqplot", width = NULL, background = "aqua",
-              plotOutput("qqplott"),
-              valueBoxOutput("qqalertt")
-            ) #Ebox
-          ), #Ecolumn
-          column(width = 5,
-            box(title = "Hypothesis Test", width = NULL,
-              splitLayout(
-                textInput("th0","Null:",0,width="50%"),
-                textInput("tAlpha","Alpha:",.05,width="50%"),
-                radioButtons("ttail","",c("Left Tail"="less","Two Tail"="two.sided","Right Tail"="greater"),inline = FALSE,width = "50%"),
-                actionButton("ttest","Test")
-              ), #EsplitLayout
-              tableOutput("ttr"),
-              plotOutput("ttgraph")
-            ), #Ebox
-            box(title = "Confidence Interval", width = NULL,
-            ) #Ebox
-          ) #Ecolumn
-        ) #EfluidRow
+              fluidRow(
+                column(width = 2,
+                       box(title = "Data Input", width = NULL, status = "primary",
+                           actionButton("cleart","Clear"),actionButton("plott","Plot"),
+                           rHandsontableOutput("dtt")
+                       ) #Ebox
+                ), #Ecolumn
+                column(width = 5,
+                       box(title = "Summary Statistics", width = NULL, background = "olive",
+                           plotOutput("dsst"),
+                           valueBoxOutput("qqalertt")
+                       ), #Ebox
+                ), #Ecolumn
+                column(width = 5,
+                       box(title = "Hypothesis Test", width = NULL,
+                           splitLayout(
+                             textInput("th0","Null:",0,width="50%"),
+                             textInput("tAlpha","Alpha:",.05,width="50%"),
+                             radioButtons("ttail","",c("Left Tail"="less","Two Tail"="two.sided","Right Tail"="greater"),inline = FALSE,width = "50%"),
+                             actionButton("ttest","Test")
+                           ), #EsplitLayout
+                           plotOutput("ttgraph")
+                       ), #Ebox
+                ) #Ecolumn
+              ) #EfluidRow
       ), #EtabItem tTestData
       tabItem("tTestStats","tTestStats goes Here"), #EtabItem tTestData
       tabItem("Pairedt","Pairedt goes Here"), #EtabItem Pairedt
@@ -133,9 +135,9 @@ server <- function(input, output) {
   observeEvent(eventExpr = input$plot, {
     data.in$values <- hot_to_r(input$dt)
     if(sum(!is.na(data.in$values[,1]))>1){
-    hist.x <- data.in$values[!is.na(data.in$values)]
-    count <- length(hist.x)
-    bins <- ceiling(1+3.322*log10(count))
+      hist.x <- data.in$values[!is.na(data.in$values)]
+      count <- length(hist.x)
+      bins <- ceiling(1+3.322*log10(count))
       if (count > 2) {binwidth <- (max(hist.x)-min(hist.x)+2)/(bins-2)}
       hist.df <- data.frame(hist.x)
       if(!is.null(tryCatch(ggplot(hist.df), error = function(e){}))){
@@ -199,23 +201,20 @@ server <- function(input, output) {
     if(sum(!is.na(t.x$values[,1]))>1){
       t.x <- t.x$values[!is.na(t.x$values)]
       t.df <- data.frame(t.x)
-      output$qqplott <- renderPlot({
-        t.df %>% ggplot(mapping = aes(sample = t.x)) +
-          stat_qq_band() +
-          stat_qq_line() +
-          stat_qq_point() +
-          labs(x = "Theoretical Quantiles", y = "Sample Quantiles")
-      }) #Eoutput$qqplot
+      qqt <- t.df %>% ggplot(mapping = aes(sample = t.x)) +
+        stat_qq_band() +
+        stat_qq_line() +
+        stat_qq_point() +
+        labs(x = "Theoretical Quantiles", y = "Sample Quantiles")
       good <- shapiro.test(t.x)
       output$qqalertt <- renderValueBox({
         valueBox(round(good$p.value,3), subtitle = "p-value",width = 5,color = if (good$p.value < .05) {"red"} else {"green"})
-      }) #Eoutput$qqalert
+      }) #Eoutput$qqalert      
       sx <- summary(t.x)
       dss <- matrix(formatC(c(length(t.x),sx[4],sd(t.x)),
                             format="f",digits = 7,drop0trailing = TRUE),ncol=3,nrow=1)
       colnames(dss) <- c("Count","Mean","Standard Dev")
-      output$dsst <- renderTable({dss},rownames = FALSE,colnames=TRUE)
-      
+      output$dsst <- renderPlot({grid.arrange(tableGrob(dss),qqt,ncol =1)})
     }#Eif
   }) #EobserveEvent
   observeEvent(eventExpr = input$ttest, {
@@ -226,27 +225,57 @@ server <- function(input, output) {
     alpha <- as.numeric(input$tAlpha)
     mu <- as.numeric(input$th0)
     tail <- input$ttail
-    if(input$ttail == "two.sided"){cl <- 1 - alpha}else{cl <- 1 - 2*alpha}
-    ttr <- t.test(t.x,alternative = tail,mu=mu, conf.level = cl)
-    df <- ttr$parameter
-    if (tail == "less"){tcvl <- qt(alpha,df)}else if(tail == "greater"){tcvr <- qt(1-alpha,df)}else{
-      tcvl <- qt(alpha/2,df)
-      tcvr <- qt(1-alpha/2,df)
+    df <- length(t.x)-1
+    if (tail == "less"){
+      cl <- 1 - 2*alpha
+      tcv <- qt(alpha,df)
+      ttr <- t.test(t.x,alternative = tail,mu=mu, conf.level = cl)
+      t.s <- ttr$statistic
+      U <- max(abs(tcv),abs(t.s))+1
+      L <- -1*U
+      x <- seq(from = L, to = U, by = .01)
+      s.df <- data.frame(x,y=dt(x,df))
+      tp <- s.df %>% ggplot(aes(x,y))+geom_line()+
+        geom_area(data=subset(s.df,x<=tcv),aes(y=y), fill ="red", alpha = .5) +
+        geom_area(data=subset(s.df,x<=t.s),aes(y=y), fill ="blue", alpha = .5)
+    }else if(tail == "greater"){
+      cl <- 1 - 2*alpha
+      tcv <- qt(1-alpha,df)
+      ttr <- t.test(t.x,alternative = tail,mu=mu, conf.level = cl)
+      t.s <- ttr$statistic
+      U <- max(abs(tcv),abs(t.s))+1
+      L <- -1*U
+      x <- seq(from = L, to = U, by = .01)
+      s.df <- data.frame(x,y=dt(x,df))
+      tp <- s.df %>% ggplot(aes(x,y))+geom_line()+
+        geom_area(data=subset(s.df,x>=tcv),aes(y=y), fill ="red", alpha = .5) +
+        geom_area(data=subset(s.df,x>=t.s),aes(y=y), fill ="blue", alpha = .5)
+    }else{
+      cl <- 1 - alpha
+      tcv <- qt(alpha/2,df)
+      ttr <- t.test(t.x,alternative = tail,mu=mu, conf.level = cl)
+      t.s <- ttr$statistic
+      U <- max(abs(tcv),abs(t.s))+2
+      L <- -1*U
+      x <- seq(from = L, to = U, by = .01)
+      s.df <- data.frame(x,y=dt(x,df))
+      tp <- s.df %>% ggplot(aes(x,y))+geom_line()+
+        geom_area(data=subset(s.df,x <= -abs(tcv)),aes(y=y), fill ="red", alpha = .5) +
+        geom_area(data=subset(s.df,x >= abs(tcv)),aes(y=y), fill ="red", alpha = .5) +
+        geom_area(data=subset(s.df,x <= -abs(t.s)),aes(y=y), fill ="blue", alpha = .5) +
+        geom_area(data=subset(s.df,x >= abs(t.s)),aes(y=y), fill ="blue", alpha = .5)
     }
     ttt <- matrix(formatC(c(length(t.x)-1,ttr$statistic,ttr$p.value,tcv),
                           format="f",digits = 7,drop0trailing = TRUE),ncol=4,nrow=1)
     colnames(ttt) <- c("df","t-score","P-Value","Critical Value")
-    output$ttr <- renderTable({ttt},rownames = FALSE,colnames=TRUE)
-    U <- max(abs(tcvl),tcvr,abs(ttr$statistic))+1
-    L <- -1*U
-    x <- seq(from = L, to = U, by = .01)
-    shade.df <- data.frame(x,y=dt(x,ttr$parameter))
-    tp <- shade.df %>% ggplot(aes(x,y))+geom_line()+
-      geom_area(data=subset(shade.df,x>=tcv),aes(y=y), fill ="red") +
-      scale_x_continuous(sec.axis = sec_axis(~.*sd(t.x)+mean(t.x))) +
-      theme(axis.title.y = element_blank(),axis.text.y = element_blank(),axis.ticks.y = element_blank())+
-      labs(x="Z")
-    output$ttgraph <- renderPlot({grid.arrange(tableGrob(ttt),tp,ncol=1)})
+    tp <- tp + scale_x_continuous(sec.axis = sec_axis(~.*sd(t.x)+mu, name = "A")) +
+      theme(axis.title.y = element_blank(),axis.text.y = element_blank(),axis.ticks.y = element_blank()) +
+      labs(x = "Z")
+    m.e <- abs(tcv) * sd(t.x)/sqrt(length(t.x))
+    upper <- mean(t.x)+m.e
+    lower <- mean(t.x)-m.e
+    CI.t <- paste(cl*100,"% confidence interval is (",lower,",",upper,")")
+    output$ttgraph <- renderPlot({grid.arrange(tableGrob(ttt),tp,textGrob(CI.t),ncol=1)})
   })#EobserveEvent
 } #end of the server
 

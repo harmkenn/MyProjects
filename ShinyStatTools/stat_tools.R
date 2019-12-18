@@ -20,14 +20,14 @@ ui <- dashboardPage(
   dashboardSidebar(
     sidebarMenu(
       menuItem("Descriptive Stats", tabName = "ds"),
-      menuItem("z-Test", tabName = "zTest"),
+      menuItem("Normal", tabName = "normal"),
       menuItem("One Sample t-Test", 
-               menuSubItem("Data", tabName = "tTestData"),
-               menuSubItem("Stats", tabName = "tTestStats")),
+        menuSubItem("Data", tabName = "tTestData"),
+        menuSubItem("Stats", tabName = "tTestStats")),
       menuItem("Paired t-Test", tabName = "Pairedt"),
       menuItem("Two Sample t-Test", 
-               menuSubItem("Data", tabName = "2tTestData"),
-               menuSubItem("Stats", tabName = "2tTestStats")),
+        menuSubItem("Data", tabName = "2tTestData"),
+        menuSubItem("Stats", tabName = "2tTestStats")),
       menuItem("ANOVA", tabName = "ANOVA"),
       menuItem("One Prop z-Test", tabName = "1pzt"),
       menuItem("Two Prop z-Test", tabName = "2pzt"),
@@ -39,29 +39,26 @@ ui <- dashboardPage(
   dashboardBody(
     tabItems(
       tabItem("ds",
-              fluidRow(
-                column(width = 2,
-                       box(
-                         title = "Data Input", width = NULL, status = "primary",
-                         actionButton("clear","Clear"),actionButton("plot","Plot"),
-                         rHandsontableOutput("dt")
-                       ) #Ebox
-                ), #Ecolumn
-                column(width = 5,
-                       box(
-                         title = "Histogram", width = NULL,
-                         plotOutput("hist")
-                       ), #Ebox
-                       box(
-                         title = "Percentile", width = NULL,
-                         splitLayout(
-                           textInput("ptile","Percentile:",width="25%"),
-                           actionButton("goptile","Get"),
-                           textOutput("pptile")
-                         ) #EsplitLayout
-                       ) #Ebox
-                ), #Ecolumn
-                column(width = 5,
+        fluidRow(
+          column(width = 2,
+            box(title = "Data Input", width = NULL, status = "primary",
+              actionButton("clear","Clear"),actionButton("plot","Plot"),
+              rHandsontableOutput("dt")
+            ) #Ebox
+          ), #Ecolumn
+          column(width = 5,
+            box(title = "Histogram", width = NULL,
+              plotOutput("hist")
+            ), #Ebox
+            box(title = "Percentile", width = NULL,
+              splitLayout(
+                textInput("ptile","Percentile:",width="25%"),
+                actionButton("goptile","Get"),
+                textOutput("pptile")
+              ) #EsplitLayout
+            ) #Ebox
+          ), #Ecolumn
+          column(width = 5,
                        box(
                          title = "Summary Statistics", width = NULL, solidHeader = TRUE,
                          tableOutput("dss")
@@ -74,7 +71,34 @@ ui <- dashboardPage(
                 ) #Ecolumn
               ) #EfluidRow
       ), #EtabItem ds
-      tabItem("zTest","zTest goes Here"), #EtabItem zTest
+      tabItem("normal",
+              fluidRow(
+                column(width = 3,
+                       box(title = "Selections", width = NULL, solidHeader = TRUE,
+                           helpText("Shade:"),
+                           checkboxInput("Left","Left"),
+                           checkboxInput("Center","Center"),
+                           checkboxInput("Right","Right"),
+                           helpText("z-Score Cut-offs"),
+                           checkboxInput("nsym","Symmetric"),
+                           textInput("nmu","Mean:",0),
+                           textInput("nsd", "Standard Dev:",1),
+                           actionButton("nReset","Reset")
+                       ) #Ebox 
+                ), #Ecolumn left
+                column(width = 9,
+                       box(title = "Normal Probability Applet", width = NULL, solidHeader = TRUE,
+                           plotOutput("npp"),
+                           splitLayout(
+                             textInput("lz","Left z-Score",-1,width="25%"),
+                             textInput("rz","Right z-Score",1,width="25%"),
+                             actionButton("z2p","Find Probability")
+                           ), #EsplitLayout
+                           
+                       ) #Ebox
+                ) #Ecolumn Main
+              ) #EfluidRow Normal Tab
+      ), #EtabItem zTest
       tabItem("tTestData",
               fluidRow(
                 column(width = 2,

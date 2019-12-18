@@ -22,12 +22,12 @@ ui <- dashboardPage(
       menuItem("Descriptive Stats", tabName = "ds"),
       menuItem("Normal", tabName = "normal"),
       menuItem("One Sample t-Test", 
-               menuSubItem("Data", tabName = "tTestData"),
-               menuSubItem("Stats", tabName = "tTestStats")),
+        menuSubItem("Data", tabName = "tTestData"),
+        menuSubItem("Stats", tabName = "tTestStats")),
       menuItem("Paired t-Test", tabName = "Pairedt"),
       menuItem("Two Sample t-Test", 
-               menuSubItem("Data", tabName = "2tTestData"),
-               menuSubItem("Stats", tabName = "2tTestStats")),
+        menuSubItem("Data", tabName = "2tTestData"),
+        menuSubItem("Stats", tabName = "2tTestStats")),
       menuItem("ANOVA", tabName = "ANOVA"),
       menuItem("One Prop z-Test", tabName = "1pzt"),
       menuItem("Two Prop z-Test", tabName = "2pzt"),
@@ -39,77 +39,93 @@ ui <- dashboardPage(
   dashboardBody(
     tabItems(
       tabItem("ds",
-              fluidRow(
-                column(width = 2,
-                       box(
-                         title = "Data Input", width = NULL, status = "primary",
-                         actionButton("clear","Clear"),actionButton("plot","Plot"),
-                         rHandsontableOutput("dt")
-                       ) #Ebox
-                ), #Ecolumn
-                column(width = 5,
-                       box(
-                         title = "Histogram", width = NULL,
-                         plotOutput("hist")
-                       ), #Ebox
-                       box(
-                         title = "Percentile", width = NULL,
-                         splitLayout(
-                           textInput("ptile","Percentile:",width="25%"),
-                           actionButton("goptile","Get"),
-                           textOutput("pptile")
-                         ) #EsplitLayout
-                       ) #Ebox
-                ), #Ecolumn
-                column(width = 5,
-                       box(
-                         title = "Summary Statistics", width = NULL, solidHeader = TRUE,
-                         tableOutput("dss")
-                       ), #Ebox
-                       box(
-                         title = "qqplot", width = NULL, background = "aqua",
-                         plotOutput("qqplot"),
-                         valueBoxOutput("qqalert")
-                       ) #Ebox
-                ) #Ecolumn
-              ) #EfluidRow
+        fluidRow(
+          column(width = 2,
+            box(title = "Data Input", width = NULL, status = "primary",
+              actionButton("clear","Clear"),actionButton("plot","Plot"),
+              rHandsontableOutput("dt")
+            ) #Ebox
+          ), #Ecolumn
+          column(width = 5,
+            box(title = "Histogram", width = NULL,
+              plotOutput("hist")
+            ), #Ebox
+            box(title = "Percentile", width = NULL,
+              splitLayout(
+                textInput("ptile","Percentile:",width="25%"),
+                actionButton("goptile","Get"),
+                textOutput("pptile")
+              ) #EsplitLayout
+            ) #Ebox
+          ), #Ecolumn
+          column(width = 5,
+            box(title = "Summary Statistics", width = NULL, solidHeader = TRUE,
+              tableOutput("dss")
+            ), #Ebox
+            box(title = "qqplot", width = NULL, background = "aqua",
+              plotOutput("qqplot"),
+              valueBoxOutput("qqalert")
+            ) #Ebox
+          ) #Ecolumn
+        ) #EfluidRow
       ), #EtabItem ds
       tabItem("normal",
-              fluidRow(
-                column(width = 3,
-                  box(title = "Selections", width = NULL, solidHeader = TRUE,
-                    checkboxGroupInput("nsel", "Shade:",choices = c("Left", "Center", "Right")),
-                    checkboxInput("nsym","Symmetric")
-                  ) #Ebox 
-                ) #Ecolumn left
-              ) #EfluidRow Normal Tab
-      ), #EtabItem zTest
+        fluidRow(
+          column(width = 3,
+            box(title = "Selections", width = NULL, solidHeader = TRUE,
+              helpText("Shade:"),
+                checkboxInput("Left","Left"),
+                checkboxInput("Center","Center"),
+                checkboxInput("Right","Right"),
+                helpText("z-Score Cut-offs"),
+                checkboxInput("nsym","Symmetric"),
+                textInput("nmu","Mean:",0),
+                textInput("nsd", "Standard Dev:",1),
+                actionButton("nReset","Reset")
+            ) #Ebox 
+          ), #Ecolumn left
+          column(width = 9,
+            box(title = "Normal Probability Applet", width = NULL, solidHeader = TRUE,
+              plotOutput("npp"),
+                splitLayout(
+                  textInput("lz","Left z-Score",-1,width="25%"),
+                  textInput("rz","Right z-Score",1,width="25%"),
+                  actionButton("z2p","Find Probability")
+                ), #EsplitLayout
+            ) #Ebox
+          ) #Ecolumn Main
+        ) #EfluidRow Normal Tab
+      ), #EtabItem Normal
       tabItem("tTestData",
-              fluidRow(
-                column(width = 2,
-                       box(title = "Data Input", width = NULL, status = "primary",
-                           actionButton("cleart","Clear"),actionButton("plott","Plot"),
-                           rHandsontableOutput("dtt")
-                       ) #Ebox
-                ), #Ecolumn
-                column(width = 5,
-                       box(title = "Summary Statistics", width = NULL, background = "olive",
-                           plotOutput("dsst"),
-                           valueBoxOutput("qqalertt")
-                       ), #Ebox
-                ), #Ecolumn
-                column(width = 5,
-                       box(title = "Hypothesis Test", width = NULL,
-                           splitLayout(
-                             textInput("th0","Null:",0,width="50%"),
-                             textInput("tAlpha","Alpha:",.05,width="50%"),
-                             radioButtons("ttail","",c("Left Tail"="less","Two Tail"="two.sided","Right Tail"="greater"),inline = FALSE,width = "50%"),
-                             actionButton("ttest","Test")
-                           ), #EsplitLayout
-                           plotOutput("ttgraph")
-                       ), #Ebox
-                ) #Ecolumn
-              ) #EfluidRow
+        fluidRow(
+          column(width = 2,
+             box(
+               title = "Data Input",
+               width = NULL,
+               status = "primary",
+               actionButton("cleart", "Clear"),
+               actionButton("plott", "Plot"),
+               rHandsontableOutput("dtt")
+             ) #Ebox
+          ), #Ecolumn
+            column(width = 5,
+               box(title = "Summary Statistics", width = NULL, background = "olive",
+                 plotOutput("dsst"),
+                 valueBoxOutput("qqalertt")
+               ), #Ebox
+            ), #Ecolumn
+          column(width = 5,
+            box(title = "Hypothesis Test", width = NULL,
+            splitLayout(
+              textInput("th0","Null:",0,width="50%"),
+              textInput("tAlpha","Alpha:",.05,width="50%"),
+              radioButtons("ttail","",c("Left Tail"="less","Two Tail"="two.sided","Right Tail"="greater"),inline = FALSE,width = "50%"),
+              actionButton("ttest","Test")
+            ), #EsplitLayout
+            plotOutput("ttgraph")
+            ), #Ebox
+          ) #Ecolumn
+        ) #EfluidRow
       ), #EtabItem tTestData
       tabItem("tTestStats","tTestStats goes Here"), #EtabItem tTestData
       tabItem("Pairedt","Pairedt goes Here"), #EtabItem Pairedt
@@ -196,6 +212,13 @@ server <- function(input, output) {
     ptileout <- quantile(hist.x, as.numeric(input$ptile) / 100, type = 6)
     output$pptile <- renderText({paste("The ",input$ptile," percentile is: ",round(ptileout,2))})
   }) #EobserveEvent
+  observeEvent(eventExpr = input$normal, {
+    x <- seq(from = -4, to = 4, by = .01)
+    s.df <- data.frame(x,y=norm(x))
+    normp <- s.df %>% ggplot(aes(x,y))+geom_line()+
+      geom_area(aes(y=y), fill ="blue", alpha = .5)
+    output$npp <- renderPlot({normp})
+  }) #EobsefveEvent
   observeEvent(eventExpr = input$plott, {
     t.x$values <- hot_to_r(input$dtt)
     if(sum(!is.na(t.x$values[,1]))>1){

@@ -1,4 +1,5 @@
 library(shiny)
+library(shinyjs)
 library(shinydashboard)
 box <- shinydashboard::box
 library(tidyverse)
@@ -24,7 +25,7 @@ ui <- dashboardPage(
 # >>>>>>>>>>>>>>>Side Bar  
   
   dashboardSidebar(
-    sidebarMenu(
+    sidebarMenu("tabs",
       menuItem("Descriptive Stats", tabName = "ds"),
       menuItem("Normal", tabName = "normal"),
       menuItem("One Sample t-Test", 
@@ -65,7 +66,7 @@ ui <- dashboardPage(
             ), #Ebox
             box(title = "Percentile", width = NULL,
               splitLayout(
-                textInput("ptile","Percentile:",width="25%"),
+                numericInput("ptile","Percentile:",50,width="50%"),
                 actionButton("goptile","Get"),
                 textOutput("pptile")
               ) #EsplitLayout
@@ -90,26 +91,34 @@ ui <- dashboardPage(
         fluidRow(
           column(width = 3,
             box(title = "Selections", width = NULL, solidHeader = TRUE,
+                radioButtons("nway","",c("z to Prob","Prob to z")),
               helpText("Shade:"),
                 checkboxInput("Left","Left"),
                 checkboxInput("Center","Center"),
                 checkboxInput("Right","Right"),
-                helpText("z-Score Cut-offs"),
+              helpText("z-Score Cut-offs"),
                 checkboxInput("nsym","Symmetric"),
-                textInput("nmu","Mean:",0),
-                textInput("nsd", "Standard Dev:",1),
+                numericInput("nmu","Mean:",0),
+                numericInput("nsd", "Standard Dev:",1),
                 actionButton("nReset","Reset")
             ) #Ebox 
           ), #Ecolumn left
           column(width = 9,
-            box(title = "Normal Probability Applet", width = NULL, solidHeader = TRUE,
-              plotOutput("npp"),
+            conditionalPanel(condition = "input.nway == 'z to Prob'",
                 splitLayout(
-                  textInput("lz","Left z-Score",-1,width="25%"),
-                  textInput("rz","Right z-Score",1,width="25%"),
-                  actionButton("z2p","Find Probability")
+                  numericInput("lz","Left z-Score",-1,width="25%"),
+                  actionButton("z2p","Find Probability"),
+                  numericInput("rz","Right z-Score",1,width="25%")
                 ), #EsplitLayout
-            ) #Ebox
+                plotOutput("npp")
+            ), #EconditionalPanel
+            conditionalPanel(condition = "input.nway == 'Prob to z'",
+                splitLayout(
+                  numericInput("prob","Percent",50,width="25%"),
+                  actionButton("p2z","Find Probability")
+                ), #EsplitLayout
+                plotOutput("npz")
+            ) #EconditionalPanel
           ) #Ecolumn Main
         ) #EfluidRow Normal Tab
       ), #EtabItem Normal
@@ -138,8 +147,8 @@ ui <- dashboardPage(
           column(width = 5,
             box(title = "Hypothesis Test", width = NULL,
             splitLayout(
-              textInput("th0","Null:",0,width="50%"),
-              textInput("tAlpha","Alpha:",.05,width="50%"),
+              numericInput("th0","Null:",0,width="50%"),
+              numericInput("tAlpha","Alpha:",.05,width="50%"),
               radioButtons("ttail","",c("Left Tail"="less","Two Tail"="two.sided","Right Tail"="greater"),inline = FALSE,width = "50%"),
               actionButton("ttest","Test")
             ), #EsplitLayout
@@ -239,18 +248,25 @@ server <- function(input, output) {
     if(sum(!is.na(disc.in$values[,1]))>1){
       hist.x <- disc.in$values[!is.na(disc.in$values)]
     }
-    ptileout <- quantile(hist.x, as.numeric(input$ptile) / 100, type = 6)
+    ptileout <- quantile(hist.x, (input$ptile) / 100, type = 6)
     output$pptile <- renderText({paste("The ",input$ptile," percentile is: ",round(ptileout,2))})
   }) #EobserveEvent
   
 # <<<<<<<<<<<<<< End of Discrete Tab Server
-# >>>>>>>>>>>>>> Start of Discrete Tab Server
-
-  observeEvent(eventExpr = input$normal, {
+# >>>>>>>>>>>>>> Start of Normal Tab Server
+  
+  observeEvent(eventExpr = input$z2p, {
     x <- seq(from = -4, to = 4, by = .01)
+    mu <- input$nmu
+    sd <- input$nsd
+    lz <- input$lz
+    rz <- input$rz
     s.df <- data.frame(x,y=dnorm(x))
     normp <- s.df %>% ggplot(aes(x,y))+geom_line()+
-      geom_area(aes(y=y), fill ="blue", alpha = .5)
+      geom_area(aes(y=y), fill ="blue", alpha = .5) + scale_x_continuous(sec.axis = sec_axis(~.*sd+mu, name = "A")) +
+      theme(axis.title.y = element_blank(),axis.text.y = element_blank(),axis.ticks.y = element_blank()) +
+      labs(x = "Z") + geom_segment(aes(x = lz, y = 0, xend = lz, yend = dnorm(lz)),color="red") + 
+      geom_segment(aes(x = rz, y = 0, xend = rz, yend = dnorm(rz)),color="red")
     output$npp <- renderPlot({normp})
   }) #EobsefveEvent
   
@@ -292,8 +308,8 @@ server <- function(input, output) {
     if(sum(!is.na(t.in$values[,1]))>1){
       t.x <- t.in$values[!is.na(t.in$values)]
     } #Eif
-    alpha <- as.numeric(input$tAlpha)
-    mu <- as.numeric(input$th0)
+    alpha <- input$tAlpha
+    mu <- input$th0
     tail <- input$ttail
     df <- length(t.x)-1
     if (tail == "less"){

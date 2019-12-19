@@ -12,11 +12,17 @@ theme_set(theme_bw())
 
 data.discr <- data.frame(as.numeric(matrix(, nrow=500, ncol=1)))
 colnames(data.discr) <- "A"
+data.ttest <- data.frame(as.numeric(matrix(, nrow=500, ncol=1)))
+colnames(data.ttest) <- "A"
 binwidth <- 1
 
-# We'll save it in a variable `ui` so that we can preview it in the console
+# >>>>>>>>>>>>>>>Start of UI
+
 ui <- dashboardPage(
   dashboardHeader(title = "Stat Tools"),
+
+# >>>>>>>>>>>>>>>Side Bar  
+  
   dashboardSidebar(
     sidebarMenu(
       menuItem("Descriptive Stats", tabName = "ds"),
@@ -36,8 +42,15 @@ ui <- dashboardPage(
       menuItem("Discrete", tabName = "Disc")
     ) #End sidebarMenu
   ), #End dashboardSidebar
+
+# <<<<<<<<<<<<<End Sidebar
+# >>>>>>>>>>>>>Dashboard Body
+
   dashboardBody(
     tabItems(
+      
+# >>>>>>>>>>>>>>Discrete Tab UI
+      
       tabItem("ds",
         fluidRow(
           column(width = 2,
@@ -69,6 +82,10 @@ ui <- dashboardPage(
           ) #Ecolumn
         ) #EfluidRow
       ), #EtabItem ds
+      
+# <<<<<<<<<<<<< Discrete Tab UI
+# >>>>>>>>>>>>> Normal Tab UI
+
       tabItem("normal",
         fluidRow(
           column(width = 3,
@@ -96,6 +113,10 @@ ui <- dashboardPage(
           ) #Ecolumn Main
         ) #EfluidRow Normal Tab
       ), #EtabItem Normal
+
+# <<<<<<<<<<<<<<<<< Normal TAB UI
+# >>>>>>>>>>>>>>>>> tTest TAB UI
+
       tabItem("tTestData",
         fluidRow(
           column(width = 2,
@@ -127,6 +148,9 @@ ui <- dashboardPage(
           ) #Ecolumn
         ) #EfluidRow
       ), #EtabItem tTestData
+
+# <<<<<<<<<<<<<<<<< t-test TAB UI
+
       tabItem("tTestStats","tTestStats goes Here"), #EtabItem tTestData
       tabItem("Pairedt","Pairedt goes Here"), #EtabItem Pairedt
       tabItem("2tTestData","2tTestData goes Here"), #EtabItem 2tTestData
@@ -141,17 +165,23 @@ ui <- dashboardPage(
   ) #EdashboardBody
 ) #EdashboardPage
 
-#Start of the Server
+# >>>>>>>>>>> Start of the Server
 server <- function(input, output) {
-  data.in <- reactiveValues(values = data.discr)
+  
+# >>>>>>>>>> Variables
+  
+  disc.in <- reactiveValues(values = data.discr)
   hist.x <- reactiveValues(values = data.discr)
-  t.x <- reactiveValues(values = data.discr)
-  output$dt <- renderRHandsontable({rhandsontable(data.in$values)})
-  output$dtt <- renderRHandsontable({rhandsontable(data.in$values)})
+  t.in <- reactiveValues(values = data.ttest)
+  
+#>>>>>>>>>> Discrete Tab Server  
+  
+  output$dt <- renderRHandsontable({rhandsontable(disc.in$values)})
+
   observeEvent(eventExpr = input$plot, {
-    data.in$values <- hot_to_r(input$dt)
-    if(sum(!is.na(data.in$values[,1]))>1){
-      hist.x <- data.in$values[!is.na(data.in$values)]
+    disc.in$values <- hot_to_r(input$dt)
+    if(sum(!is.na(disc.in$values[,1]))>1){
+      hist.x <- disc.in$values[!is.na(disc.in$values)]
       count <- length(hist.x)
       bins <- ceiling(1+3.322*log10(count))
       if (count > 2) {binwidth <- (max(hist.x)-min(hist.x)+2)/(bins-2)}
@@ -201,28 +231,45 @@ server <- function(input, output) {
   observeEvent(eventExpr = input$clear, {
     data.discr <- data.frame(matrix(NA_real_, nrow = 500, ncol = 1))
     colnames(data.discr) <- "A"
-    data.in <- reactiveValues(values = data.discr)
-    output$dt <- renderRHandsontable({rhandsontable(data.in$values)})
+    disc.in <- reactiveValues(values = data.discr)
+    output$dt <- renderRHandsontable({rhandsontable(disc.in$values)})
   }) #EobserveEvent
   observeEvent(eventExpr = input$goptile, {
-    data.in$values <- hot_to_r(input$dt)
-    if(sum(!is.na(data.in$values[,1]))>1){
-      hist.x <- data.in$values[!is.na(data.in$values)]
+    disc.in$values <- hot_to_r(input$dt)
+    if(sum(!is.na(disc.in$values[,1]))>1){
+      hist.x <- disc.in$values[!is.na(disc.in$values)]
     }
     ptileout <- quantile(hist.x, as.numeric(input$ptile) / 100, type = 6)
     output$pptile <- renderText({paste("The ",input$ptile," percentile is: ",round(ptileout,2))})
   }) #EobserveEvent
+  
+# <<<<<<<<<<<<<< End of Discrete Tab Server
+# >>>>>>>>>>>>>> Start of Discrete Tab Server
+
   observeEvent(eventExpr = input$normal, {
     x <- seq(from = -4, to = 4, by = .01)
-    s.df <- data.frame(x,y=norm(x))
+    s.df <- data.frame(x,y=dnorm(x))
     normp <- s.df %>% ggplot(aes(x,y))+geom_line()+
       geom_area(aes(y=y), fill ="blue", alpha = .5)
     output$npp <- renderPlot({normp})
   }) #EobsefveEvent
+  
+# <<<<<<<<<<<<<< End of Normal Tab Server
+# >>>>>>>>>>>>>> Start of t-test Tab Server
+  
+  output$dtt <- renderRHandsontable({rhandsontable(t.in$values)})
+  
+  observeEvent(eventExpr = input$cleart, {
+    data.ttest <- data.frame(matrix(NA_real_, nrow = 500, ncol = 1))
+    colnames(data.ttest) <- "A"
+    t.in <- reactiveValues(values = data.ttest)
+    output$dtt <- renderRHandsontable({rhandsontable(t.in$values)})
+  }) #EobserveEvent
+  
   observeEvent(eventExpr = input$plott, {
-    t.x$values <- hot_to_r(input$dtt)
-    if(sum(!is.na(t.x$values[,1]))>1){
-      t.x <- t.x$values[!is.na(t.x$values)]
+    t.in$values <- hot_to_r(input$dtt)
+    if(sum(!is.na(t.in$values[,1]))>1){
+      t.x <- t.in$values[!is.na(t.in$values)]
       t.df <- data.frame(t.x)
       qqt <- t.df %>% ggplot(mapping = aes(sample = t.x)) +
         stat_qq_band() +
@@ -241,9 +288,9 @@ server <- function(input, output) {
     }#Eif
   }) #EobserveEvent
   observeEvent(eventExpr = input$ttest, {
-    t.x$values <- hot_to_r(input$dtt)
-    if(sum(!is.na(t.x$values[,1]))>1){
-      t.x <- t.x$values[!is.na(t.x$values)]
+    t.in$values <- hot_to_r(input$dtt)
+    if(sum(!is.na(t.in$values[,1]))>1){
+      t.x <- t.in$values[!is.na(t.in$values)]
     } #Eif
     alpha <- as.numeric(input$tAlpha)
     mu <- as.numeric(input$th0)
@@ -300,6 +347,9 @@ server <- function(input, output) {
     CI.t <- paste(cl*100,"% confidence interval is (",lower,",",upper,")")
     output$ttgraph <- renderPlot({grid.arrange(tableGrob(ttt),tp,textGrob(CI.t),ncol=1)})
   })#EobserveEvent
+  
+# <<<<<<<<<<<<< End of T-test Tab Server  
+  
 } #end of the server
 
 # Run the application 

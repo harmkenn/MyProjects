@@ -106,11 +106,12 @@ ui <- dashboardPage(
           column(width = 9,
             conditionalPanel(condition = "input.nway == 'z to Prob'",
                 splitLayout(
-                  numericInput("lz","Left z-Score",-1,width="25%"),
+                  numericInput("lz","Left z-Score",-1,width="25%",step = .1),
                   actionButton("z2p","Find Probability"),
-                  numericInput("rz","Right z-Score",1,width="25%")
+                  numericInput("rz","Right z-Score",1,width="25%", step = .1)
                 ), #EsplitLayout
-                plotOutput("npp")
+                plotOutput("npp"),
+                textOutput("npptext")
             ), #EconditionalPanel
             conditionalPanel(condition = "input.nway == 'Prob to z'",
                 splitLayout(
@@ -175,7 +176,7 @@ ui <- dashboardPage(
 ) #EdashboardPage
 
 # >>>>>>>>>>> Start of the Server
-server <- function(input, output) {
+server <- function(input, output, session) {
   
 # >>>>>>>>>> Variables
   
@@ -255,21 +256,41 @@ server <- function(input, output) {
 # <<<<<<<<<<<<<< End of Discrete Tab Server
 # >>>>>>>>>>>>>> Start of Normal Tab Server
   
+  x <- seq(from = -4, to = 4, by = .01)
+  observeEvent(input$rz, {
+       if(input$nsym == TRUE){
+          updateNumericInput(session, "lz", value = -1*input$rz)
+        }
+  }, ignoreInit = TRUE)
   observeEvent(eventExpr = input$z2p, {
-    x <- seq(from = -4, to = 4, by = .01)
-    mu <- input$nmu
-    sd <- input$nsd
-    lz <- input$lz
-    rz <- input$rz
-    s.df <- data.frame(x,y=dnorm(x))
-    normp <- s.df %>% ggplot(aes(x,y))+geom_line()+
-      geom_area(aes(y=y), fill ="blue", alpha = .5) + scale_x_continuous(sec.axis = sec_axis(~.*sd+mu, name = "A")) +
-      theme(axis.title.y = element_blank(),axis.text.y = element_blank(),axis.ticks.y = element_blank()) +
-      labs(x = "Z") + geom_segment(aes(x = lz, y = 0, xend = lz, yend = dnorm(lz)),color="red") + 
-      geom_segment(aes(x = rz, y = 0, xend = rz, yend = dnorm(rz)),color="red")
-    output$npp <- renderPlot({normp})
+      mu <- input$nmu
+      sd <- input$nsd
+      lz <- input$lz
+      rz <- input$rz
+      s.df <- data.frame(x,y=dnorm(x))
+      normp <- s.df %>% ggplot(aes(x,y))+geom_line()+
+        geom_area(aes(y=y),alpha=0) + scale_x_continuous(sec.axis = sec_axis(~.*sd+mu, name = "A")) +
+        theme(axis.title.y = element_blank(),axis.text.y = element_blank(),axis.ticks.y = element_blank()) +
+        labs(x = "Z") + geom_segment(aes(x = lz, y = 0, xend = lz, yend = dnorm(lz)),color="red") + 
+        geom_segment(aes(x = rz, y = 0, xend = rz, yend = dnorm(rz)),color="red")
+    output$npp <- renderPlot({
+      if(input$Left == TRUE){normp <- normp + geom_area(data=subset(s.df,x<lz),aes(y=y), fill ="blue", alpha = .5)}else{normp}
+      if(input$Center == TRUE){normp <- normp + geom_area(data=subset(s.df,x > lz & x < rz),aes(y=y), fill ="blue", alpha = .5)}else{normp}
+      if(input$Right == TRUE){normp + geom_area(data=subset(s.df,x > rz),aes(y=y), fill ="blue", alpha = .5)}else{normp}
+    })
+    output$npptext <- renderText({
+      if(input$Left == TRUE){tp <- pnorm(lz)}else{tp <- 0}
+      if(input$Center == TRUE){tp <- tp + pnorm(rz) - pnorm(lz)}else{tp <- tp}
+      if(input$Right == TRUE){tp <- tp + 1 - pnorm(rz)}else{tp <- tp}
+      paste("Total Prabability: ",tp)
+    })
   }) #EobsefveEvent
-  
+    
+
+
+
+
+ 
 # <<<<<<<<<<<<<< End of Normal Tab Server
 # >>>>>>>>>>>>>> Start of t-test Tab Server
   

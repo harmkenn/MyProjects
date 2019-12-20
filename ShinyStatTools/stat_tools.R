@@ -1,4 +1,5 @@
 library(shiny)
+library(shinyjs)
 library(shinydashboard)
 box <- shinydashboard::box
 library(tidyverse)
@@ -24,7 +25,7 @@ ui <- dashboardPage(
 # >>>>>>>>>>>>>>>Side Bar  
   
   dashboardSidebar(
-    sidebarMenu(
+    sidebarMenu("tabs",
       menuItem("Descriptive Stats", tabName = "ds"),
       menuItem("Normal", tabName = "normal"),
       menuItem("One Sample t-Test", 
@@ -65,7 +66,7 @@ ui <- dashboardPage(
             ), #Ebox
             box(title = "Percentile", width = NULL,
               splitLayout(
-                textInput("ptile","Percentile:",width="25%"),
+                numericInput("ptile","Percentile:",50,width="50%"),
                 actionButton("goptile","Get"),
                 textOutput("pptile")
               ) #EsplitLayout
@@ -90,26 +91,35 @@ ui <- dashboardPage(
         fluidRow(
           column(width = 3,
             box(title = "Selections", width = NULL, solidHeader = TRUE,
+                radioButtons("nway","",c("z to Prob","Prob to z")),
               helpText("Shade:"),
                 checkboxInput("Left","Left"),
                 checkboxInput("Center","Center"),
                 checkboxInput("Right","Right"),
-                helpText("z-Score Cut-offs"),
+              helpText("z-Score Cut-offs"),
                 checkboxInput("nsym","Symmetric"),
-                textInput("nmu","Mean:",0),
-                textInput("nsd", "Standard Dev:",1),
+                numericInput("nmu","Mean:",0),
+                numericInput("nsd", "Standard Dev:",1),
                 actionButton("nReset","Reset")
             ) #Ebox 
           ), #Ecolumn left
           column(width = 9,
-            box(title = "Normal Probability Applet", width = NULL, solidHeader = TRUE,
-              plotOutput("npp"),
+            conditionalPanel(condition = "input.nway == 'z to Prob'",
                 splitLayout(
-                  textInput("lz","Left z-Score",-1,width="25%"),
-                  textInput("rz","Right z-Score",1,width="25%"),
-                  actionButton("z2p","Find Probability")
+                  numericInput("lz","Left z-Score",-1,width="25%",step = .1),
+                  actionButton("z2p","Find Probability"),
+                  numericInput("rz","Right z-Score",1,width="25%", step = .1)
                 ), #EsplitLayout
-            ) #Ebox
+                plotOutput("npp"),
+                textOutput("npptext")
+            ), #EconditionalPanel
+            conditionalPanel(condition = "input.nway == 'Prob to z'",
+                splitLayout(
+                  numericInput("prob","Percent",50,width="25%"),
+                  actionButton("p2z","Find Probability")
+                ), #EsplitLayout
+                plotOutput("npz")
+            ) #EconditionalPanel
           ) #Ecolumn Main
         ) #EfluidRow Normal Tab
       ), #EtabItem Normal
@@ -138,8 +148,8 @@ ui <- dashboardPage(
           column(width = 5,
             box(title = "Hypothesis Test", width = NULL,
             splitLayout(
-              textInput("th0","Null:",0,width="50%"),
-              textInput("tAlpha","Alpha:",.05,width="50%"),
+              numericInput("th0","Null:",0,width="50%"),
+              numericInput("tAlpha","Alpha:",.05,width="50%"),
               radioButtons("ttail","",c("Left Tail"="less","Two Tail"="two.sided","Right Tail"="greater"),inline = FALSE,width = "50%"),
               actionButton("ttest","Test")
             ), #EsplitLayout
@@ -166,22 +176,22 @@ ui <- dashboardPage(
 ) #EdashboardPage
 
 # >>>>>>>>>>> Start of the Server
-server <- function(input, output) {
+server <- function(input, output, session) {
   
 # >>>>>>>>>> Variables
   
-  data.in <- reactiveValues(values = data.discr)
+  disc.in <- reactiveValues(values = data.discr)
   hist.x <- reactiveValues(values = data.discr)
-  t.x <- reactiveValues(values = data.ttest)
+  t.in <- reactiveValues(values = data.ttest)
   
 #>>>>>>>>>> Discrete Tab Server  
   
-  output$dt <- renderRHandsontable({rhandsontable(data.in$values)})
-  output$dtt <- renderRHandsontable({rhandsontable(data.in$values)})
+  output$dt <- renderRHandsontable({rhandsontable(disc.in$values)})
+
   observeEvent(eventExpr = input$plot, {
-    data.in$values <- hot_to_r(input$dt)
-    if(sum(!is.na(data.in$values[,1]))>1){
-      hist.x <- data.in$values[!is.na(data.in$values)]
+    disc.in$values <- hot_to_r(input$dt)
+    if(sum(!is.na(disc.in$values[,1]))>1){
+      hist.x <- disc.in$values[!is.na(disc.in$values)]
       count <- length(hist.x)
       bins <- ceiling(1+3.322*log10(count))
       if (count > 2) {binwidth <- (max(hist.x)-min(hist.x)+2)/(bins-2)}
@@ -231,43 +241,72 @@ server <- function(input, output) {
   observeEvent(eventExpr = input$clear, {
     data.discr <- data.frame(matrix(NA_real_, nrow = 500, ncol = 1))
     colnames(data.discr) <- "A"
-    data.in <- reactiveValues(values = data.discr)
-    output$dt <- renderRHandsontable({rhandsontable(data.in$values)})
+    disc.in <- reactiveValues(values = data.discr)
+    output$dt <- renderRHandsontable({rhandsontable(disc.in$values)})
   }) #EobserveEvent
   observeEvent(eventExpr = input$goptile, {
-    data.in$values <- hot_to_r(input$dt)
-    if(sum(!is.na(data.in$values[,1]))>1){
-      hist.x <- data.in$values[!is.na(data.in$values)]
+    disc.in$values <- hot_to_r(input$dt)
+    if(sum(!is.na(disc.in$values[,1]))>1){
+      hist.x <- disc.in$values[!is.na(disc.in$values)]
     }
-    ptileout <- quantile(hist.x, as.numeric(input$ptile) / 100, type = 6)
+    ptileout <- quantile(hist.x, (input$ptile) / 100, type = 6)
     output$pptile <- renderText({paste("The ",input$ptile," percentile is: ",round(ptileout,2))})
   }) #EobserveEvent
   
 # <<<<<<<<<<<<<< End of Discrete Tab Server
-# >>>>>>>>>>>>>> Start of Discrete Tab Server
-
-  observeEvent(eventExpr = input$normal, {
-    x <- seq(from = -4, to = 4, by = .01)
-    s.df <- data.frame(x,y=dnorm(x))
-    normp <- s.df %>% ggplot(aes(x,y))+geom_line()+
-      geom_area(aes(y=y), fill ="blue", alpha = .5)
-    output$npp <- renderPlot({normp})
-  }) #EobsefveEvent
+# >>>>>>>>>>>>>> Start of Normal Tab Server
   
+  x <- seq(from = -4, to = 4, by = .01)
+  observeEvent(input$rz, {
+       if(input$nsym == TRUE){
+          updateNumericInput(session, "lz", value = -1*input$rz)
+        }
+  }, ignoreInit = TRUE)
+  observeEvent(eventExpr = input$z2p, {
+      mu <- input$nmu
+      sd <- input$nsd
+      lz <- input$lz
+      rz <- input$rz
+      s.df <- data.frame(x,y=dnorm(x))
+      normp <- s.df %>% ggplot(aes(x,y))+geom_line()+
+        geom_area(aes(y=y),alpha=0) + scale_x_continuous(sec.axis = sec_axis(~.*sd+mu, name = "A")) +
+        theme(axis.title.y = element_blank(),axis.text.y = element_blank(),axis.ticks.y = element_blank()) +
+        labs(x = "Z") + geom_segment(aes(x = lz, y = 0, xend = lz, yend = dnorm(lz)),color="red") + 
+        geom_segment(aes(x = rz, y = 0, xend = rz, yend = dnorm(rz)),color="red")
+    output$npp <- renderPlot({
+      if(input$Left == TRUE){normp <- normp + geom_area(data=subset(s.df,x<lz),aes(y=y), fill ="blue", alpha = .5)}else{normp}
+      if(input$Center == TRUE){normp <- normp + geom_area(data=subset(s.df,x > lz & x < rz),aes(y=y), fill ="blue", alpha = .5)}else{normp}
+      if(input$Right == TRUE){normp + geom_area(data=subset(s.df,x > rz),aes(y=y), fill ="blue", alpha = .5)}else{normp}
+    })
+    output$npptext <- renderText({
+      if(input$Left == TRUE){tp <- pnorm(lz)}else{tp <- 0}
+      if(input$Center == TRUE){tp <- tp + pnorm(rz) - pnorm(lz)}else{tp <- tp}
+      if(input$Right == TRUE){tp <- tp + 1 - pnorm(rz)}else{tp <- tp}
+      paste("Total Prabability: ",tp)
+    })
+  }) #EobsefveEvent
+    
+
+
+
+
+ 
 # <<<<<<<<<<<<<< End of Normal Tab Server
 # >>>>>>>>>>>>>> Start of t-test Tab Server
+  
+  output$dtt <- renderRHandsontable({rhandsontable(t.in$values)})
   
   observeEvent(eventExpr = input$cleart, {
     data.ttest <- data.frame(matrix(NA_real_, nrow = 500, ncol = 1))
     colnames(data.ttest) <- "A"
-    data.in <- reactiveValues(values = data.ttest)
-    output$dtt <- renderRHandsontable({rhandsontable(data.in$values)})
+    t.in <- reactiveValues(values = data.ttest)
+    output$dtt <- renderRHandsontable({rhandsontable(t.in$values)})
   }) #EobserveEvent
   
   observeEvent(eventExpr = input$plott, {
-    t.x$values <- hot_to_r(input$dtt)
-    if(sum(!is.na(t.x$values[,1]))>1){
-      t.x <- t.x$values[!is.na(t.x$values)]
+    t.in$values <- hot_to_r(input$dtt)
+    if(sum(!is.na(t.in$values[,1]))>1){
+      t.x <- t.in$values[!is.na(t.in$values)]
       t.df <- data.frame(t.x)
       qqt <- t.df %>% ggplot(mapping = aes(sample = t.x)) +
         stat_qq_band() +
@@ -286,12 +325,12 @@ server <- function(input, output) {
     }#Eif
   }) #EobserveEvent
   observeEvent(eventExpr = input$ttest, {
-    t.x$values <- hot_to_r(input$dtt)
-    if(sum(!is.na(t.x$values[,1]))>1){
-      t.x <- t.x$values[!is.na(t.x$values)]
+    t.in$values <- hot_to_r(input$dtt)
+    if(sum(!is.na(t.in$values[,1]))>1){
+      t.x <- t.in$values[!is.na(t.in$values)]
     } #Eif
-    alpha <- as.numeric(input$tAlpha)
-    mu <- as.numeric(input$th0)
+    alpha <- input$tAlpha
+    mu <- input$th0
     tail <- input$ttail
     df <- length(t.x)-1
     if (tail == "less"){

@@ -92,16 +92,21 @@ ui <- dashboardPage(
           column(width = 3,
             box(title = "Selections", width = NULL, solidHeader = TRUE,
                 radioButtons("nway","",c("z to Prob","Prob to z")),
+                numericInput("nmu","Mean:",0),
+                numericInput("nsd", "Standard Dev:",1),
+                actionButton("nReset","Reset")
+            ), #Ebox
+            conditionalPanel(condition = "input.nway == 'z to Prob'",
               helpText("Shade:"),
                 checkboxInput("Left","Left"),
                 checkboxInput("Center","Center"),
                 checkboxInput("Right","Right"),
               helpText("z-Score Cut-offs"),
                 checkboxInput("nsym","Symmetric"),
-                numericInput("nmu","Mean:",0),
-                numericInput("nsd", "Standard Dev:",1),
-                actionButton("nReset","Reset")
-            ) #Ebox 
+            ), #EconditionalPanel
+            conditionalPanel(condition = "input.nway == 'Prob to z'",
+              radioButtons("nshade","Shade", choices = c("Left","Center","Right"))
+            ), #EconditionalPanel
           ), #Ecolumn left
           column(width = 9,
             conditionalPanel(condition = "input.nway == 'z to Prob'",
@@ -115,10 +120,11 @@ ui <- dashboardPage(
             ), #EconditionalPanel
             conditionalPanel(condition = "input.nway == 'Prob to z'",
                 splitLayout(
-                  numericInput("prob","Percent",50,width="25%"),
+                  numericInput("prob","Percent",40,width="25%"),
                   actionButton("p2z","Find Probability")
                 ), #EsplitLayout
-                plotOutput("npz")
+                plotOutput("npz"),
+                textOutput("npztext")
             ) #EconditionalPanel
           ) #Ecolumn Main
         ) #EfluidRow Normal Tab
@@ -262,7 +268,13 @@ server <- function(input, output, session) {
           updateNumericInput(session, "lz", value = -1*input$rz)
         }
   }, ignoreInit = TRUE)
-  observeEvent(eventExpr = input$z2p, {
+    observeEvent(input$nsym, {
+       if(input$nsym == TRUE){
+          updateNumericInput(session, "lz", value = -1*input$rz)
+         disable("lz")
+        }
+  }, ignoreInit = TRUE)
+  observeEvent(c(input$z2p,input$nsym), {
       mu <- input$nmu
       sd <- input$nsd
       lz <- input$lz
@@ -284,8 +296,36 @@ server <- function(input, output, session) {
       if(input$Right == TRUE){tp <- tp + 1 - pnorm(rz)}else{tp <- tp}
       paste("Total Prabability: ",tp)
     })
-  }) #EobsefveEvent
-    
+  }) #EobserveEvent
+  observeEvent(c(input$p2z,input$nshade), {
+      mu <- input$nmu
+      sd <- input$nsd
+      prob <- input$prob
+      s.df <- data.frame(x,y=dnorm(x))
+      npz <- s.df %>% ggplot(aes(x,y))+geom_line()+
+        geom_area(aes(y=y),alpha=0) + scale_x_continuous(sec.axis = sec_axis(~.*sd+mu, name = "A")) +
+        theme(axis.title.y = element_blank(),axis.text.y = element_blank(),axis.ticks.y = element_blank()) +
+        labs(x = "Z") 
+      if(input$nshade == "Left"){
+        z <- qnorm(prob/100)
+        npz <- npz + geom_area(data=subset(s.df,x <= z),aes(y=y), fill ="blue", alpha = .5) + 
+        geom_segment(aes(x = z, y = 0, xend = z, yend = dnorm(z)),color="red")
+        npztext <- paste("z-Score: ",z)
+      }else if (input$nshade == "Center"){
+        z <- qnorm((1-prob/100)/2)
+        npz <- npz + geom_area(data=subset(s.df,x >= z & x <= -z),aes(y=y), fill ="blue", alpha = .5) + 
+                     geom_segment(aes(x = z, y = 0, xend = z, yend = dnorm(z)),color="red") +
+                     geom_segment(aes(x = -z, y = 0, xend = -z, yend = dnorm(-z)),color="red")
+        npztext <- paste("z-Scores: ",z," & ",-z)
+      }else if(input$nshade == "Right"){
+        z <- qnorm(1 - prob/100)
+        npz <- npz + geom_area(data=subset(s.df,x >= z),aes(y=y), fill ="blue", alpha = .5) + 
+        geom_segment(aes(x = z, y = 0, xend = z, yend = dnorm(z)),color="red")
+        npztext <- paste("z-Score: ",z) 
+      }
+     output$npz <- renderPlot({npz})
+    output$npztext <- renderText({npztext})
+  }) #EobserveEvent  
 
 
 

@@ -20,21 +20,18 @@ binwidth <- 1
 # >>>>>>>>>>>>>>>Start of UI
 
 ui <- dashboardPage(
-  dashboardHeader(title = "Stat Tools"),
+  dashboardHeader(title = span("Shiny Stat Tools"),titleWidth = "450px",
+                  tags$li(class = "dropdown",tags$a("by Ken Harmon")),
+                  dropdownMenuOutput(outputId = "notifications")),
 
 # >>>>>>>>>>>>>>>Side Bar  
   
   dashboardSidebar(
-    sidebarMenu("tabs",
+    sidebarMenu(
       menuItem("Descriptive Stats", tabName = "ds"),
       menuItem("Normal", tabName = "normal"),
-      menuItem("One Sample t-Test", 
-        menuSubItem("Data", tabName = "tTestData"),
-        menuSubItem("Stats", tabName = "tTestStats")),
-      menuItem("Paired t-Test", tabName = "Pairedt"),
-      menuItem("Two Sample t-Test", 
-        menuSubItem("Data", tabName = "2tTestData"),
-        menuSubItem("Stats", tabName = "2tTestStats")),
+      menuItem("One Sample t-Test", tabName = "tTest"),
+      menuItem("Two Sample t-Test",tabName = "2tTest"),
       menuItem("ANOVA", tabName = "ANOVA"),
       menuItem("One Prop z-Test", tabName = "1pzt"),
       menuItem("Two Prop z-Test", tabName = "2pzt"),
@@ -133,29 +130,36 @@ ui <- dashboardPage(
 # <<<<<<<<<<<<<<<<< Normal TAB UI
 # >>>>>>>>>>>>>>>>> tTest TAB UI
 
-      tabItem("tTestData",
+      tabItem("tTest",
         fluidRow(
-          column(width = 2,
-             box(
-               title = "Data Input",
-               width = NULL,
-               status = "primary",
-               actionButton("cleart", "Clear"),
-               actionButton("plott", "Plot"),
-               rHandsontableOutput("dtt")
-             ) #Ebox
+          column(width = 3,
+            box(title = "Data Input",width = NULL,status = "primary",
+              radioButtons("tchoice","Input:",c("Single Data","Statistics","Paired Data")),
+              conditionalPanel(condition = "input.tchoice != 'Statistics'",
+                 actionButton("cleart", "Clear"),
+                 actionButton("plott", "Plot"),
+                 rHandsontableOutput("dtt")
+              ), #End of conditionalPanel
+              conditionalPanel(condition = "input.tchoice == 'Statistics'",
+                numericInput("tmean","Mean:",0),
+                numericInput("tsd","Standard Deviation:",1),
+                numericInput("tn","Count:",1)
+              ), #End of conditionalPanel
+            ), #Ebox
           ), #Ecolumn
-            column(width = 5,
-               box(title = "Summary Statistics", width = NULL, background = "olive",
+          conditionalPanel(condition = "input.tchoice != 'Statistics'",
+            column(width = 4,
+               box(title = "Summary Statistics", width = NULL, background = "blue",
                  plotOutput("dsst"),
-                 valueBoxOutput("qqalertt")
+                 valueBoxOutput("qqalertt", width = NULL)
                ), #Ebox
             ), #Ecolumn
+          ), #End of Conditional
           column(width = 5,
             box(title = "Hypothesis Test", width = NULL,
             splitLayout(
-              numericInput("th0","Null:",0,width="50%"),
-              numericInput("tAlpha","Alpha:",.05,width="50%"),
+              numericInput("th0","Null:",0,width="60%"),
+              numericInput("tAlpha","Alpha:",.05,width="60%"),
               radioButtons("ttail","",c("Left Tail"="less","Two Tail"="two.sided","Right Tail"="greater"),inline = FALSE,width = "50%"),
               actionButton("ttest","Test")
             ), #EsplitLayout
@@ -163,13 +167,13 @@ ui <- dashboardPage(
             ), #Ebox
           ) #Ecolumn
         ) #EfluidRow
-      ), #EtabItem tTestData
+      ), #EtabItem tTest
 
 # <<<<<<<<<<<<<<<<< t-test TAB UI
 
-      tabItem("tTestStats","tTestStats goes Here"), #EtabItem tTestData
+      tabItem("tTestStats","tTestStats goes Here"), #EtabItem tTest
       tabItem("Pairedt","Pairedt goes Here"), #EtabItem Pairedt
-      tabItem("2tTestData","2tTestData goes Here"), #EtabItem 2tTestData
+      tabItem("2tTest","2tTest goes Here"), #EtabItem 2tTest
       tabItem("2tTestStats","2tTestStats goes Here"), #EtabItem 2tTestStats
       tabItem("ANOVA","ANOVA goes Here"), #EtabItem ANOVA
       tabItem("1pzt","1pzt goes Here"), #EtabItem 1pzt
@@ -327,26 +331,36 @@ server <- function(input, output, session) {
     output$npztext <- renderText({npztext})
   }) #EobserveEvent  
 
-
-
-
- 
 # <<<<<<<<<<<<<< End of Normal Tab Server
 # >>>>>>>>>>>>>> Start of t-test Tab Server
   
   output$dtt <- renderRHandsontable({rhandsontable(t.in$values)})
   
-  observeEvent(eventExpr = input$cleart, {
-    data.ttest <- data.frame(matrix(NA_real_, nrow = 500, ncol = 1))
-    colnames(data.ttest) <- "A"
-    t.in <- reactiveValues(values = data.ttest)
-    output$dtt <- renderRHandsontable({rhandsontable(t.in$values)})
+  observeEvent(c(input$cleart,input$tchoice), {
+    if(input$tchoice == "Single Data"){
+      data.ttest <- data.frame(matrix(NA_real_, nrow = 500, ncol = 1))
+      colnames(data.ttest) <- "A"
+      t.in <- reactiveValues(values = data.ttest)
+      output$dtt <- renderRHandsontable({rhandsontable(t.in$values)})
+    }else{
+      data.ttest <- data.frame(matrix(NA_real_, nrow = 500, ncol = 3))
+      colnames(data.ttest) <- c("diff","A","B")
+      t.in <- reactiveValues(values = data.ttest)
+      output$dtt <- renderRHandsontable({rhandsontable(t.in$values) %>% 
+          hot_col("diff", readOnly = TRUE)})
+    }
   }) #EobserveEvent
   
-  observeEvent(eventExpr = input$plott, {
+  observeEvent(input$plott, {
     t.in$values <- hot_to_r(input$dtt)
+    if(input$tchoice == "Paired Data"){
+    t.in$values[,1] <- t.in$values[,2]-t.in$values[,3]
+    output$dtt <- renderRHandsontable({rhandsontable(t.in$values) %>% 
+          hot_col("diff", readOnly = TRUE)})
+    }
     if(sum(!is.na(t.in$values[,1]))>1){
-      t.x <- t.in$values[!is.na(t.in$values)]
+      t.x <- t.in$values[,1]
+      t.x <- t.x[!is.na(t.x)]
       t.df <- data.frame(t.x)
       qqt <- t.df %>% ggplot(mapping = aes(sample = t.x)) +
         stat_qq_band() +
@@ -358,26 +372,28 @@ server <- function(input, output, session) {
         valueBox(round(good$p.value,3), subtitle = "p-value",width = 5,color = if (good$p.value < .05) {"red"} else {"green"})
       }) #Eoutput$qqalert      
       sx <- summary(t.x)
-      dss <- matrix(formatC(c(length(t.x),sx[4],sd(t.x)),
-                            format="f",digits = 7,drop0trailing = TRUE),ncol=3,nrow=1)
-      colnames(dss) <- c("Count","Mean","Standard Dev")
+      dss <- matrix(formatC(c(length(t.x),sx[4],sd(t.x),sd(t.x)/sqrt(length(t.x))),
+                            format="f",digits = 7,drop0trailing = TRUE),ncol=4,nrow=1)
+      colnames(dss) <- c("Count","Mean","Standard Dev","Standard Error")
       output$dsst <- renderPlot({grid.arrange(tableGrob(dss),qqt,ncol =1)})
     }#Eif
   }) #EobserveEvent
-  observeEvent(eventExpr = input$ttest, {
+  observeEvent(input$ttest, {
     t.in$values <- hot_to_r(input$dtt)
     if(sum(!is.na(t.in$values[,1]))>1){
-      t.x <- t.in$values[!is.na(t.in$values)]
-    } #Eif
+      t.x <- t.in$values[,1]
+      t.x <- t.x[!is.na(t.x)]
+    }else{t.x <- c(0,0,0,0,0,0,0,0)} #Eif
     alpha <- input$tAlpha
     mu <- input$th0
     tail <- input$ttail
-    df <- length(t.x)-1
+    if(input$tchoice != "Statistics"){df <- length(t.x)-1}else{df <- input$tn - 1}
     if (tail == "less"){
       cl <- 1 - 2*alpha
       tcv <- qt(alpha,df)
       ttr <- t.test(t.x,alternative = tail,mu=mu, conf.level = cl)
-      t.s <- ttr$statistic
+      if(input$tchoice != "Statistics"){t.s <- ttr$statistic}else{t.s <- (input$tmean-mu)/(input$tsd/sqrt(df+1))}
+      t.p <- pt(t.s,df)
       U <- max(abs(tcv),abs(t.s))+1
       L <- -1*U
       x <- seq(from = L, to = U, by = .01)
@@ -389,7 +405,8 @@ server <- function(input, output, session) {
       cl <- 1 - 2*alpha
       tcv <- qt(1-alpha,df)
       ttr <- t.test(t.x,alternative = tail,mu=mu, conf.level = cl)
-      t.s <- ttr$statistic
+      if(input$tchoice != "Statistics"){t.s <- ttr$statistic}else{t.s <- (input$tmean-mu)/(input$tsd/sqrt(df+1))}
+      t.p <- 1 - pt(t.s,df)
       U <- max(abs(tcv),abs(t.s))+1
       L <- -1*U
       x <- seq(from = L, to = U, by = .01)
@@ -401,7 +418,8 @@ server <- function(input, output, session) {
       cl <- 1 - alpha
       tcv <- qt(alpha/2,df)
       ttr <- t.test(t.x,alternative = tail,mu=mu, conf.level = cl)
-      t.s <- ttr$statistic
+      if(input$tchoice != "Statistics"){t.s <- ttr$statistic}else{t.s <- (input$tmean-mu)/(input$tsd/sqrt(df+1))}
+      t.p <- 2*(pt(-abs(t.s),df))
       U <- max(abs(tcv),abs(t.s))+2
       L <- -1*U
       x <- seq(from = L, to = U, by = .01)
@@ -412,15 +430,17 @@ server <- function(input, output, session) {
         geom_area(data=subset(s.df,x <= -abs(t.s)),aes(y=y), fill ="blue", alpha = .5) +
         geom_area(data=subset(s.df,x >= abs(t.s)),aes(y=y), fill ="blue", alpha = .5)
     }
-    ttt <- matrix(formatC(c(length(t.x)-1,ttr$statistic,ttr$p.value,tcv),
+    ttt <- matrix(formatC(c(df,t.s,t.p,tcv),
                           format="f",digits = 7,drop0trailing = TRUE),ncol=4,nrow=1)
     colnames(ttt) <- c("df","t-score","P-Value","Critical Value")
-    tp <- tp + scale_x_continuous(sec.axis = sec_axis(~.*sd(t.x)+mu, name = "A")) +
+    if(input$tchoice != "Statistics"){tmean <- mean(t.x)}else{tmean <- input$tmean}
+    if(input$tchoice != "Statistics"){tsd <- sd(t.x)}else{tsd <- input$tsd}
+    tp <- tp + scale_x_continuous(sec.axis = sec_axis(~.*tsd/sqrt(df+1)+mu, name = "A")) +
       theme(axis.title.y = element_blank(),axis.text.y = element_blank(),axis.ticks.y = element_blank()) +
-      labs(x = "Z")
-    m.e <- abs(tcv) * sd(t.x)/sqrt(length(t.x))
-    upper <- mean(t.x)+m.e
-    lower <- mean(t.x)-m.e
+      labs(x = "t")
+    m.e <- abs(tcv) * tsd/sqrt(df+1)
+    upper <- tmean+m.e
+    lower <- tmean-m.e
     CI.t <- paste(cl*100,"% confidence interval is (",lower,",",upper,")")
     output$ttgraph <- renderPlot({grid.arrange(tableGrob(ttt),tp,textGrob(CI.t),ncol=1)})
   })#EobserveEvent

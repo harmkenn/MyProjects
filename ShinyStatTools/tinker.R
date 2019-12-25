@@ -11,10 +11,14 @@ library(grid)
 library(gridExtra)
 theme_set(theme_bw())
 
-data.discr <- data.frame(as.numeric(matrix(, nrow=500, ncol=1)))
+data.discr <- data.frame(matrix(numeric(), nrow=500, ncol=1))
 colnames(data.discr) <- "A"
-data.ttest <- data.frame(as.numeric(matrix(, nrow=500, ncol=1)))
+data.ttest <- data.frame(matrix(numeric(), nrow=500, ncol=1))
 colnames(data.ttest) <- "A"
+data.anova <- data.frame(matrix(numeric(), nrow=300, ncol=6))
+colnames(data.anova) <- c("A","B","C","D","E","F")
+data.anova.s <- data.frame(matrix(numeric(), nrow=3, ncol=6))
+colnames(data.anova.s) <- c("A","B","C","D","E","F")
 binwidth <- 1
 
 # >>>>>>>>>>>>>>>Start of UI
@@ -31,7 +35,7 @@ ui <- dashboardPage(
       menuItem("Descriptive Stats", tabName = "ds"),
       menuItem("Normal", tabName = "normal"),
       menuItem("All t-Tests", tabName = "tTest"),
-      menuItem("ANOVA", tabName = "ANOVA"),
+      menuItem("ANOVA", tabName = "anova"),
       menuItem("One Prop z-Test", tabName = "1pzt"),
       menuItem("Two Prop z-Test", tabName = "2pzt"),
       menuItem("Chi-Square", tabName = "Chi"),
@@ -174,8 +178,8 @@ ui <- dashboardPage(
           column(width = 5,
             box(title = "Hypothesis Test", width = NULL,
             splitLayout(
-              numericInput("th0","Null:",0,width="60%"),
-              numericInput("tAlpha","Alpha:",.05,width="60%"),
+              numericInput("th0","Null:",0,width=NULL),
+              numericInput("tAlpha","Alpha:",.05,width=NULL),
               radioButtons("ttail","",c("Left Tail"="less","Two Tail"="two.sided","Right Tail"="greater"),inline = FALSE,width = "50%"),
               actionButton("ttest","Test")
             ), #EsplitLayout
@@ -186,9 +190,32 @@ ui <- dashboardPage(
         ) #EfluidRow
       ), #EtabItem tTest
 
-# <<<<<<<<<<<<<<<<< t-test TAB UI
+######################## End t-test TAB UI #######################
+######################## ANOVA Tab UI #############################
 
-      tabItem("ANOVA","ANOVA goes Here"), #EtabItem ANOVA
+      tabItem("anova",
+        fluidRow(
+          column(width = 4,
+            box(Title = "Data Input", width = 12,
+              checkboxInput("anovastat","Statistics"),
+              actionButton("anovatc", "Clear"),
+              actionButton("anovaplot", "Plot"),
+              rHandsontableOutput("anovat")
+            ), #Ebox
+          ), #Ecolumn left
+          conditionalPanel(width = NULL,
+            column(width = 4,
+              
+            ), #Ecolumn middle
+          ), #EconditionalPanel
+          column(width = 4,
+            
+          ), #Ecolumn right
+        ) #EfluidRow
+      ), #EtabItem ANOVA
+
+######################## End ANOVA Tab UI #########################
+
       tabItem("1pzt","1pzt goes Here"), #EtabItem 1pzt
       tabItem("2pzt","2pzt goes Here"), #EtabItem 2pzt
       tabItem("Chi","Chi goes Here"), #EtabItem Chi
@@ -207,6 +234,8 @@ server <- function(input, output, session) {
   disc.in <- reactiveValues(values = data.discr)
   hist.x <- reactiveValues(values = data.discr)
   t.in <- reactiveValues(values = data.ttest)
+  anova.in <- reactiveValues(values = data.anova)
+  anova.s.in <- reactiveValues(values = data.anova.s)
   
 #>>>>>>>>>> Discrete Tab Server  
   
@@ -435,48 +464,35 @@ server <- function(input, output, session) {
     } #Eif
   }) #EobserveEvent
   
+##################### Run the t-Test ########################  
+  
   observeEvent(input$ttest, {
+    alpha <- input$tAlpha
+    mu <- input$th0
+    tail <- input$ttail
+    
+################## t-Test Data ##########################    
+    
     if(input$Statistics == FALSE){
       t.in$values <- hot_to_r(input$dtt)
       if(sum(!is.na(t.in$values[,1]))>1){
         t.x <- t.in$values[,1]
         t.x <- t.x[!is.na(t.x)]
       } #Eif
-      if(input$tchoice != "2 Sample t-Test"){
-        
-      }else if(input$tchoice == "2 Sample t-Test"){
-        
-      }
-    }else if(input$Statistics == TRUE){
-      if(input$tchoice != "2 Sample t-Test"){
-        
-      }else if(input$tchoice == "2 Sample t-Test"){
-        
-      }
-    }
-    
-    
-    
-    
-    
-    
-    
-    else{t.x <- c(0,0,0,0,0,0,0,0)} #Eif
-    alpha <- input$tAlpha
-    mu <- input$th0
-    tail <- input$ttail
-    if (tail == "less"){
+      tmean <- mean(t.x)
+      if (tail == "less"){
       cl <- 1 - 2*alpha
-      if(input$tchoice == "2 Sample t-Test" && input$Statistics == FALSE){
+      if(input$tchoice == "2 Sample t-Test"){
         t.x.b <- t.in$values[,2]
         t.x.b <- t.x.b[!is.na(t.x.b)]
+        tmean <- tmean - mean(t.x.b)
         ttr <- t.test(t.x,t.x.b,alternative = tail,mu=mu, var.equal = input$eqvar, conf.level = cl)
       }else{
         ttr <- t.test(t.x,alternative = tail,mu=mu, conf.level = cl)
       }
       df <- ttr$parameter
       tcv <- qt(alpha,df)
-      if(input$Statistics != "Statistics"){t.s <- ttr$statistic}else{t.s <- (input$tmean-mu)/(input$tsd/sqrt(df+1))}
+      t.s <- ttr$statistic
       t.p <- pt(t.s,df)
       U <- max(abs(tcv),abs(t.s))+1
       L <- -1*U
@@ -496,7 +512,7 @@ server <- function(input, output, session) {
       }
       df <- ttr$parameter
       tcv <- qt(1-alpha,df)
-      if(input$Statistics != "Statistics"){t.s <- ttr$statistic}else{t.s <- (input$tmean-mu)/(input$tsd/sqrt(df+1))}
+      t.s <- ttr$statistic
       t.p <- 1 - pt(t.s,df)
       U <- max(abs(tcv),abs(t.s))+1
       L <- -1*U
@@ -516,7 +532,7 @@ server <- function(input, output, session) {
       }
       df <- ttr$parameter
       tcv <- qt(alpha/2,df)
-      if(input$Statistics != "Statistics"){t.s <- ttr$statistic}else{t.s <- (input$tmean-mu)/(input$tsd/sqrt(df+1))}
+      t.s <- ttr$statistic
       t.p <- 2*(pt(-abs(t.s),df))
       U <- max(abs(tcv),abs(t.s))+2
       L <- -1*U
@@ -527,20 +543,78 @@ server <- function(input, output, session) {
         geom_area(data=subset(s.df,x >= abs(tcv)),aes(y=y), fill ="red", alpha = .5) +
         geom_area(data=subset(s.df,x <= -abs(t.s)),aes(y=y), fill ="blue", alpha = .5) +
         geom_area(data=subset(s.df,x >= abs(t.s)),aes(y=y), fill ="blue", alpha = .5)
-    }
-    ttt <- matrix(formatC(c(df,t.s,t.p,tcv),
-                          format="f",digits = 6,drop0trailing = TRUE),ncol=4,nrow=1)
-    colnames(ttt) <- c("df","t-score","P-Value","Critical Value")
-    if(input$Statistics != "Statistics"){tmean <- mean(t.x)}else{tmean <- input$tmean}
-    if(input$Statistics != "Statistics"){tsd <- sd(t.x)}else{tsd <- input$tsd}
-    tp <- tp + scale_x_continuous(sec.axis = sec_axis(~.*tsd/sqrt(df+1)+mu, name = "A")) +
+    } #Eif
+ 
+############ t-Test Statistics #############################           
+      
+    }else if(input$Statistics == TRUE){
+      if(input$tchoice != "2 Sample t-Test"){
+        tmean <- input$tmean
+        df <- input$tn - 1
+        tse <- input$tsd/sqrt(df+1)
+        t.s <- (tmean-mu)/(tse)
+      }else if(input$tchoice == "2 Sample t-Test" && input$eqvar == TRUE){
+        tmean <- input$tmean - input$tmean.b
+        df <- input$tn + input$tn.b - 2
+        sea <- input$tsd/sqrt(input$tn)
+        seb <- input$tsd.b/sqrt(input$tn.b)
+        tse <- sqrt(sea^2+seb^2)
+        t.s <- (input$tmean-input$tmean.b)/tse
+      }else if(input$tchoice == "2 Sample t-Test" && input$eqvar == FALSE){
+        sea <- input$tsd/sqrt(input$tn)
+        seb <- input$tsd.b/sqrt(input$tn.b)
+        tse <- sqrt(sea^2+seb^2)
+        df <- tse^4/(sea^4/(input$tn-1)+seb^4/(input$tn.b-1))
+      }
+      
+      if (tail == "less"){
+        cl <- 1 - 2*alpha
+        tcv <- qt(alpha,df)
+        t.p <- pt(t.s,df)
+        U <- max(abs(tcv),abs(t.s))+1
+        L <- -1*U
+        x <- seq(from = L, to = U, by = .01)
+        s.df <- data.frame(x,y=dt(x,df))
+        tp <- s.df %>% ggplot(aes(x,y))+geom_line()+
+          geom_area(data=subset(s.df,x<=tcv),aes(y=y), fill ="red", alpha = .5) +
+          geom_area(data=subset(s.df,x<=t.s),aes(y=y), fill ="blue", alpha = .5)
+      }else if(tail == "greater"){
+        cl <- 1 - 2*alpha
+        tcv <- qt(1-alpha,df)
+        t.p <- 1 - pt(t.s,df)
+        U <- max(abs(tcv),abs(t.s))+1
+        L <- -1*U
+        x <- seq(from = L, to = U, by = .01)
+        s.df <- data.frame(x,y=dt(x,df))
+        tp <- s.df %>% ggplot(aes(x,y))+geom_line()+
+          geom_area(data=subset(s.df,x>=tcv),aes(y=y), fill ="red", alpha = .5) +
+          geom_area(data=subset(s.df,x>=t.s),aes(y=y), fill ="blue", alpha = .5)
+      }else if(tail == "two.sided"){
+        cl <- 1 - alpha
+        tcv <- qt(alpha/2,df)
+        t.p <- 2*(pt(-abs(t.s),df))
+        U <- max(abs(tcv),abs(t.s))+2
+        L <- -1*U
+        x <- seq(from = L, to = U, by = .01)
+        s.df <- data.frame(x,y=dt(x,df))
+        tp <- s.df %>% ggplot(aes(x,y))+geom_line()+
+          geom_area(data=subset(s.df,x <= -abs(tcv)),aes(y=y), fill ="red", alpha = .5) +
+          geom_area(data=subset(s.df,x >= abs(tcv)),aes(y=y), fill ="red", alpha = .5) +
+          geom_area(data=subset(s.df,x <= -abs(t.s)),aes(y=y), fill ="blue", alpha = .5) +
+          geom_area(data=subset(s.df,x >= abs(t.s)),aes(y=y), fill ="blue", alpha = .5)
+      } #Eif
+    } #Eif
+    
+    m.e <- abs(tcv) * tse
+    ttt <- matrix(formatC(c(df,t.s,t.p,tcv,tse,m.e),
+                          format="f",digits = 6,drop0trailing = TRUE),ncol=6,nrow=1)
+    colnames(ttt) <- c("df","t-score","P-Value","Critical Value","Standard Error","Margin of Error")
+
+    tp <- tp + scale_x_continuous(sec.axis = sec_axis(~.*tse+mu, name = "A")) +
       theme(axis.title.y = element_blank(),axis.text.y = element_blank(),axis.ticks.y = element_blank()) +
       labs(x = "t")
-    if(input$tchoice != "2 Sample t-Test"){tse <- tsd/sqrt(df+1)}else{
-      tse <- sqrt(sd(t.x.b)^2/length(t.x.b)+sd(t.x)^2/length(t.x))
-      tmean <- mean(t.x)-mean(t.x.b)
-      }
-    m.e <- abs(tcv) * tse
+
+    
     upper <- tmean+m.e
     lower <- tmean-m.e
     CI.t <- paste(cl*100,"% confidence interval is (",lower,",",upper,")")
@@ -549,6 +623,13 @@ server <- function(input, output, session) {
   
 # <<<<<<<<<<<<< End of T-test Tab Server  
   
+####################### Start of ANOVA tab Server
+  
+  if(input$anovastat = FALSE){
+    output$anovat <- renderRHandsontable({rhandsontable(anova.in$values)})
+  }else if(input$anovastat = TRUE){
+    output$anovat <- renderRHandsontable({rhandsontable(anova.s.in$values)})
+  }
 } #end of the server
 
 # Run the application 

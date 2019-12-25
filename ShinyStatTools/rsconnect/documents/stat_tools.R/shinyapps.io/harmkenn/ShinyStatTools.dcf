@@ -5,9 +5,9 @@ account: harmkenn
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 1607482
-bundleId: 2689929
+bundleId: 2690873
 url: https://harmkenn.shinyapps.io/ShinyStatTools/
-when: 1577210196.08789
+when: 1577284537.93059
 asMultiple: FALSE
 asStatic: FALSE
 ignoredFiles: stat_tools_ex.R|tinker.R|crime/app.R

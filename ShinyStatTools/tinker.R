@@ -19,6 +19,7 @@ data.anova <- data.frame(matrix(numeric(), nrow=300, ncol=6))
 colnames(data.anova) <- c("A","B","C","D","E","F")
 data.anova.s <- data.frame(matrix(numeric(), nrow=3, ncol=6))
 colnames(data.anova.s) <- c("A","B","C","D","E","F")
+rownames(data.anova.s) <- c("Count","Mean","SD")
 binwidth <- 1
 
 # >>>>>>>>>>>>>>>Start of UI
@@ -195,21 +196,24 @@ ui <- dashboardPage(
 
       tabItem("anova",
         fluidRow(
-          column(width = 4,
-            box(Title = "Data Input", width = 12,
+          column(width = 4, 
+            box(title = "Data Input", width = 12,
               checkboxInput("anovastat","Statistics"),
               actionButton("anovatc", "Clear"),
               actionButton("anovaplot", "Plot"),
               rHandsontableOutput("anovat")
             ), #Ebox
           ), #Ecolumn left
-          conditionalPanel(width = NULL,
+          conditionalPanel(condition = "input.anovastat == 0",
             column(width = 4,
-              
+              box(title = "graphs", background = "blue",
+                plotOutput("anovabox"),
+                plotOutput("anovaqq")
+              ), #Ebox
             ), #Ecolumn middle
           ), #EconditionalPanel
           column(width = 4,
-            
+            box(title = "Results")
           ), #Ecolumn right
         ) #EfluidRow
       ), #EtabItem ANOVA
@@ -625,11 +629,14 @@ server <- function(input, output, session) {
   
 ####################### Start of ANOVA tab Server
   
-  if(input$anovastat = FALSE){
-    output$anovat <- renderRHandsontable({rhandsontable(anova.in$values)})
-  }else if(input$anovastat = TRUE){
-    output$anovat <- renderRHandsontable({rhandsontable(anova.s.in$values)})
-  }
+  observeEvent(input$anovastat,
+    if(input$anovastat == FALSE){
+      output$anovat <- renderRHandsontable({rhandsontable(anova.in$values)})
+    }else if(input$anovastat == TRUE){
+      output$anovat <- renderRHandsontable({rhandsontable(anova.s.in$values)})
+    } #Eif
+  ) #EobserveEvent
+  
 } #end of the server
 
 # Run the application 

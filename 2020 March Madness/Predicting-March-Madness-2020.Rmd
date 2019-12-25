@@ -1,0 +1,654 @@
+---
+title: "Predicting March Madness 2020"
+author: "Ken Harmon"
+date: "`r format(Sys.time(), '%Y %B %d')`"
+output:
+  html_document:  
+    keep_md: true
+    code_folding: hide
+    fig_height: 6
+    fig_width: 12
+    fig_align: 'center'
+editor_options: 
+  chunk_output_type: console
+---
+
+# {.tabset .tabset-fade}
+
+```{r, echo=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
+```
+
+```{r load_libraries, include=FALSE}
+# Use this R-Chunk to load all your libraries!
+pacman::p_load(tidyverse, DT, rpart, DMwR, caret, rpart.plot, rattle, Metrics, ipred, randomForest, gbm)
+theme_set(theme_bw())
+confusionMatrix <- caret::confusionMatrix
+```
+
+```{r swd, eval=FALSE, echo=FALSE}
+# this is set to not run during the knit process
+# this sets the working directory to the file location
+setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
+```
+
+## NCAARock
+
+NCAA Season Stats: https://www.sports-reference.com/cbb/seasons/
+
+All Tournament Game Results:
+
+  From which I can get Seed Expectations
+  From Which I can get each teams PASE
+  
+Kenpom Rankings: https://kenpom.com/index.php?s=TeamName
+
+### 2002 to 2019 Games
+
+```{r DT}
+# Load NCAARock of all games and the differences of season stats
+NCAARock <- read.csv( "NCAARock.csv", stringsAsFactor = FALSE ) 
+
+NCAARock <- NCAARock %>% mutate(result = Fscore - Uscore)
+
+#If you want to see where the NAs are
+#sapply(NCAARock, function(x) sum(is.na(x)))
+# pull out just the Numeric columns
+temp <- NCAARock %>% select(10:52)
+
+#Fill in all of the NAs with the K nearest neighbor
+temp <- knnImputation(temp, k = 10, scale = T, meth = "weighAvg", distData = NULL)
+
+#pull of the front columns not in temp
+Front <- NCAARock %>% select(1:9)
+
+NCAARock <- cbind(Front,temp)
+
+#binomial the difference in Score
+bresult <- ifelse(NCAARock$result > 0, "F", "U")
+NCAARock$bresult <- as.factor(bresult)
+
+datatable(NCAARock, extensions = "Responsive",options=list(lengthMenu = c(10,25,68)))
+```
+
+## Train and Test
+
+```{r tt}
+# Get the number of observations
+n_obs <- nrow(NCAARock)
+
+# Shuffle row indices: permuted_rows
+permuted_rows <- sample(n_obs)
+
+# Randomly order data: Sonar
+NCAA_shuffled <- NCAARock[permuted_rows, ]
+
+# Identify row to split on: split
+split <- round(n_obs * 0.6)
+
+# Create train
+train <- NCAA_shuffled[1:split, ]
+
+# Create test
+test <- NCAA_shuffled[(split + 1):n_obs, ]
+
+nrow(train)/nrow(NCAARock)
+```
+
+## Logistic Regression
+
+```{r lr}
+# Fit glm model: model
+model <- glm(bresult ~ ., family = "binomial", train %>% select(10:51,53))
+
+# Predict on test: p
+p <- predict(model, test, type = "response")
+```
+
+### Confusion Matrix
+
+```{r ccm}
+# If p exceeds threshold of 0.5, M else R: m_or_r
+F_or_U <- ifelse(p < .5, "F", "U")
+
+
+# Convert to factor: p_class
+p_class <- factor(F_or_U, levels = levels(test[["bresult"]]))
+
+# Create confusion matrix
+confusionMatrix(p_class, test$bresult)
+```
+
+## Trees
+
+Build a classification tree
+
+```{r bct}
+# Create the model
+pred_model <- rpart(formula = bresult ~ ., data = NCAARock %>% select(1:3,6,10:51,53), method = "class", model=TRUE)
+
+# Display the results
+rpart.plot(x = pred_model, yesno = 2, type = 0, extra = 0)
+```
+
+Train/test split
+
+```{r tts}
+
+# Total number of rows in the NCAA data frame
+n <- nrow(NCAARock)
+
+# Number of rows for the training set (80% of the dataset)
+n_train <- round(.8 * n) 
+
+# Create a vector of indices which is an 80% random sample
+set.seed(123)
+train_indices <- sample(1:n, n_train)
+
+# Subset the NCAA data frame to training indices only
+NCAA_train <- NCAARock[train_indices, ]  
+  
+# Exclude the training indices to create the test set
+NCAA_test <- NCAARock[-train_indices, ] 
+```
+
+Train a classification tree model
+
+```{r tctm}
+# Train the model (to predict 'bresult')
+NCAA_model <- rpart(formula = bresult ~ ., data = NCAA_train %>% select(1:3,6,10:51,53), method = "class", model = TRUE)
+
+# Look at the model output                      
+print(NCAA_model)
+```
+
+Compute confusion matrix
+
+```{r ccm2}
+# Generate predicted classes using the model object
+
+class_prediction <- predict(object = NCAA_model, newdata = NCAA_test, type = "class")  
+                            
+# Calculate the confusion matrix for the test set
+confusionMatrix(data = class_prediction, reference = NCAA_test$bresult) 
+```
+
+Compare models with a different splitting criterion
+
+```{r cmdsc}
+# Train a gini-based model
+NCAA_model1 <- rpart(formula = bresult ~ ., 
+                       data = NCAA_train %>% select(1:3,6,10:51,53), 
+                       method = "class",
+                       parms = list(split = "gini"), model = TRUE)
+
+# Train an information-based model
+NCAA_model2 <- rpart(formula = bresult ~ ., 
+                       data = NCAA_train %>% select(1:3,6,10:51,53), 
+                       method = "class",
+                       parms = list(split = "information"), model = TRUE)
+
+# Generate predictions on the validation set using the gini model
+pred1 <- predict(object = NCAA_model1, 
+             newdata = NCAA_test %>% select(1:3,6,10:51,53),
+             type = "class")  
+
+# Generate predictions on the validation set using the information model
+pred2 <- predict(object = NCAA_model2, 
+             newdata = NCAA_test %>% select(1:3,6,10:51,53),
+             type = "class")
+
+# Compare classification error
+ce(actual = NCAA_test$bresult, 
+   predicted = pred1)
+ce(actual = NCAA_test$bresult, 
+   predicted = pred2) 
+```
+
+## Regression Trees
+
+Split the Data
+
+```{r std}
+
+# Set seed and create assignment
+set.seed(1)
+assignment <- sample(1:3, size = nrow(NCAARock), prob = c(.7,.15,.15), replace = TRUE)
+
+# Create a train, validation and tests from the original data frame 
+NCAA_train <- NCAARock[assignment == 1, ]    # subset NCAA to training indices only
+NCAA_valid <- NCAARock[assignment == 2, ]  # subset NCAA to validation indices only
+NCAA_test <- NCAARock[assignment == 3, ]   # subset NCAA to test indices only
+```
+
+Train the Regression Tree Model
+
+```{r trtm}
+# Train the model
+NCAA_model <- rpart(formula = result ~ ., 
+                     data = NCAA_train %>% select(1:3,6,10:51,52),
+                     method = "anova", model = TRUE)
+
+# Look at the model output                      
+print(NCAA_model)
+
+# Plot the tree model
+rpart.plot(x = NCAA_model, yesno = 2, type = 0, extra = 0)
+```
+
+Evaluate the Regression Tree Model
+
+```{r ertm}
+# Generate predictions on a test set
+pred <- predict(object = NCAA_model,   # model object 
+                newdata = NCAA_test %>% select(1:3,6,10:51,52))  # test dataset
+
+# Compute the RMSE
+rmse(actual = NCAA_test$result, 
+     predicted = pred)
+```
+
+Tuning the Model
+
+```{r ttm}
+# Plot the "CP Table"
+plotcp(NCAA_model)
+
+# Print the "CP Table"
+print(NCAA_model$cptable)
+
+# Retrieve optimal cp value based on cross-validated error
+opt_index <- which.min(NCAA_model$cptable[, "xerror"])
+cp_opt <- NCAA_model$cptable[opt_index, "CP"]
+
+# Prune the model (to optimized cp value)
+NCAA_model_opt <- prune(tree = NCAA_model, cp = cp_opt)
+                          
+# Plot the optimized model
+rpart.plot(x = NCAA_model_opt, yesno = 2, type = 0, extra = 0, roundint = FALSE)
+```
+
+Generate a grid of hyperparameter values
+
+```{r gghv}
+# Establish a list of possible values for minsplit and maxdepth
+minsplit <- seq(1, 4, 1)
+maxdepth <- seq(1, 6, 1)
+
+# Create a data frame containing all combinations 
+hyper_grid <- expand.grid(minsplit = minsplit, maxdepth = maxdepth)
+
+# Check out the grid
+head(hyper_grid)
+
+# Print the number of grid combinations
+nrow(hyper_grid)
+```
+
+Generate a grid of models
+
+```{r ggm}
+# Number of potential models in the grid
+num_models <- nrow(hyper_grid)
+
+# Create an empty list to store models
+NCAA_models <- list()
+
+# Write a loop over the rows of hyper_grid to train the grid of models
+for (i in 1:num_models) {
+
+    # Get minsplit, maxdepth values at row i
+    minsplit <- hyper_grid$minsplit[i]
+    maxdepth <- hyper_grid$maxdepth[i]
+
+    # Train a model and store in the list
+    NCAA_models[[i]] <- rpart(formula = result ~ ., 
+                               data = NCAA_train%>% select(1:3,6,10:51,52), 
+                               method = "anova",
+                               minsplit = minsplit,
+                               maxdepth = maxdepth, model = TRUE)
+}
+```
+
+Evaluate the Grid
+
+```{r etg}
+
+# Number of potential models in the grid
+num_models <- length(NCAA_models)
+
+# Create an empty vector to store RMSE values
+rmse_values <- c()
+
+# Write a loop over the models to compute validation RMSE
+for (i in 1:num_models) {
+
+    # Retrieve the i^th model from the list
+    model <- NCAA_models[[i]]
+    
+    # Generate predictions on NCAA_valid 
+    pred <- predict(object = model,
+                    newdata = NCAA_valid %>% select(1:3,6,10:51,52))
+    
+    # Compute validation RMSE and add to the 
+    rmse_values[i] <- rmse(actual = NCAA_valid$result, 
+                           predicted = pred)
+}
+
+# Identify the model with smallest validation set RMSE
+best_model <- NCAA_models[[which.min(rmse_values)]]
+
+# Print the model paramters of the best model
+best_model$control
+
+# Compute test set RMSE on best_model
+pred <- predict(object = best_model,
+                newdata = NCAA_test %>% select(1:3,6,10:51,52))
+rmse(actual = NCAA_test$result, 
+     predicted = pred)
+```
+
+Plot Results
+
+```{r pr}
+plot(NCAA_test$result,pred)
+```
+
+## Bagging Trees
+
+Train a Bootstraping Tree Model
+
+```{r tbtm}
+
+# Bagging is a randomized model, so let's set a seed (123) for reproducibility
+set.seed(123)
+
+# Train a bagged model
+NCAA_model <- bagging(formula = result ~ ., 
+                        data = NCAA_train %>% select(1:3,6,10:51,52),
+                        coob = TRUE)
+
+# Print the model
+print(NCAA_model)
+```
+
+Prediction and confusion matrix
+
+```{r pcm}
+
+# Train a bagged model
+NCAA_model <- bagging(formula = bresult ~ ., 
+                        data = NCAA_train %>% select(1:3,6,10:51,53),
+                        coob = TRUE)
+
+# Generate predicted classes using the model object
+class_prediction <- predict(object = NCAA_model, 
+                            newdata = NCAA_test %>% select(1:3,6,10:51,53),  
+                            type = "class")         # return classification labels
+# Print the predicted classes
+print(class_prediction)
+                            
+# Calculate the confusion matrix for the test set
+confusionMatrix(data = class_prediction,         
+                reference = NCAA_test$bresult)  
+```
+
+Predict on a test set and compute AUC
+
+```{r pts c AUC}
+# Generate predictions on the test set
+pred <- predict(object = NCAA_model, 
+                newdata = NCAA_test,
+                type = "prob")
+
+# `pred` is a matrix
+class(pred)
+                
+# Look at the pred format
+head(pred)                
+
+# Compute the AUC (`actual` must be a binary vector)
+auc(actual = ifelse(NCAA_test$bresult == "F", 1, 0), 
+    predicted = pred[,"F"])   
+
+# A zero AUC (Area under the curve) means your predictions are completely wrong in every case
+
+# A .5 AUC means your model is just as good as a random guess
+
+# A 1 AUC means your model is perfect.
+```
+
+Cross-validate a bagged tree model in caret
+
+```{r cvbtmc}
+# Specify the training configuration
+ctrl <- trainControl(method = "cv",     # Cross-validation
+                     number = 5,        # 5 folds
+                     classProbs = TRUE,                  # For AUC
+                     summaryFunction = twoClassSummary)  # For AUC
+
+# Cross validate the NCAA model using "treebag" method; 
+# Track AUC (Area under the ROC curve)
+set.seed(1)  # for reproducibility
+NCAA_caret_model <- train(bresult ~ ., 
+                            data = NCAA_train %>% select(1:3,6,10:51,53), 
+                            method = "treebag",
+                            metric = "ROC",
+                            trControl = ctrl)
+                      
+# Look at the model object
+print(NCAA_caret_model)
+
+# Inspect the contents of the model list 
+names(NCAA_caret_model)
+
+# Print the CV AUC
+NCAA_caret_model$results[,"ROC"]
+```
+
+Generate predictions from the caret model
+Generate predictions on a test set for the caret model.
+
+Instructions
+100 XP
+First generate predictions on the NCAA_test data frame using the NCAA_caret_model object.
+After generating test set predictions, use the auc() function from the Metrics package to compute AUC.
+
+```{r gpcm}
+# Generate predictions on the test set
+pred <- predict(object = NCAA_caret_model, 
+                newdata = NCAA_test %>% select(1:3,6,10:51,53),
+                type = "prob")
+
+# Compute the AUC (`actual` must be a binary (or 1/0 numeric) vector)
+auc(actual = ifelse(NCAA_test$bresult == "F", 1, 0), predicted = pred[,"F"])
+
+
+# Generate predicted classes using the model object
+class_prediction <- predict(object = NCAA_model, 
+                            newdata = NCAA_test %>% select(1:3,6,10:51,53),  
+                            type = "class")         # return classification
+
+# Calculate the confusion matrix for the test set
+confusionMatrix(data = class_prediction,         
+                reference = NCAA_test$bresult)
+```
+
+## Random Forest
+
+Train a Random Forest Model
+
+```{r trfm}
+# Train a Random Forest
+set.seed(1)  # for reproducibility
+NCAA_model <- randomForest(formula = bresult ~ ., 
+                             data = NCAA_train %>% select(1,3,6,10:51,53))
+                             
+# Print the model output                             
+print(NCAA_model)
+```
+
+Evaluate out-of-bag error
+
+```{r eoob}
+# Grab OOB error matrix & take a look
+err <- NCAA_model$err.rate
+head(err)
+
+# Look at final OOB error rate (last row in err matrix)
+oob_err <- err[nrow(err), "OOB"]
+print(oob_err)
+
+# Plot the model trained in the previous exercise
+plot(NCAA_model)
+
+# Add a legend since it doesn't have one by default
+legend(x = "right", 
+       legend = colnames(err),
+       fill = 1:ncol(err))
+```
+
+Evaluate model performance on a test set
+
+```{r empts}
+# Generate predicted classes using the model object
+class_prediction <- predict(object = NCAA_model,  # model object 
+                            newdata = NCAA_test %>% select(1,3,6,10:51,53),  # test dataset
+                            type = "class")         # return classification labels
+                            
+# Calculate the confusion matrix for the test set
+cm <- confusionMatrix(data = class_prediction,          # predicted classes
+                      reference = NCAA_test$bresult)  # actual classes
+print(cm)
+
+# Compare test set accuracy to OOB accuracy
+paste0("Test Accuracy: ", cm$overall[1])
+paste0("OOB Accuracy: ", 1 - oob_err)
+```
+
+Evaluate test set AUC
+
+```{r ets AUC}
+# Generate predictions on the test set
+pred <- predict(object = NCAA_model, 
+                newdata = NCAA_test %>% select(1,3,6,10:51,53),
+                type = "prob")
+
+# `pred` is a matrix
+class(pred)
+                
+# Look at the pred format
+head(pred)                
+                
+# Compute the AUC (`actual` must be a binary 1/0 numeric vector)
+auc(actual = ifelse(NCAA_test$bresult == "F", 1, 0), 
+    predicted = pred[,"F"])   
+```
+
+Tuning a Random Forest via mtry
+
+```{r trfwm}
+# Execute the tuning process
+set.seed(1)              
+res <- tuneRF(x = subset(NCAA_train %>% select(1,3,6,10:51,53), select = -bresult), y = NCAA_train$bresult, ntreeTry = 500)
+               
+# Look at results
+print(res)
+
+# Find the mtry value that minimizes OOB Error
+mtry_opt <- res[,"mtry"][which.min(res[,"OOBError"])]
+print(mtry_opt)
+
+# If you just want to return the best RF model (rather than results)
+# you can set `doBest = TRUE` in `tuneRF()` to return the best RF model
+# instead of a set performance matrix.
+```
+
+Tuning a Random Forest via tree depth
+In Chapter 2, we created a manual grid of hyperparameters using the expand.grid() function and wrote code that trained and evaluated the models of the grid in a loop. In this exercise, you will create a grid of mtry, nodesize and sampsize values. In this example, we will identify the "best model" based on OOB error. The best model is defined as the model from our grid which minimizes OOB error.
+
+Keep in mind that there are other ways to select a best model from a grid, such as choosing the best model based on validation AUC. However, for this exercise, we will use the built-in OOB error calculations instead of using a separate validation set.
+
+Instructions
+100 XP
+Create a grid of mtry, nodesize and sampsize values.
+Write a simple loop to train all the models and choose the best one based on OOB error.
+Print the set of hyperparameters which produced the best model.
+
+```{r trfvtd}
+# Establish a list of possible values for mtry, nodesize and sampsize
+mtry <- seq(4, ncol(NCAA_train %>% select(1,3,6,10:51,53)) * 0.8, 2)
+nodesize <- seq(3, 8, 2)
+sampsize <- nrow(NCAA_train) * c(0.7, 0.8)
+
+# Create a data frame containing all combinations 
+hyper_grid <- expand.grid(mtry = mtry, nodesize = nodesize, sampsize = sampsize)
+
+# Create an empty vector to store OOB error values
+oob_err <- c()
+
+# Write a loop over the rows of hyper_grid to train the grid of models
+for (i in 1:nrow(hyper_grid)) {
+
+    # Train a Random Forest model
+    model <- randomForest(formula = bresult ~ ., 
+                          data = NCAA_train %>% select(1,3,6,10:51,53),
+                          mtry = hyper_grid$mtry[i],
+                          nodesize = hyper_grid$nodesize[i],
+                          sampsize = hyper_grid$sampsize[i])
+                          
+    # Store OOB error for the model                      
+    oob_err[i] <- model$err.rate[nrow(model$err.rate), "OOB"]
+}
+
+# Identify optimal set of hyperparmeters based on OOB error
+opt_i <- which.min(oob_err)
+print(hyper_grid[opt_i,])
+```
+
+## GBM Model
+
+Train a GBM model
+
+```{r tgbmm}
+# Convert "yes" to 1, "no" to 0
+NCAA_train$b01result <- ifelse(NCAA_train$bresult == "F", 1, 0)
+
+# Train a 10000-tree GBM model
+set.seed(1)
+NCAA_model <- gbm(formula = b01result ~ ., 
+                    distribution = "bernoulli", 
+                    data = NCAA_train,
+                    n.trees = 10000)
+                    
+# Print the model object                    
+print(NCAA_model) 
+
+# summary() prints variable importance
+summary(NCAA_model) 
+```
+
+Prediction using a GBM model
+
+```{r puGBMm}
+# Since we converted the training response col, let's also convert the test response col
+NCAA_train$b01result <- ifelse(NCAA_train$bresult == "F", 1, 0)
+
+# Generate predictions on the test set
+preds1 <- predict(object = NCAA_model, 
+                  newdata = NCAA_test %>% select(1,3,6,10:51,53),
+                  n.trees = 10000)
+
+# Generate predictions on the test set (scale to response)
+preds2 <- predict(object = NCAA_model, 
+                  newdata = NCAA_test %>% select(1,3,6,10:51,53),
+                  n.trees = 10000,
+                  type = "response")
+
+# Compare the range of the two sets of predictions
+#range(preds1)
+#range(preds2)
+```
+
+
+

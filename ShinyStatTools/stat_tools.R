@@ -30,14 +30,14 @@ ui <- dashboardPage(
     sidebarMenu(
       menuItem("Descriptive Stats", tabName = "ds"),
       menuItem("Normal", tabName = "normal"),
-      menuItem("One Sample t-Test", tabName = "tTest"),
-      menuItem("Two Sample t-Test",tabName = "2tTest"),
+      menuItem("All t-Tests", tabName = "tTest"),
       menuItem("ANOVA", tabName = "ANOVA"),
       menuItem("One Prop z-Test", tabName = "1pzt"),
       menuItem("Two Prop z-Test", tabName = "2pzt"),
       menuItem("Chi-Square", tabName = "Chi"),
       menuItem("Linear Regression", tabName = "LR"),
-      menuItem("Discrete", tabName = "Disc")
+      menuItem("Discrete", tabName = "Disc"),
+      menuItem("Data Sets", tabName = "datasets")
     ) #End sidebarMenu
   ), #End dashboardSidebar
 
@@ -73,7 +73,7 @@ ui <- dashboardPage(
             box(title = "Summary Statistics", width = NULL, solidHeader = TRUE,
               tableOutput("dss")
             ), #Ebox
-            box(title = "qqplot", width = NULL, background = "aqua",
+            box(title = "qqplot", width = NULL, background = "blue",
               plotOutput("qqplot"),
               valueBoxOutput("qqalert")
             ) #Ebox
@@ -134,24 +134,40 @@ ui <- dashboardPage(
         fluidRow(
           column(width = 3,
             box(title = "Data Input",width = NULL,status = "primary",
-              radioButtons("tchoice","Input:",c("Single Data","Statistics","Paired Data")),
-              conditionalPanel(condition = "input.tchoice != 'Statistics'",
+              checkboxInput("Statistics","Statistics"),
+              conditionalPanel(condition = "input.Statistics == 0",
+                radioButtons("tchoice","Input:",c("Single Data","Paired Data","2 Sample t-Test")),
                  actionButton("cleart", "Clear"),
                  actionButton("plott", "Plot"),
                  rHandsontableOutput("dtt")
               ), #End of conditionalPanel
-              conditionalPanel(condition = "input.tchoice == 'Statistics'",
+              conditionalPanel(condition = "input.Statistics == 1",
+                radioButtons("tchoice","Input:",c("Single Data","2 Sample t-Test")),
+              ), #End of conditionalPanel
+              conditionalPanel(condition = "input.Statistics == 1 && input.tchoice == 'Single Data'",
                 numericInput("tmean","Mean:",0),
                 numericInput("tsd","Standard Deviation:",1),
                 numericInput("tn","Count:",1)
               ), #End of conditionalPanel
+              conditionalPanel(condition = "input.Statistics == 1 && input.tchoice == '2 Sample t-Test'",
+                numericInput("tmean","Mean A:",0),
+                numericInput("tsd","Standard Deviation A:",1),
+                numericInput("tn","Count A:",1),
+                numericInput("tmean.b","Mean B:",0),
+                numericInput("tsd.b","Standard Deviation B:",1),
+                numericInput("tn.b","Count B:",1)
+              ), #End of conditionalPanel
             ), #Ebox
           ), #Ecolumn
-          conditionalPanel(condition = "input.tchoice != 'Statistics'",
+          conditionalPanel(condition = "input.Statistics == 0",
             column(width = 4,
                box(title = "Summary Statistics", width = NULL, background = "blue",
-                 plotOutput("dsst"),
-                 valueBoxOutput("qqalertt", width = NULL)
+                  tableOutput("ttst"),
+                  plotOutput("ttqq"),
+                  splitLayout(
+                    valueBoxOutput("qqalertt", width = NULL),
+                    valueBoxOutput("qqalertt.b", width = NULL)
+                  ), #EsplitLayout
                ), #Ebox
             ), #Ecolumn
           ), #End of Conditional
@@ -163,6 +179,7 @@ ui <- dashboardPage(
               radioButtons("ttail","",c("Left Tail"="less","Two Tail"="two.sided","Right Tail"="greater"),inline = FALSE,width = "50%"),
               actionButton("ttest","Test")
             ), #EsplitLayout
+            conditionalPanel(condition = "input.tchoice == '2 Sample t-Test'",checkboxInput("eqvar","Equal Variances",TRUE)),
             plotOutput("ttgraph")
             ), #Ebox
           ) #Ecolumn
@@ -171,16 +188,13 @@ ui <- dashboardPage(
 
 # <<<<<<<<<<<<<<<<< t-test TAB UI
 
-      tabItem("tTestStats","tTestStats goes Here"), #EtabItem tTest
-      tabItem("Pairedt","Pairedt goes Here"), #EtabItem Pairedt
-      tabItem("2tTest","2tTest goes Here"), #EtabItem 2tTest
-      tabItem("2tTestStats","2tTestStats goes Here"), #EtabItem 2tTestStats
       tabItem("ANOVA","ANOVA goes Here"), #EtabItem ANOVA
       tabItem("1pzt","1pzt goes Here"), #EtabItem 1pzt
       tabItem("2pzt","2pzt goes Here"), #EtabItem 2pzt
       tabItem("Chi","Chi goes Here"), #EtabItem Chi
       tabItem("LR","LR goes Here"), #EtabItem LR
-      tabItem("Disc","Disc goes Here") #EtabItem Disc
+      tabItem("Disc","Disc goes Here"), #EtabItem Disc
+      tabItem("datasets", "All the pre-built datasets will go here") #EtabItem Datasets
     ) #End tabItems
   ) #EdashboardBody
 ) #EdashboardPage
@@ -239,10 +253,10 @@ server <- function(input, output, session) {
       sx <- summary(hist.x)
       sxe <- quantile(hist.x, c(0.25, 0.75), type = 6)
       dsse <- matrix(formatC(c("","","","","",sxe[2],"",sxe[1],""),
-                             format="f",digits = 7,drop0trailing = TRUE),ncol=1,nrow=9)
+                             format="f",digits = 6,drop0trailing = TRUE),ncol=1,nrow=9)
       dss <- matrix(formatC(c(length(hist.x),sx[4],sd(hist.x),var(hist.x),
                               sx[6],sx[5],sx[3],sx[2],sx[1]),
-                            format="f",digits = 7,drop0trailing = TRUE),ncol=1,nrow=9)
+                            format="f",digits = 6,drop0trailing = TRUE),ncol=1,nrow=9)
       dss <- cbind(dss,dsse)
       rownames(dss) <- c("Count","Mean","Standard Dev","Variance","Max","3rd Quartile","Median","1st Quartile","Min")
       output$dss <- renderTable({dss},rownames = TRUE,colnames=FALSE)
@@ -342,12 +356,17 @@ server <- function(input, output, session) {
       colnames(data.ttest) <- "A"
       t.in <- reactiveValues(values = data.ttest)
       output$dtt <- renderRHandsontable({rhandsontable(t.in$values)})
-    }else{
+    }else if(input$tchoice == "Paired Data"){
       data.ttest <- data.frame(matrix(NA_real_, nrow = 500, ncol = 3))
       colnames(data.ttest) <- c("diff","A","B")
       t.in <- reactiveValues(values = data.ttest)
       output$dtt <- renderRHandsontable({rhandsontable(t.in$values) %>% 
           hot_col("diff", readOnly = TRUE)})
+    }else if(input$tchoice == "2 Sample t-Test"){
+      data.ttest <- data.frame(matrix(NA_real_, nrow = 500, ncol = 2))
+      colnames(data.ttest) <- c("A","B")
+      t.in <- reactiveValues(values = data.ttest)
+      output$dtt <- renderRHandsontable({rhandsontable(t.in$values)}) 
     }
   }) #EobserveEvent
   
@@ -366,18 +385,56 @@ server <- function(input, output, session) {
         stat_qq_band() +
         stat_qq_line() +
         stat_qq_point() +
-        labs(x = "Theoretical Quantiles", y = "Sample Quantiles")
+        labs(title="A",x = "Theoretical Quantiles", y = "Sample Quantiles")
       good <- shapiro.test(t.x)
       output$qqalertt <- renderValueBox({
         valueBox(round(good$p.value,3), subtitle = "p-value",width = 5,color = if (good$p.value < .05) {"red"} else {"green"})
       }) #Eoutput$qqalert      
       sx <- summary(t.x)
       dss <- matrix(formatC(c(length(t.x),sx[4],sd(t.x),sd(t.x)/sqrt(length(t.x))),
-                            format="f",digits = 7,drop0trailing = TRUE),ncol=4,nrow=1)
+                            format="f",digits = 6,drop0trailing = TRUE),ncol=4,nrow=1)
       colnames(dss) <- c("Count","Mean","Standard Dev","Standard Error")
-      output$dsst <- renderPlot({grid.arrange(tableGrob(dss),qqt,ncol =1)})
+      rownames(dss) <- c("A")
+      tse <- sd(t.x)/sqrt(length(t.x))
     }#Eif
+    if(input$tchoice == "2 Sample t-Test"){
+      t.x.b <- t.in$values[,2]
+      t.x.b <- t.x.b[!is.na(t.x.b)]
+      t.df.b <- data.frame(t.x.b)
+      qqt.b <- t.df.b %>% ggplot(mapping = aes(sample = t.x.b)) +
+        stat_qq_band() +
+        stat_qq_line() +
+        stat_qq_point() +
+        labs(title="B", x = "Theoretical Quantiles", y = "Sample Quantiles")
+      good.b <- shapiro.test(t.x.b)
+      output$qqalertt.b <- renderValueBox({
+        valueBox(round(good.b$p.value,3), subtitle = "p-value",width = 5,color = if (good.b$p.value < .05) {"red"} else {"green"})
+      }) #Eoutput$qqalert.b      
+      sx.b <- summary(t.x.b)
+      dss.b <- matrix(formatC(c(length(t.x.b),sx.b[4],sd(t.x.b),sd(t.x.b)/sqrt(length(t.x.b))),
+                            format="f",digits = 6,drop0trailing = TRUE),ncol=4,nrow=1)
+      dmean <- (sx[4]-sx.b[4])
+      tse <- sqrt(sd(t.x.b)^2/length(t.x.b)+sd(t.x)^2/length(t.x))
+      dss.t <- matrix(formatC(c("",dmean,"",tse),
+                            format="f",digits = 6,drop0trailing = TRUE),ncol=4,nrow=1)
+      dss <- rbind(dss,dss.b,dss.t)
+      rownames(dss) <- c("A","B", "Total")
+    }#Eif
+    output$ttst <- renderTable({dss},rownames = TRUE,colnames=TRUE)
+    if(input$tchoice == "Single Data"){output$ttqq <- renderPlot({qqt})
+    }else if (input$tchoice == "2 Sample t-Test"){
+    boxpA <- t.df %>% ggplot(aes(x="", y = t.x)) +
+          geom_boxplot(color="darkblue", fill="lightblue", outlier.colour="red", outlier.shape=8, outlier.size=4) + 
+          geom_jitter(width = .1) + theme_classic() +
+          labs(x="", y="A" ) + ylim(c(min(t.x,t.x.b),max(t.x,t.x.b)))
+    boxpB <- t.df.b %>% ggplot(aes(x="", y = t.x.b)) +
+          geom_boxplot(color="darkblue", fill="lightblue", outlier.colour="red", outlier.shape=8, outlier.size=4) + 
+          geom_jitter(width = .1) + theme_classic() +
+          labs(x="", y="B" ) + ylim(c(min(t.x,t.x.b),max(t.x,t.x.b)))
+    output$ttqq <- renderPlot({grid.arrange(boxpA,boxpB,qqt, qqt.b, ncol =2, nrow =2)})
+    } #Eif
   }) #EobserveEvent
+  
   observeEvent(input$ttest, {
     t.in$values <- hot_to_r(input$dtt)
     if(sum(!is.na(t.in$values[,1]))>1){
@@ -387,12 +444,18 @@ server <- function(input, output, session) {
     alpha <- input$tAlpha
     mu <- input$th0
     tail <- input$ttail
-    if(input$tchoice != "Statistics"){df <- length(t.x)-1}else{df <- input$tn - 1}
     if (tail == "less"){
       cl <- 1 - 2*alpha
+      if(input$tchoice == "2 Sample t-Test"){
+        t.x.b <- t.in$values[,2]
+        t.x.b <- t.x.b[!is.na(t.x.b)]
+        ttr <- t.test(t.x,t.x.b,alternative = tail,mu=mu, var.equal = input$eqvar, conf.level = cl)
+      }else{
+        ttr <- t.test(t.x,alternative = tail,mu=mu, conf.level = cl)
+      }
+      df <- ttr$parameter
       tcv <- qt(alpha,df)
-      ttr <- t.test(t.x,alternative = tail,mu=mu, conf.level = cl)
-      if(input$tchoice != "Statistics"){t.s <- ttr$statistic}else{t.s <- (input$tmean-mu)/(input$tsd/sqrt(df+1))}
+      if(input$Statistics != "Statistics"){t.s <- ttr$statistic}else{t.s <- (input$tmean-mu)/(input$tsd/sqrt(df+1))}
       t.p <- pt(t.s,df)
       U <- max(abs(tcv),abs(t.s))+1
       L <- -1*U
@@ -403,9 +466,16 @@ server <- function(input, output, session) {
         geom_area(data=subset(s.df,x<=t.s),aes(y=y), fill ="blue", alpha = .5)
     }else if(tail == "greater"){
       cl <- 1 - 2*alpha
+      if(input$tchoice == "2 Sample t-Test"){
+        t.x.b <- t.in$values[,2]
+        t.x.b <- t.x.b[!is.na(t.x.b)]
+        ttr <- t.test(t.x,t.x.b,alternative = tail,mu=mu, var.equal = input$eqvar, conf.level = cl)
+      }else{
+        ttr <- t.test(t.x,alternative = tail,mu=mu, conf.level = cl)
+      }
+      df <- ttr$parameter
       tcv <- qt(1-alpha,df)
-      ttr <- t.test(t.x,alternative = tail,mu=mu, conf.level = cl)
-      if(input$tchoice != "Statistics"){t.s <- ttr$statistic}else{t.s <- (input$tmean-mu)/(input$tsd/sqrt(df+1))}
+      if(input$Statistics != "Statistics"){t.s <- ttr$statistic}else{t.s <- (input$tmean-mu)/(input$tsd/sqrt(df+1))}
       t.p <- 1 - pt(t.s,df)
       U <- max(abs(tcv),abs(t.s))+1
       L <- -1*U
@@ -416,9 +486,16 @@ server <- function(input, output, session) {
         geom_area(data=subset(s.df,x>=t.s),aes(y=y), fill ="blue", alpha = .5)
     }else{
       cl <- 1 - alpha
+      if(input$tchoice == "2 Sample t-Test"){
+        t.x.b <- t.in$values[,2]
+        t.x.b <- t.x.b[!is.na(t.x.b)]
+        ttr <- t.test(t.x,t.x.b,alternative = tail,mu=mu, var.equal = input$eqvar, conf.level = cl)
+      }else{
+        ttr <- t.test(t.x,alternative = tail,mu=mu, conf.level = cl)
+      }
+      df <- ttr$parameter
       tcv <- qt(alpha/2,df)
-      ttr <- t.test(t.x,alternative = tail,mu=mu, conf.level = cl)
-      if(input$tchoice != "Statistics"){t.s <- ttr$statistic}else{t.s <- (input$tmean-mu)/(input$tsd/sqrt(df+1))}
+      if(input$Statistics != "Statistics"){t.s <- ttr$statistic}else{t.s <- (input$tmean-mu)/(input$tsd/sqrt(df+1))}
       t.p <- 2*(pt(-abs(t.s),df))
       U <- max(abs(tcv),abs(t.s))+2
       L <- -1*U
@@ -431,14 +508,18 @@ server <- function(input, output, session) {
         geom_area(data=subset(s.df,x >= abs(t.s)),aes(y=y), fill ="blue", alpha = .5)
     }
     ttt <- matrix(formatC(c(df,t.s,t.p,tcv),
-                          format="f",digits = 7,drop0trailing = TRUE),ncol=4,nrow=1)
+                          format="f",digits = 6,drop0trailing = TRUE),ncol=4,nrow=1)
     colnames(ttt) <- c("df","t-score","P-Value","Critical Value")
-    if(input$tchoice != "Statistics"){tmean <- mean(t.x)}else{tmean <- input$tmean}
-    if(input$tchoice != "Statistics"){tsd <- sd(t.x)}else{tsd <- input$tsd}
+    if(input$Statistics != "Statistics"){tmean <- mean(t.x)}else{tmean <- input$tmean}
+    if(input$Statistics != "Statistics"){tsd <- sd(t.x)}else{tsd <- input$tsd}
     tp <- tp + scale_x_continuous(sec.axis = sec_axis(~.*tsd/sqrt(df+1)+mu, name = "A")) +
       theme(axis.title.y = element_blank(),axis.text.y = element_blank(),axis.ticks.y = element_blank()) +
       labs(x = "t")
-    m.e <- abs(tcv) * tsd/sqrt(df+1)
+    if(input$tchoice != "2 Sample t-Test"){tse <- tsd/sqrt(df+1)}else{
+      tse <- sqrt(sd(t.x.b)^2/length(t.x.b)+sd(t.x)^2/length(t.x))
+      tmean <- mean(t.x)-mean(t.x.b)
+      }
+    m.e <- abs(tcv) * tse
     upper <- tmean+m.e
     lower <- tmean-m.e
     CI.t <- paste(cl*100,"% confidence interval is (",lower,",",upper,")")

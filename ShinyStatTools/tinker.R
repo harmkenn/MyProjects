@@ -37,8 +37,7 @@ ui <- dashboardPage(
       menuItem("Normal", tabName = "normal"),
       menuItem("All t-Tests", tabName = "tTest"),
       menuItem("ANOVA", tabName = "anova"),
-      menuItem("One Prop z-Test", tabName = "1pzt"),
-      menuItem("Two Prop z-Test", tabName = "2pzt"),
+      menuItem("Proportions", tabName = "props"),
       menuItem("Chi-Square", tabName = "Chi"),
       menuItem("Linear Regression", tabName = "LR"),
       menuItem("Discrete", tabName = "Disc"),
@@ -59,178 +58,214 @@ ui <- dashboardPage(
       # >>>>>>>>>>>>>>Discrete Tab UI
       
       tabItem("ds",
-              fluidRow(
-                column(width = 2,
-                       box(title = "Data Input", width = NULL, status = "primary",
-                           actionButton("clear","Clear"),actionButton("plot","Plot"),
-                           rHandsontableOutput("dt")
-                       ) #Ebox
-                ), #Ecolumn
-                column(width = 5,
-                       box(title = "Histogram", width = NULL,
-                           plotOutput("hist")
-                       ), #Ebox
-                       box(title = "Percentile", width = NULL,
-                           splitLayout(
-                             numericInput("ptile","Percentile:",50,width="50%"),
-                             actionButton("goptile","Get"),
-                             textOutput("pptile")
-                           ) #EsplitLayout
-                       ) #Ebox
-                ), #Ecolumn
-                column(width = 5,
-                       box(title = "Summary Statistics", width = NULL, solidHeader = TRUE,
-                           tableOutput("dss")
-                       ), #Ebox
-                       box(title = "qqplot", width = NULL, background = "blue",
-                           plotOutput("qqplot"),
-                           valueBoxOutput("qqalert")
-                       ) #Ebox
-                ) #Ecolumn
-              ) #EfluidRow
+        fluidRow(
+          column(width = 2,
+           box(title = "Data Input", width = NULL, status = "primary",
+               actionButton("clear","Clear"),actionButton("plot","Plot"),
+               rHandsontableOutput("dt")
+           ) #Ebox
+          ), #Ecolumn
+          column(width = 5,
+           box(title = "Histogram", width = NULL,
+               plotOutput("hist")
+           ), #Ebox
+           box(title = "Percentile", width = NULL,
+               splitLayout(
+                 numericInput("ptile","Percentile:",50,width="50%"),
+                 actionButton("goptile","Get"),
+                 textOutput("pptile")
+               ) #EsplitLayout
+           ) #Ebox
+          ), #Ecolumn
+          column(width = 5,
+           box(title = "Summary Statistics", width = NULL, solidHeader = TRUE,
+               tableOutput("dss")
+           ), #Ebox
+           box(title = "qqplot", width = NULL, background = "blue",
+               plotOutput("qqplot"),
+               valueBoxOutput("qqalert")
+           ) #Ebox
+          ) #Ecolumn
+        ) #EfluidRow
       ), #EtabItem ds
       
       # <<<<<<<<<<<<< Discrete Tab UI
       # >>>>>>>>>>>>> Normal Tab UI
       
       tabItem("normal",
-              fluidRow(
-                column(width = 3,
-                       box(title = "Selections", width = NULL, solidHeader = TRUE,
-                           radioButtons("nway","",c("z to Prob","Prob to z")),
-                           numericInput("nmu","Mean:",0),
-                           numericInput("nsd", "Standard Dev:",1),
-                           actionButton("nReset","Reset")
-                       ), #Ebox
-                       conditionalPanel(condition = "input.nway == 'z to Prob'",
-                                        helpText("Shade:"),
-                                        checkboxInput("Left","Left"),
-                                        checkboxInput("Center","Center"),
-                                        checkboxInput("Right","Right"),
-                                        helpText("z-Score Cut-offs"),
-                                        checkboxInput("nsym","Symmetric"),
-                       ), #EconditionalPanel
-                       conditionalPanel(condition = "input.nway == 'Prob to z'",
-                                        radioButtons("nshade","Shade", choices = c("Left","Center","Right"))
-                       ), #EconditionalPanel
-                ), #Ecolumn left
-                column(width = 9,
-                       conditionalPanel(condition = "input.nway == 'z to Prob'",
-                                        splitLayout(
-                                          numericInput("lz","Left z-Score",-1,width="25%",step = .1),
-                                          actionButton("z2p","Find Probability"),
-                                          numericInput("rz","Right z-Score",1,width="25%", step = .1)
-                                        ), #EsplitLayout
-                                        plotOutput("npp"),
-                                        textOutput("npptext")
-                       ), #EconditionalPanel
-                       conditionalPanel(condition = "input.nway == 'Prob to z'",
-                                        splitLayout(
-                                          numericInput("prob","Percent",40,width="25%"),
-                                          actionButton("p2z","Find Probability")
-                                        ), #EsplitLayout
-                                        plotOutput("npz"),
-                                        textOutput("npztext")
-                       ) #EconditionalPanel
-                ) #Ecolumn Main
-              ) #EfluidRow Normal Tab
+        fluidRow(
+          column(width = 3,
+                 box(title = "Selections", width = NULL, solidHeader = TRUE,
+                     radioButtons("nway","",c("z to Prob","Prob to z")),
+                     numericInput("nmu","Mean:",0),
+                     numericInput("nsd", "Standard Dev:",1),
+                     actionButton("nReset","Reset")
+                 ), #Ebox
+                 conditionalPanel(condition = "input.nway == 'z to Prob'",
+                    helpText("Shade:"),
+                    checkboxInput("Left","Left"),
+                    checkboxInput("Center","Center"),
+                    checkboxInput("Right","Right"),
+                    helpText("z-Score Cut-offs"),
+                    checkboxInput("nsym","Symmetric"),
+                 ), #EconditionalPanel
+                 conditionalPanel(condition = "input.nway == 'Prob to z'",
+                                  radioButtons("nshade","Shade", choices = c("Left","Center","Right"))
+                 ), #EconditionalPanel
+          ), #Ecolumn left
+          column(width = 9,
+             conditionalPanel(condition = "input.nway == 'z to Prob'",
+                splitLayout(
+                  numericInput("lz","Left z-Score",-1,width="25%",step = .1),
+                  actionButton("z2p","Find Probability"),
+                  numericInput("rz","Right z-Score",1,width="25%", step = .1)
+                ), #EsplitLayout
+                plotOutput("npp"),
+                textOutput("npptext")
+             ), #EconditionalPanel
+             conditionalPanel(condition = "input.nway == 'Prob to z'",
+                splitLayout(
+                  numericInput("prob","Percent",40,width="25%"),
+                  actionButton("p2z","Find Probability")
+                ), #EsplitLayout
+                plotOutput("npz"),
+                textOutput("npztext")
+             ) #EconditionalPanel
+          ) #Ecolumn Main
+        ) #EfluidRow Normal Tab
       ), #EtabItem Normal
       
       # <<<<<<<<<<<<<<<<< Normal TAB UI
       # >>>>>>>>>>>>>>>>> tTest TAB UI
       
       tabItem("tTest",
-              fluidRow(
-                column(width = 3,
-                       box(title = "Data Input",width = NULL,status = "primary",
-                           checkboxInput("Statistics","Statistics"),
-                           conditionalPanel(condition = "input.Statistics == 0",
-                                            radioButtons("tchoice","Input:",c("Single Data","Paired Data","2 Sample t-Test")),
-                                            actionButton("cleart", "Clear"),
-                                            actionButton("plott", "Plot"),
-                                            rHandsontableOutput("dtt")
-                           ), #End of conditionalPanel
-                           conditionalPanel(condition = "input.Statistics == 1",
-                                            radioButtons("tchoice","Input:",c("Single Data","2 Sample t-Test")),
-                           ), #End of conditionalPanel
-                           conditionalPanel(condition = "input.Statistics == 1 && input.tchoice == 'Single Data'",
-                                            numericInput("tmean","Mean:",0),
-                                            numericInput("tsd","Standard Deviation:",1),
-                                            numericInput("tn","Count:",1)
-                           ), #End of conditionalPanel
-                           conditionalPanel(condition = "input.Statistics == 1 && input.tchoice == '2 Sample t-Test'",
-                                            numericInput("tmean","Mean A:",0),
-                                            numericInput("tsd","Standard Deviation A:",1),
-                                            numericInput("tn","Count A:",1),
-                                            numericInput("tmean.b","Mean B:",0),
-                                            numericInput("tsd.b","Standard Deviation B:",1),
-                                            numericInput("tn.b","Count B:",1)
-                           ), #End of conditionalPanel
-                       ), #Ebox
-                ), #Ecolumn
-                conditionalPanel(condition = "input.Statistics == 0",
-                                 column(width = 4,
-                                        box(title = "Summary Statistics", width = NULL, background = "blue",
-                                            tableOutput("ttst"),
-                                            plotOutput("ttqq"),
-                                            splitLayout(
-                                              valueBoxOutput("qqalertt", width = NULL),
-                                              valueBoxOutput("qqalertt.b", width = NULL)
-                                            ), #EsplitLayout
-                                        ), #Ebox
-                                 ), #Ecolumn
-                ), #End of Conditional
-                column(width = 5,
-                       box(title = "Hypothesis Test", width = NULL,
-                           splitLayout(
-                             numericInput("th0","Null:",0,width=NULL),
-                             numericInput("tAlpha","Alpha:",.05,width=NULL),
-                             radioButtons("ttail","",c("Left Tail"="less","Two Tail"="two.sided","Right Tail"="greater"),inline = FALSE,width = "50%"),
-                             actionButton("ttest","Test")
-                           ), #EsplitLayout
-                           conditionalPanel(condition = "input.tchoice == '2 Sample t-Test'",checkboxInput("eqvar","Equal Variances",TRUE)),
-                           plotOutput("ttgraph")
-                       ), #Ebox
-                ) #Ecolumn
-              ) #EfluidRow
+        fluidRow(
+          column(width = 3,
+         box(title = "Data Input",width = NULL,status = "primary",
+             checkboxInput("Statistics","Statistics"),
+             conditionalPanel(condition = "input.Statistics == 0",
+                  radioButtons("tchoice","Input:",c("Single Data","Paired Data","2 Sample t-Test")),
+                  actionButton("cleart", "Clear"),
+                  actionButton("plott", "Plot"),
+                  rHandsontableOutput("dtt")
+             ), #End of conditionalPanel
+             conditionalPanel(condition = "input.Statistics == 1",
+                radioButtons("tchoice","Input:",c("Single Data","2 Sample t-Test")),
+             ), #End of conditionalPanel
+             conditionalPanel(condition = "input.Statistics == 1 && input.tchoice == 'Single Data'",
+                numericInput("tmean","Mean:",0),
+                numericInput("tsd","Standard Deviation:",1),
+                numericInput("tn","Count:",1)
+             ), #End of conditionalPanel
+             conditionalPanel(condition = "input.Statistics == 1 && input.tchoice == '2 Sample t-Test'",
+                  numericInput("tmean","Mean A:",0),
+                  numericInput("tsd","Standard Deviation A:",1),
+                  numericInput("tn","Count A:",1),
+                  numericInput("tmean.b","Mean B:",0),
+                  numericInput("tsd.b","Standard Deviation B:",1),
+                  numericInput("tn.b","Count B:",1)
+               ), #End of conditionalPanel
+           ), #Ebox
+          ), #Ecolumn
+          conditionalPanel(condition = "input.Statistics == 0",
+           column(width = 4,
+              box(title = "Summary Statistics", width = NULL, background = "blue",
+                  tableOutput("ttst"),
+                  plotOutput("ttqq"),
+                  splitLayout(
+                    valueBoxOutput("qqalertt", width = NULL),
+                    valueBoxOutput("qqalertt.b", width = NULL)
+                  ), #EsplitLayout
+              ), #Ebox
+           ), #Ecolumn
+          ), #End of Conditional
+          column(width = 5,
+           box(title = "Hypothesis Test", width = NULL,
+               splitLayout(
+                 numericInput("th0","Null:",0,width=NULL),
+                 numericInput("tAlpha","Alpha:",.05,width=NULL),
+                 radioButtons("ttail","",c("Left Tail"="less","Two Tail"="two.sided","Right Tail"="greater"),inline = FALSE,width = "50%"),
+                 actionButton("ttest","Test")
+               ), #EsplitLayout
+               conditionalPanel(condition = "input.tchoice == '2 Sample t-Test'",checkboxInput("eqvar","Equal Variances",TRUE)),
+               plotOutput("ttgraph")
+           ), #Ebox
+          ) #Ecolumn
+        ) #EfluidRow
       ), #EtabItem tTest
       
       ######################## End t-test TAB UI #######################
       ######################## ANOVA Tab UI #############################
       
       tabItem("anova",
-              fluidRow(
-                column(width = 4, 
-                       box(title = "Data Input", width = 12, 
-                           checkboxInput("anovastat","Statistics"),
-                           actionButton("anovatc", "Clear"),
-                           actionButton("anovaplot", "Plot"),
-                           rHandsontableOutput("anovat")
-                       ), #Ebox
-                ), #Ecolumn left
-                conditionalPanel(condition = "input.anovastat == 0",
-                                 column(width = 3, 
-                                        box(title = "graphs",width = 12, background = "blue", 
-                                            plotOutput("anovabox"),
-                                            plotOutput("anovaqq")
-                                        ), #Ebox
-                                 ), #Ecolumn middle
-                ), #EconditionalPanel
-                column(width = 5, 
-                       box(title = "Results", width = 12, 
-                           tableOutput("anovaut"),
-                           tableOutput("anovalt"),
-                           numericInput("F.alpha","Alpha:",.05),
-                           plotOutput("F.plot")
-                       ), #Ebox
-                ), #Ecolumn right
-              ) #EfluidRow
+        fluidRow(
+          column(width = 4, 
+             box(title = "Data Input", width = 12, 
+               checkboxInput("anovastat","Statistics"),
+               actionButton("anovatc", "Clear"),
+               actionButton("anovaplot", "Plot"),
+               rHandsontableOutput("anovat")
+             ), #Ebox
+          ), #Ecolumn left
+          conditionalPanel(condition = "input.anovastat == 0",
+           column(width = 3, 
+            box(title = "graphs",width = 12, background = "blue", 
+              plotOutput("anovabox"),
+              plotOutput("anovaqq")
+            ), #Ebox
+           ), #Ecolumn middle
+          ), #EconditionalPanel
+          column(width = 5, 
+           box(title = "Results", width = 12, 
+             tableOutput("anovaut"),
+             tableOutput("anovalt"),
+             numericInput("F.alpha","Alpha:",.05),
+             plotOutput("F.plot")
+           ), #Ebox
+          ), #Ecolumn right
+        ) #EfluidRow
       ), #EtabItem ANOVA
       
       ######################## End ANOVA Tab UI #########################
+      ######################## Proportions UI ##############################
       
-      tabItem("1pzt","1pzt goes Here"), #EtabItem 1pzt
-      tabItem("2pzt","2pzt goes Here"), #EtabItem 2pzt
+      tabItem("props",
+        fluidRow(
+          column(width = 4, 
+             box(title = "Data Input", width = 12, 
+               radioButtons("props","",choices = c("1 Proportion", "2 Proportions")),
+                 splitLayout(
+                   numericInput("x1","Set 1 x:",0),
+                   numericInput("n1","Set 1 n:",1)
+                  ), #Esplit
+               conditionalPanel(condition = "input.props == '2 Proportions'",
+                  splitLayout(
+                   numericInput("x2","Set 2 x:",0),
+                   numericInput("n2","Set 2 n:",1)
+                  ), #Esplit
+               ), #EconditionalPanel
+             ), #Ebox
+          ), #Ecolumn left
+          column(width = 3,
+            box(title = "Graphs",width = 12, background = "blue", 
+              plotOutput("pplot")
+            ) #Ebox
+          ), #Ecolumn Middle  
+          column(width = 5,
+            box(title = "Results",width = 12,  
+              splitLayout(
+                 numericInput("ph0","Null:",.5,width=NULL),
+                 numericInput("pAlpha","Alpha:",.05,width=NULL),
+                 radioButtons("ptail","",c("Left Tail"="less","Two Tail"="two.sided","Right Tail"="greater"),inline = FALSE,width = "50%"),
+                 actionButton("ptest","Test")
+               ), #EsplitLayout
+            ) #Ebox
+          ), #Ecolumn Right 
+        ) #EfluidRow
+      ), #EtabItem props
+      
+      ######################## End Proportions UI #############################
+      
       tabItem("Chi","Chi goes Here"), #EtabItem Chi
       tabItem("LR","LR goes Here"), #EtabItem LR
       tabItem("Disc","Disc goes Here"), #EtabItem Disc
@@ -491,6 +526,7 @@ server <- function(input, output, session) {
       if(sum(!is.na(t.in$values[,1]))>1){
         t.x <- t.in$values[,1]
         t.x <- t.x[!is.na(t.x)]
+        tse <- sd(t.x)/sqrt(length(t.x))
       } #Eif
       tmean <- mean(t.x)
       if (tail == "less"){
@@ -503,7 +539,7 @@ server <- function(input, output, session) {
           tse <- sqrt(sd(t.x.b)^2/length(t.x.b)+sd(t.x)^2/length(t.x))
         }else{
           ttr <- t.test(t.x,alternative = tail,mu=mu, conf.level = cl)
-          tse <- sd(t.x)/sqrt(length(t.x))
+          
         }
         df <- ttr$parameter
         tcv <- qt(alpha,df)
@@ -522,6 +558,7 @@ server <- function(input, output, session) {
           t.x.b <- t.in$values[,2]
           t.x.b <- t.x.b[!is.na(t.x.b)]
           ttr <- t.test(t.x,t.x.b,alternative = tail,mu=mu, var.equal = input$eqvar, conf.level = cl)
+          tse <- sqrt(sd(t.x.b)^2/length(t.x.b)+sd(t.x)^2/length(t.x))
         }else{
           ttr <- t.test(t.x,alternative = tail,mu=mu, conf.level = cl)
         }
@@ -542,9 +579,11 @@ server <- function(input, output, session) {
           t.x.b <- t.in$values[,2]
           t.x.b <- t.x.b[!is.na(t.x.b)]
           ttr <- t.test(t.x,t.x.b,alternative = tail,mu=mu, var.equal = input$eqvar, conf.level = cl)
+          tse <- sqrt(sd(t.x.b)^2/length(t.x.b)+sd(t.x)^2/length(t.x))
         }else{
           ttr <- t.test(t.x,alternative = tail,mu=mu, conf.level = cl)
         }
+        
         df <- ttr$parameter
         tcv <- qt(alpha/2,df)
         t.s <- ttr$statistic
@@ -560,7 +599,7 @@ server <- function(input, output, session) {
           geom_area(data=subset(s.df,x >= abs(t.s)),aes(y=y), fill ="blue", alpha = .5)
       } #Eif
       
-      ############ t-Test Statistics #############################           
+      ############ t-Test Statistics Server #############################           
       
     }else if(input$Statistics == TRUE){
       if(input$tchoice != "2 Sample t-Test"){
@@ -623,7 +662,7 @@ server <- function(input, output, session) {
     m.e <- abs(tcv) * tse
     ttt <- matrix(formatC(c(df,t.s,t.p,tcv,tse,m.e),
                           format="f",digits = 6,drop0trailing = TRUE),ncol=6,nrow=1)
-    colnames(ttt) <- c("df","t-score","P-Value","Critical Value","Standard Error","Margin of Error")
+    colnames(ttt) <- c("df","t-score","P-Value","CV","SE","ME")
     
     tp <- tp + scale_x_continuous(sec.axis = sec_axis(~.*tse+mu, name = "A")) +
       theme(axis.title.y = element_blank(),axis.text.y = element_blank(),axis.ticks.y = element_blank()) +
@@ -640,7 +679,7 @@ server <- function(input, output, session) {
   
   ####################### Start of ANOVA tab Server
   
-  ####### Stas or Data Anovoa ########
+  ####### Stats or Data Anovoa ########
   
   observeEvent(input$anovastat, {
     if(input$anovastat == FALSE){
@@ -735,6 +774,52 @@ server <- function(input, output, session) {
       output$F.plot <- renderPlot({fp})
   }) #EobserveEvent
   
+    ############################# End ANOVA Server #########################
+    ############################# Proportions Server #######################
+  
+  observeEvent(c(input$ptest, input$ptail), {
+    if(input$ptest == 0){return()}
+    alpha <- input$pAlpha
+    ptail <- input$ptail
+    if(ptail != "two.tail"){cl <- 1-2*alpha}else if(ptail == "two.tail"){cl <- 1-alpha}
+    x1 <- input$x1
+    n1 <- input$n1
+    ph0 <- input$ph0
+    if(input$props == "1 Proportion"){
+      prop.test <- prop.test(x1,n1,ph0,alternative = input$ptail, conf.level = cl)
+      low <- prop.test$conf.int[1]
+      high <- prop.test$conf.int[2]
+      dat <- data.frame(set = c("Set 1","Null"),prop = c(x1/n1,ph0))
+      pplot<- dat %>% ggplot(aes(y=prop))+
+        geom_rect(aes(xmin=-.1, xmax=.1, ymin = 0, ymax = x1/n1), fill = "blue") +
+        geom_rect(aes(xmin=.1, xmax=.3, ymin = 0, ymax = ph0), fill = "red") + 
+        xlim(c(-.2,.4)) +
+        geom_errorbar(aes(x = 0, ymin = low, ymax = high)) +
+        geom_point(x=0,y=x1/n1)+
+        theme(axis.title.x = element_blank(),axis.text.x = element_blank(),axis.ticks.x = element_blank())
+    }else if(input$props == "2 Proportions"){
+      x2 <- input$x2
+      n2 <- input$n2  
+      pm <- matrix(c(x1,n1-x1,x2,n2-x2),byrow = FALSE, nrow = 2)
+      prop.test <- prop.test(pm,ph0,alternative = input$ptail, conf.level = cl)
+      low <- prop.test$conf.int[1]
+      high <- prop.test$conf.int[2]
+      dat <- data.frame(set = c("Set 1","Set 2"),prop = c(x1/n1,x2/n2))
+      pplot<- dat %>% ggplot(aes(y=prop))+
+        geom_rect(aes(xmin=-.1, xmax=.1,ymin=0, ymax = x1/n1), fill = "blue") +
+        geom_rect(aes(xmin=-.1, xmax=.1,ymin=-x2/n2, ymax = 0), fill = "red") +
+        xlim(c(-.2,.2)) +
+        geom_errorbar(aes(x = 0, ymin = low, ymax = high)) +
+        geom_point(x=0,y=x1/n1-x2/n2)+
+        scale_fill_brewer(palette="Dark2") +
+        theme(axis.title.x = element_blank(),axis.text.x = element_blank(),axis.ticks.x = element_blank())
+    } #endif
+ 
+    output$pplot <- renderPlot({pplot})
+  }) #EobserveEvent
+  
+    ########################## End Proportions Server ######################
+    ########################## 
   
 } #end of the server
 

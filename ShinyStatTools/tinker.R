@@ -25,7 +25,7 @@ binwidth <- 1
 # >>>>>>>>>>>>>>>Start of UI
 
 ui <- dashboardPage(
-  dashboardHeader(title = span("Shiny Stat Tools"),titleWidth = "450px",
+  dashboardHeader(title = "Shiny Stat Tools",titleWidth = "450px",
                   tags$li(class = "dropdown",tags$a("by Ken Harmon")),
                   dropdownMenuOutput(outputId = "notifications")),
   
@@ -254,11 +254,12 @@ ui <- dashboardPage(
           column(width = 5,
             box(title = "Results",width = 12,  
               splitLayout(
-                 numericInput("ph0","Null:",.5,width=NULL),
+                conditionalPanel(condition = "input.props == '1 Proportion'",numericInput("ph0","Null:",.5,width=NULL)),
                  numericInput("pAlpha","Alpha:",.05,width=NULL),
                  radioButtons("ptail","",c("Left Tail"="less","Two Tail"="two.sided","Right Tail"="greater"),inline = FALSE,width = "50%"),
                  actionButton("ptest","Test")
                ), #EsplitLayout
+              plotOutput("ptgraph")
             ) #Ebox
           ), #Ecolumn Right 
         ) #EfluidRow
@@ -782,40 +783,82 @@ server <- function(input, output, session) {
     alpha <- input$pAlpha
     ptail <- input$ptail
     if(ptail != "two.tail"){cl <- 1-2*alpha}else if(ptail == "two.tail"){cl <- 1-alpha}
+    pci.cv <- qnorm(mean(c(1,cl)))
     x1 <- input$x1
     n1 <- input$n1
+    phat1 <- x1/n1
     ph0 <- input$ph0
     if(input$props == "1 Proportion"){
-      prop.test <- prop.test(x1,n1,ph0,alternative = input$ptail, conf.level = cl)
-      low <- prop.test$conf.int[1]
-      high <- prop.test$conf.int[2]
-      dat <- data.frame(set = c("Set 1","Null"),prop = c(x1/n1,ph0))
+      pt.se <- sqrt(ph0*(1-ph0)/n1)
+      pt.ts <- (phat1-ph0)/pt.se
+      pci.se <- sqrt(phat1*(1-phat1)/n1)
+      pci.me <- pci.cv*pci.se
+      high <- phat1 + pci.me
+      low <- phat1 - pci.me
+      dat <- data.frame(set = c("Set 1","Null"),prop = c(phat1,ph0))
       pplot<- dat %>% ggplot(aes(y=prop))+
-        geom_rect(aes(xmin=-.1, xmax=.1, ymin = 0, ymax = x1/n1), fill = "blue") +
-        geom_rect(aes(xmin=.1, xmax=.3, ymin = 0, ymax = ph0), fill = "red") + 
-        xlim(c(-.2,.4)) +
-        geom_errorbar(aes(x = 0, ymin = low, ymax = high)) +
-        geom_point(x=0,y=x1/n1)+
+        geom_rect(aes(xmin=-.1, xmax=.1, ymin = 0, ymax = phat1), fill = "deepskyblue4") +
+        geom_rect(aes(xmin=.1, xmax=.3, ymin = 0, ymax = ph0), fill = "deepskyblue2") + 
+        xlim(c(-.15,.35)) +
+        geom_errorbar(aes(x = 0, ymin = low, ymax = high),color="darkslateblue") +
+        geom_point(x=0,y=phat1)+ geom_text(aes(x=0,y=phat1/2,label="Set 1")) + geom_text(aes(x=.2,y=ph0/2,label="Null")) +
         theme(axis.title.x = element_blank(),axis.text.x = element_blank(),axis.ticks.x = element_blank())
     }else if(input$props == "2 Proportions"){
       x2 <- input$x2
-      n2 <- input$n2  
-      pm <- matrix(c(x1,n1-x1,x2,n2-x2),byrow = FALSE, nrow = 2)
-      prop.test <- prop.test(pm,ph0,alternative = input$ptail, conf.level = cl)
-      low <- prop.test$conf.int[1]
-      high <- prop.test$conf.int[2]
-      dat <- data.frame(set = c("Set 1","Set 2"),prop = c(x1/n1,x2/n2))
+      n2 <- input$n2
+      ph0 <- 0
+      phat2 <- x2/n2
+      phatp <- (x1+x2)/(n1+n2)
+      pt.se <- sqrt(phatp*(1-phatp)*(1/n1+1/n2))
+      pt.ts <- (phat1-phat2)/pt.se
+      pci.se <- sqrt(phat1*(1-phat1)/n1+phat2*(1-phat2)/n2)
+      pci.me <- pci.cv*pci.se 
+      phatd <- phat1-phat2
+      high <- phatd + pci.me
+      low <- phatd - pci.me
+      dat <- data.frame(set = c("Set 1","Set 2"),prop = c(phat1,phat2))
       pplot<- dat %>% ggplot(aes(y=prop))+
-        geom_rect(aes(xmin=-.1, xmax=.1,ymin=0, ymax = x1/n1), fill = "blue") +
-        geom_rect(aes(xmin=-.1, xmax=.1,ymin=-x2/n2, ymax = 0), fill = "red") +
-        xlim(c(-.2,.2)) +
-        geom_errorbar(aes(x = 0, ymin = low, ymax = high)) +
-        geom_point(x=0,y=x1/n1-x2/n2)+
+        geom_rect(aes(xmin=-.1, xmax=.1,ymin=0, ymax = phat1), fill = "deepskyblue4") +
+        geom_rect(aes(xmin=-.1, xmax=.1,ymin=-phat2, ymax = 0), fill = "deepskyblue2") +
+        xlim(c(-.15,.15)) +
+        geom_errorbar(aes(x = 0, ymin = low, ymax = high),color="darkslateblue") +
+        geom_point(x=0,y=phatd)+ geom_text(aes(x=0,y=phat1/2,label="Set 1")) + geom_text(aes(x=0,y=-phat2/2,label="Set 2")) +
         scale_fill_brewer(palette="Dark2") +
         theme(axis.title.x = element_blank(),axis.text.x = element_blank(),axis.ticks.x = element_blank())
     } #endif
- 
     output$pplot <- renderPlot({pplot})
+    
+    x <- seq(from = -4, to = 4, by = .01)
+    s.df <- data.frame(x,y=dnorm(x))
+    if(ptail == "less"){
+      pp <- s.df %>% ggplot(aes(x,y))+geom_line()+
+        geom_area(data=subset(s.df,x <= -abs(pci.cv)),aes(y=y), fill ="red", alpha = .5) +
+        geom_area(data=subset(s.df,x <= pt.ts),aes(y=y), fill ="blue", alpha = .5) 
+        pt.pv <- pnorm(pt.ts)
+    }else if(ptail == "greater"){
+      pp <- s.df %>% ggplot(aes(x,y))+geom_line()+
+        geom_area(data=subset(s.df,x >= abs(pci.cv)),aes(y=y), fill ="red", alpha = .5) +
+        geom_area(data=subset(s.df,x >= pt.ts),aes(y=y), fill ="blue", alpha = .5)
+        pt.pv <- 1-pnorm(pt.ts)
+    }else if(ptail == "two.sided"){
+      pp <- s.df %>% ggplot(aes(x,y))+geom_line()+
+        geom_area(data=subset(s.df,x <= -abs(pci.cv)),aes(y=y), fill ="red", alpha = .5) +
+        geom_area(data=subset(s.df,x >= abs(pci.cv)),aes(y=y), fill ="red", alpha = .5) +
+        geom_area(data=subset(s.df,x <= -abs(pt.ts)),aes(y=y), fill ="blue", alpha = .5) +
+        geom_area(data=subset(s.df,x >= abs(pt.ts)),aes(y=y), fill ="blue", alpha = .5)
+        pt.pv <- 2*pnorm(-abs(pt.ts))
+    } #Eif
+
+    ptt <- matrix(formatC(c(pt.ts,pt.pv,pci.cv,pt.se,pci.se,pci.me),
+                          format="f",digits = 6,drop0trailing = TRUE),ncol=6,nrow=1)
+    colnames(ptt) <- c("z-score","P-Value","CV","Test SE","CI SE","ME")
+    
+    pp <- pp + scale_x_continuous(sec.axis = sec_axis(~.*pt.se+ph0, name = "P")) +
+      theme(axis.title.y = element_blank(),axis.text.y = element_blank(),axis.ticks.y = element_blank()) +
+      labs(x = "Z")
+
+    CI.p <- paste(cl*100,"% confidence interval is (",low,",",high,")")
+    output$ptgraph <- renderPlot({grid.arrange(tableGrob(ptt),pp,textGrob(CI.p),ncol=1)})
   }) #EobserveEvent
   
     ########################## End Proportions Server ######################

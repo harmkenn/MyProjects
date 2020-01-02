@@ -1,3 +1,4 @@
+library(janitor)
 library(shiny)
 library(shinyjs)
 library(shinydashboard)
@@ -11,6 +12,8 @@ library(grid)
 library(gridExtra)
 theme_set(theme_bw())
 
+chisq.test <- stats::chisq.test
+
 data.discr <- data.frame(matrix(numeric(), nrow=500, ncol=1))
 colnames(data.discr) <- "A"
 data.ttest <- data.frame(matrix(numeric(), nrow=500, ncol=1))
@@ -20,6 +23,12 @@ colnames(data.anova) <- c("A","B","C","D","E","F")
 data.anova.s <- data.frame(matrix(numeric(), nrow=3, ncol=6))
 colnames(data.anova.s) <- c("A","B","C","D","E","F")
 rownames(data.anova.s) <- c("Count","Mean","SD")
+data.Chi.ti <- data.frame(matrix(integer(), nrow=6, ncol=6))
+colnames(data.Chi.ti) <- c("X1","X2","X3","X4","X5","X6")
+rownames(data.Chi.ti) <- c("Y1","Y2","Y3","Y4","Y5","Y6")
+data.Chi.gof <- data.frame(matrix(integer(), nrow=2, ncol=6))
+colnames(data.Chi.gof) <- c("X1","X2","X3","X4","X5","X6")
+rownames(data.Chi.gof) <- c("Obs","Exp")
 binwidth <- 1
 
 # >>>>>>>>>>>>>>>Start of UI
@@ -31,7 +40,7 @@ ui <- dashboardPage(
   
   # >>>>>>>>>>>>>>>Side Bar  
   
-  dashboardSidebar(
+  dashboardSidebar(width = 150,
     sidebarMenu(
       menuItem("Descriptive Stats", tabName = "ds"),
       menuItem("Normal", tabName = "normal"),
@@ -266,9 +275,46 @@ ui <- dashboardPage(
       ), #EtabItem props
       
       ######################## End Proportions UI #############################
+      ######################## Chi Square UI ##################################
       
-      tabItem("Chi","Chi goes Here"), #EtabItem Chi
-      tabItem("LR","LR goes Here"), #EtabItem LR
+      tabItem("Chi",
+        fluidRow(
+          column(width = 6, 
+             box(title = "Data Input", width = 12, 
+              splitLayout(
+                radioButtons("chic","",c("Independence","Goodness of Fit")),
+                numericInput("chi.alpha","Alpha:",.05, width = 100)
+              ), #EsplitLayout
+              actionButton("Chi.r", "Reset"),
+              actionButton("Chitest", "Test"),
+              rHandsontableOutput("Chi"),
+              tags$hr(style="border-color: blue;"),
+              textOutput("Chiexptitle"),
+              tableOutput("Chiexp"),
+              tags$hr(style="border-color: blue;"),
+              textOutput("ChiSquares"),
+              tableOutput("chicell"),
+             ), #Ebox
+          ), #Ecolumn left
+          column(width = 6, 
+           box(title = "Results", width = 12, 
+             tableOutput("Chiresult"),
+             tags$hr(style="border-color: blue;"),
+             plotOutput("Chi.plot")
+           ), #Ebox
+          ), #Ecolumn right
+        ) #EfluidRow
+      ), #EtabItem Chi
+      
+      ######################## End Chi Square UI #############################
+      ######################## Linear Regression UI #############################
+      
+      tabItem("LR",
+              "LR goes Here"
+      ), #EtabItem LR
+      
+      ######################## End Linear Rergression UI #####################
+      
       tabItem("Disc","Disc goes Here"), #EtabItem Disc
       tabItem("datasets", "All the pre-built datasets will go here") #EtabItem Datasets
     ) #End tabItems
@@ -285,8 +331,10 @@ server <- function(input, output, session) {
   t.in <- reactiveValues(values = data.ttest)
   anova.in <- reactiveValues(values = data.anova)
   anova.s.in <- reactiveValues(values = data.anova.s)
+  chi.ti.in <- reactiveValues(values =  data.Chi.ti)
+  chi.gof.in <- reactiveValues(values =  data.Chi.gof)
   
-  #>>>>>>>>>> Discrete Tab Server  
+  #>>>>>>>>>> Discriptive Tab Server  
   
   output$dt <- renderRHandsontable({rhandsontable(disc.in$values)})
   
@@ -355,7 +403,7 @@ server <- function(input, output, session) {
     output$pptile <- renderText({paste("The ",input$ptile," percentile is: ",round(ptileout,2))})
   }) #EobserveEvent
   
-  # <<<<<<<<<<<<<< End of Discrete Tab Server
+  # <<<<<<<<<<<<<< End of Discriptive Tab Server
   # >>>>>>>>>>>>>> Start of Normal Tab Server
   
   x <- seq(from = -4, to = 4, by = .01)
@@ -439,7 +487,7 @@ server <- function(input, output, session) {
       colnames(data.ttest) <- c("diff","A","B")
       t.in <- reactiveValues(values = data.ttest)
       output$dtt <- renderRHandsontable({rhandsontable(t.in$values) %>% 
-          hot_col("diff", readOnly = TRUE)})
+          hot_col("diff", readOnly = TRUE)}) 
     }else if(input$tchoice == "2 Sample t-Test"){
       data.ttest <- data.frame(matrix(NA_real_, nrow = 500, ncol = 2))
       colnames(data.ttest) <- c("A","B")
@@ -800,7 +848,7 @@ server <- function(input, output, session) {
         geom_rect(aes(xmin=-.1, xmax=.1, ymin = 0, ymax = phat1), fill = "deepskyblue4") +
         geom_rect(aes(xmin=.1, xmax=.3, ymin = 0, ymax = ph0), fill = "deepskyblue2") + 
         xlim(c(-.15,.35)) +
-        geom_errorbar(aes(x = 0, ymin = low, ymax = high),color="darkslateblue") +
+        geom_errorbar(aes(x = 0, ymin = low, ymax = high),color="darkorange2") +
         geom_point(x=0,y=phat1)+ geom_text(aes(x=0,y=phat1/2,label="Set 1")) + geom_text(aes(x=.2,y=ph0/2,label="Null")) +
         theme(axis.title.x = element_blank(),axis.text.x = element_blank(),axis.ticks.x = element_blank())
     }else if(input$props == "2 Proportions"){
@@ -821,7 +869,7 @@ server <- function(input, output, session) {
         geom_rect(aes(xmin=-.1, xmax=.1,ymin=0, ymax = phat1), fill = "deepskyblue4") +
         geom_rect(aes(xmin=-.1, xmax=.1,ymin=-phat2, ymax = 0), fill = "deepskyblue2") +
         xlim(c(-.15,.15)) +
-        geom_errorbar(aes(x = 0, ymin = low, ymax = high),color="darkslateblue") +
+        geom_errorbar(aes(x = 0, ymin = low, ymax = high),color="darkorange2") +
         geom_point(x=0,y=phatd)+ geom_text(aes(x=0,y=phat1/2,label="Set 1")) + geom_text(aes(x=0,y=-phat2/2,label="Set 2")) +
         scale_fill_brewer(palette="Dark2") +
         theme(axis.title.x = element_blank(),axis.text.x = element_blank(),axis.ticks.x = element_blank())
@@ -862,7 +910,80 @@ server <- function(input, output, session) {
   }) #EobserveEvent
   
     ########################## End Proportions Server ######################
-    ########################## 
+    ########################## Chi Server ##################################
+  
+  observeEvent(c(input$Chi.r,input$chic),{
+    if(input$chic == "Independence"){
+      output$Chi <- renderRHandsontable({rhandsontable(chi.ti.in$values)}) 
+    }else if(input$chic == "Goodness of Fit"){
+      output$Chi <- renderRHandsontable({rhandsontable(chi.gof.in$values)})
+    } #Eif
+  }) #EobserveEvent
+  
+  observeEvent(input$Chitest,{
+    if(input$chic == "Independence"){
+      Chi.ti <- hot_to_r(input$Chi)%>% remove_empty(c("rows","cols"))
+      c<-sum(substring(colnames(Chi.ti), 1, 1)== "X")
+      r<-sum(substring(rownames(Chi.ti), 1, 1)== "Y")
+      Chi.ti <- Chi.ti[1:r,1:c]
+      chi.test <- chisq.test(Chi.ti)
+      Chi.ti <- cbind(Chi.ti, Total = rowSums(Chi.ti, na.rm = TRUE))
+      Chi.ti <- rbind(Chi.ti, Total = colSums(Chi.ti, na.rm = TRUE))
+      output$Chi <- renderRHandsontable({rhandsontable(Chi.ti)%>% hot_cols(format = "0", halign = "htCenter")%>% 
+          hot_col(ncol(Chi.ti), readOnly = TRUE) %>% hot_row(nrow(Chi.ti), readOnly = TRUE)}) 
+      output$Chiexptitle <- renderText({"Expected Values"})
+      output$Chiexp <- renderTable({chi.test$expected},rownames = TRUE,colnames=TRUE)
+      output$ChiSquares <- renderText({"Chi-Square Values"})
+      ressq <- (chi.test$residuals)^2
+      output$chicell <- renderTable({ressq},rownames = TRUE,colnames=TRUE)
+      chi.cv <- qchisq(1-input$chi.alpha,chi.test$parameter)
+      chit <- matrix(formatC(c(chi.test$statistic,chi.test$parameter,chi.cv,chi.test$p.value),
+                     format="f",digits = 6,drop0trailing = TRUE),ncol=4,nrow=1)
+      colnames(chit) <- c("Chi-score","df","Chi-CV","P-Value")
+      output$Chiresult <- renderTable({chit})
+      
+      x <- seq(from = 0, to = max(chi.test$statistic,chi.cv)+5, by = .01)
+      s.df <- data.frame(x,y=dchisq(x,chi.test$parameter))
+      chip <- s.df %>% ggplot(aes(x,y))+geom_line()+
+          geom_area(data=subset(s.df,x>=chi.cv),aes(y=y), fill ="red", alpha = .5) +
+          geom_area(data=subset(s.df,x>=chi.test$statistic),aes(y=y), fill ="blue", alpha = .5) +
+          theme(axis.title.y = element_blank(),axis.text.y = element_blank(),axis.ticks.y = element_blank()) +
+          labs(x = "Chi") 
+      output$Chi.plot <- renderPlot({chip})
+      
+    }else if(input$chic == "Goodness of Fit"){
+      Chi.gof <- hot_to_r(input$Chi)%>% remove_empty(c("cols"))
+      c<-sum(substring(colnames(Chi.gof), 1, 1)== "X")
+      Chi.gof.ob <- as.numeric(Chi.gof[1,1:c])
+      Chi.gof.exp <- as.numeric(Chi.gof[2,1:c])
+      chi.test <- chisq.test(x = Chi.gof.ob, p = Chi.gof.exp/sum(Chi.gof.ob))
+      Chi.gof <- cbind(Chi.gof, Total = rowSums(Chi.gof, na.rm = TRUE))
+      Chi.gof <- rbind(Chi.gof, Chi = chi.test$residuals^2)
+      output$Chi <- renderRHandsontable({rhandsontable(Chi.gof)%>% hot_cols(format = "0", halign = "htCenter")%>% 
+          hot_col(ncol(Chi.gof), readOnly = TRUE) %>% hot_row(nrow(Chi.gof), readOnly = TRUE)}) 
+      output$Chiexptitle <- renderText({""})
+      output$Chiexp <- renderTable({})
+      output$ChiSquares <- renderText({""})
+      output$chicell <- renderTable({})
+      chi.cv <- qchisq(1-input$chi.alpha,chi.test$parameter)
+      chit <- matrix(formatC(c(chi.test$statistic,chi.test$parameter,chi.cv,chi.test$p.value),
+                     format="f",digits = 6,drop0trailing = TRUE),ncol=4,nrow=1)
+      colnames(chit) <- c("Chi-score","df","Chi-CV","P-Value")
+      output$Chiresult <- renderTable({chit})
+      
+      x <- seq(from = 0, to = max(chi.test$statistic,chi.cv)+5, by = .01)
+      s.df <- data.frame(x,y=dchisq(x,chi.test$parameter))
+      chip <- s.df %>% ggplot(aes(x,y))+geom_line()+
+          geom_area(data=subset(s.df,x>=chi.cv),aes(y=y), fill ="red", alpha = .5) +
+          geom_area(data=subset(s.df,x>=chi.test$statistic),aes(y=y), fill ="blue", alpha = .5) +
+          theme(axis.title.y = element_blank(),axis.text.y = element_blank(),axis.ticks.y = element_blank()) +
+          labs(x = "Chi") 
+      output$Chi.plot <- renderPlot({chip})
+    } #Eif
+  })
+
+  
+    ########################## End Chi Server ##############################
   
 } #end of the server
 

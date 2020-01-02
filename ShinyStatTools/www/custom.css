@@ -1,11 +1,7 @@
-.x-column.one-fourth-no-spacing {
-  width: 24.1%;
-  margin-right: 1.2%;
-}
-
-@media (max-width: 767px) {
-  .x-column.one-fourth-no-spacing {
-    width: 100%;
-    margin-right: 0%;
-  }
+[class*="col-lg-"],[class*="col-md-"],
+[class*="col-sm-"],[class*="col-xs-"]{
+    padding-right:0 !important;
+    padding-left:0 !important;
+    padding-top:0 !important;
+    padding-bottom: !important;
 }

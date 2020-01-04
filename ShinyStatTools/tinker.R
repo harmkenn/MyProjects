@@ -316,10 +316,6 @@ ui <- dashboardPage(
       fluidRow(
         column(width = 3,
           box(title = "Data Input",width = NULL,status = "primary",
-            splitLayout(
-              numericInput("lr.alpha","Alpha:",.05),
-              numericInput("lr.x","x:",1)
-            ), #EsplitLayout
             actionButton("lr.reset", "Reset"),
             actionButton("lr.test", "Test"),
             rHandsontableOutput("lr.data")
@@ -328,11 +324,22 @@ ui <- dashboardPage(
         column(width = 4,
           box(title = "Graphs", width = NULL, background = "blue",
             plotOutput("lr.big3"),
+            valueBoxOutput("lr.qqplot",width = 6)
           ), #Ebox
         ), #Ecolumn
         column(width = 5,
           box(title = "Test Results", width = NULL,
-            tableOutput("lr.stats")
+            tableOutput("lr.stats"),
+            tableOutput("lr.rstats"),
+            tableOutput("lr.test"),
+            numericInput("lr.alpha","Alpha:",.05),
+            textOutput("ci.slope"),
+            splitLayout(
+              numericInput("lr.x","x:",26),
+              tableOutput("lr.point")
+            ), #EsplitLayout
+            textOutput("ci.meany"),
+            textOutput("pi.y")
           ), #Ebox
         ) #Ecolumn
       ) #EfluidRow
@@ -1023,24 +1030,64 @@ server <- function(input, output, session) {
   }) #EobserveEvent
   
   observeEvent(input$lr.test,{
-    alpha <- input$lr.alpha
+    
     lr.data <- hot_to_r(input$lr.data)%>% remove_empty("rows")
     lr.plot <- lr.data %>% ggplot(aes(x=x, y=y)) + 
       geom_point(shape=18, color="blue")+
       geom_smooth(method=lm,formula = y ~ x, se=FALSE, color="darkred") +
       stat_poly_eq(aes(label = paste(..eq.label.., ..rr.label.., sep = "~~~")), 
-               label.x.npc = "right", label.y.npc = 0.15,
-               formula = y ~ x, parse = TRUE, size = 3)
+        label.x.npc = "right", label.y.npc = 0.15,
+        formula = y ~ x, parse = TRUE, size = 3) +
+        labs(title = "Scatterplot")
+
     fit <- lm(y~x, data=lr.data)
-    res <- qplot(fitted(fit), resid(fit))+geom_hline(yintercept=0)
+    res <- qplot(fitted(fit), resid(fit))+geom_hline(yintercept=0) +
+        labs(title = "Residual Plot")
     
     qqres <- lr.data %>% ggplot(mapping = aes(sample = resid(fit))) +
           stat_qq_band() +
           stat_qq_line() +
           stat_qq_point() +
-          labs(x = "Theoretical Quantiles", y = "Sample Quantiles")
-    output$lr.big3 <- renderPlot({grid.arrange(lr.plot,res,qqres)})
+          labs(title= "Residual QQ Plot",x = "Theoretical Quantiles", y = "Sample Quantiles")
+    output$lr.big3 <- renderPlot({grid.arrange(lr.plot,res,qqres,ncol = 1)})
+    good <- shapiro.test(resid(fit))
+    output$lr.qqplot <-renderValueBox({valueBox(tags$p(round(good$p.value,3), style = "font-size: 50%;"), subtitle = "p-value",width = 5,color = if (good$p.value < .05) {"red"} else {"green"})})
     
+    lr.stats <- matrix(formatC(c(mean(lr.data$x),sd(lr.data$x),mean(lr.data$y),sd(lr.data$y)),
+                       format="f",digits = 6,drop0trailing = TRUE),ncol=4,nrow=1)
+      colnames(lr.stats) <- c("Mean x","SD x","Mean y","SD y")
+    output$lr.stats <- renderTable({lr.stats})
+    xxx <- summary(fit)
+    slope <- xxx$coefficients[2,1]
+    yint <- xxx$coefficients[1,1]
+    r <- cor(lr.data$x,lr.data$y)
+    r2 <- r^2
+    see <- xxx$sigma
+    lr.rstats <- matrix(formatC(c(r,r2,see),
+                       format="f",digits = 6,drop0trailing = TRUE),ncol=3,nrow=1)
+      colnames(lr.rstats) <- c("r","R sq","St Err est")
+    output$lr.rstats <- renderTable({lr.rstats})
+    xxxt <- xxx$coefficients
+    rownames(xxxt) <- c("y-Int","Slope")
+    output$lr.test <- renderTable({xxxt},digits = 6, rownames = TRUE)
+    
+    alpha <- input$lr.alpha
+    lr.x <- input$lr.x
+    cl <- 1 - alpha
+    df <- xxx$df[2]
+    slope.l <- round(slope + qt(alpha/2,df)*xxx$coefficients[2,2],6) 
+    slope.u <- round(slope - qt(alpha/2,df)*xxx$coefficients[2,2],6) 
+    output$ci.slope <- renderText({paste(cl*100,"% confidence interval for slope:(",slope.l,",",slope.u,")")})
+    lr.y <- lr.x*slope + yint
+    output$lr.point <- renderTable({rbind(c("y"),c(lr.y))},colnames = FALSE)
+    semuhat <- see*sqrt(1/(df+2)+(lr.x-mean(lr.data$x))^2/((df+1)*(sd(lr.data$x))^2))
+    cimu.l <- round(lr.y + qt(alpha/2,df)*semuhat,6)
+    cimu.u <- round(lr.y - qt(alpha/2,df)*semuhat,6)
+    output$ci.meany <- renderText({paste(cl*100,"% confidence interval for mean y: (",cimu.l,",",cimu.u,")")})
+    seyhat <- see*sqrt(1+1/(df+2)+(lr.x-mean(lr.data$x))^2/((df+1)*(sd(lr.data$x))^2))
+    piy.l <- round(lr.y + qt(alpha/2,df)*seyhat,6)
+    piy.u <- round(lr.y - qt(alpha/2,df)*seyhat,6)
+    output$pi.y <- renderText({paste(cl*100,"% prediction interval for y: (",piy.l,",",piy.u,")")})
   }) #EobserveEvent
     ########################## End Linear Regression Server ################
   

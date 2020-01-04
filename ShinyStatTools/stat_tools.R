@@ -1,3 +1,4 @@
+library(ggpmisc)
 library(janitor)
 library(shiny)
 library(shinyjs)
@@ -29,12 +30,14 @@ rownames(data.Chi.ti) <- c("Y1","Y2","Y3","Y4","Y5","Y6")
 data.Chi.gof <- data.frame(matrix(integer(), nrow=2, ncol=6))
 colnames(data.Chi.gof) <- c("X1","X2","X3","X4","X5","X6")
 rownames(data.Chi.gof) <- c("Obs","Exp")
+data.lr <- data.frame(matrix(numeric(), nrow=500, ncol=2))
+colnames(data.lr) <- c("x","y")
 binwidth <- 1
 
 # >>>>>>>>>>>>>>>Start of UI
 
 ui <- dashboardPage(
-  dashboardHeader(title = "Shiny Stat Tools",titleWidth = "450px",
+  dashboardHeader(title = "Shiny Stat Tools v1.0",titleWidth = "450px",
                   tags$li(class = "dropdown",tags$a("by Ken Harmon")),
                   dropdownMenuOutput(outputId = "notifications")),
   
@@ -307,8 +310,36 @@ ui <- dashboardPage(
       ), #EtabItem Chi
       
       ######################## End Chi Square UI #############################
+      ######################## Linear Regression UI #############################
       
-      tabItem("LR","LR goes Here"), #EtabItem LR
+    tabItem("LR",
+      fluidRow(
+        column(width = 3,
+          box(title = "Data Input",width = NULL,status = "primary",
+            splitLayout(
+              numericInput("lr.alpha","Alpha:",.05),
+              numericInput("lr.x","x:",1)
+            ), #EsplitLayout
+            actionButton("lr.reset", "Reset"),
+            actionButton("lr.test", "Test"),
+            rHandsontableOutput("lr.data")
+          ), #Ebox
+        ), #Ecolumn
+        column(width = 4,
+          box(title = "Graphs", width = NULL, background = "blue",
+            plotOutput("lr.big3"),
+          ), #Ebox
+        ), #Ecolumn
+        column(width = 5,
+          box(title = "Test Results", width = NULL,
+            tableOutput("lr.stats")
+          ), #Ebox
+        ) #Ecolumn
+      ) #EfluidRow
+    ), #EtabItem LR
+      
+      ######################## End Linear Rergression UI #####################
+      
       tabItem("Disc","Disc goes Here"), #EtabItem Disc
       tabItem("datasets", "All the pre-built datasets will go here") #EtabItem Datasets
     ) #End tabItems
@@ -327,6 +358,7 @@ server <- function(input, output, session) {
   anova.s.in <- reactiveValues(values = data.anova.s)
   chi.ti.in <- reactiveValues(values =  data.Chi.ti)
   chi.gof.in <- reactiveValues(values =  data.Chi.gof)
+  lr.in <- reactiveValues(values =  data.lr)
   
   #>>>>>>>>>> Discriptive Tab Server  
   
@@ -923,13 +955,16 @@ server <- function(input, output, session) {
       chi.test <- chisq.test(Chi.ti)
       Chi.ti <- cbind(Chi.ti, Total = rowSums(Chi.ti, na.rm = TRUE))
       Chi.ti <- rbind(Chi.ti, Total = colSums(Chi.ti, na.rm = TRUE))
-      output$Chi <- renderRHandsontable({rhandsontable(Chi.ti)%>% hot_cols(format = "0", halign = "htCenter")%>% 
-          hot_col(ncol(Chi.ti), readOnly = TRUE) %>% hot_row(nrow(Chi.ti), readOnly = TRUE)}) 
+      Chi.ti <- cbind(Chi.ti,Perc = Chi.ti$Total / Chi.ti[r+1,c+1])
+      Chi.ti <- rbind(Chi.ti,Perc = Chi.ti["Total",] / Chi.ti[r+1,c+1])
+      Chi.ti[r+2,c+2] <- NA
+      output$Chi <- renderRHandsontable({rhandsontable(Chi.ti)%>% hot_cols(format = "0", halign = "htCenter", digits = 5)%>% 
+          hot_col(c("Total","Perc"), readOnly = TRUE) %>% hot_row(c(r+1,r+2), readOnly = TRUE)}) 
       output$Chiexptitle <- renderText({"Expected Values"})
-      output$Chiexp <- renderTable({chi.test$expected},rownames = TRUE,colnames=TRUE)
+      output$Chiexp <- renderTable({chi.test$expected},rownames = TRUE,colnames=TRUE, digits = 5)
       output$ChiSquares <- renderText({"Chi-Square Values"})
       ressq <- (chi.test$residuals)^2
-      output$chicell <- renderTable({ressq},rownames = TRUE,colnames=TRUE)
+      output$chicell <- renderTable({ressq},rownames = TRUE,colnames=TRUE, digits = 5)
       chi.cv <- qchisq(1-input$chi.alpha,chi.test$parameter)
       chit <- matrix(formatC(c(chi.test$statistic,chi.test$parameter,chi.cv,chi.test$p.value),
                      format="f",digits = 6,drop0trailing = TRUE),ncol=4,nrow=1)
@@ -953,6 +988,7 @@ server <- function(input, output, session) {
       chi.test <- chisq.test(x = Chi.gof.ob, p = Chi.gof.exp/sum(Chi.gof.ob))
       Chi.gof <- cbind(Chi.gof, Total = rowSums(Chi.gof, na.rm = TRUE))
       Chi.gof <- rbind(Chi.gof, Chi = chi.test$residuals^2)
+      Chi.gof[3,c+1]<-NA
       output$Chi <- renderRHandsontable({rhandsontable(Chi.gof)%>% hot_cols(format = "0", halign = "htCenter")%>% 
           hot_col(ncol(Chi.gof), readOnly = TRUE) %>% hot_row(nrow(Chi.gof), readOnly = TRUE)}) 
       output$Chiexptitle <- renderText({""})
@@ -978,6 +1014,35 @@ server <- function(input, output, session) {
 
   
     ########################## End Chi Server ##############################
+    ########################## Linear Regression Server ####################
+  
+  output$lr.data <- renderRHandsontable({rhandsontable(lr.in$values)})
+  
+  observeEvent(input$lr.reset,{
+    output$lr.data <- renderRHandsontable({rhandsontable(lr.in$values)})
+  }) #EobserveEvent
+  
+  observeEvent(input$lr.test,{
+    alpha <- input$lr.alpha
+    lr.data <- hot_to_r(input$lr.data)%>% remove_empty("rows")
+    lr.plot <- lr.data %>% ggplot(aes(x=x, y=y)) + 
+      geom_point(shape=18, color="blue")+
+      geom_smooth(method=lm,formula = y ~ x, se=FALSE, color="darkred") +
+      stat_poly_eq(aes(label = paste(..eq.label.., ..rr.label.., sep = "~~~")), 
+               label.x.npc = "right", label.y.npc = 0.15,
+               formula = y ~ x, parse = TRUE, size = 3)
+    fit <- lm(y~x, data=lr.data)
+    res <- qplot(fitted(fit), resid(fit))+geom_hline(yintercept=0)
+    
+    qqres <- lr.data %>% ggplot(mapping = aes(sample = resid(fit))) +
+          stat_qq_band() +
+          stat_qq_line() +
+          stat_qq_point() +
+          labs(x = "Theoretical Quantiles", y = "Sample Quantiles")
+    output$lr.big3 <- renderPlot({grid.arrange(lr.plot,res,qqres)})
+    
+  }) #EobserveEvent
+    ########################## End Linear Regression Server ################
   
 } #end of the server
 

@@ -5,9 +5,9 @@ account: harmkenn
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 1607482
-bundleId: 2703034
+bundleId: 2704485
 url: https://harmkenn.shinyapps.io/ShinyStatTools/
-when: 1577998859.22419
+when: 1578061604.29775
 asMultiple: FALSE
 asStatic: FALSE
 ignoredFiles: SoccerShoes.csv|stat_tools_ex.R|tinker.R|crime/app.R|www/custom.css

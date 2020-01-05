@@ -61,10 +61,7 @@ ui <- dashboardPage(
   # >>>>>>>>>>>>>Dashboard Body
   
   dashboardBody(
-    tags$head(
-      tags$link(rel = "stylesheet", type = "text/css", href = "custom.css")
-    ),
-
+    
     tabItems(
       
       # >>>>>>>>>>>>>>Discrete Tab UI
@@ -243,7 +240,7 @@ ui <- dashboardPage(
       
       tabItem("props",
         fluidRow(
-          column(width = 4, 
+          column(width = 4, offset = 0, style='padding:0px;',
              box(title = "Data Input", width = 12, 
                radioButtons("props","",choices = c("1 Proportion", "2 Proportions")),
                  splitLayout(
@@ -258,12 +255,12 @@ ui <- dashboardPage(
                ), #EconditionalPanel
              ), #Ebox
           ), #Ecolumn left
-          column(width = 3,
+          column(width = 3, offset = 0, style='padding:0px;',
             box(title = "Graphs",width = 12, background = "blue", 
               plotOutput("pplot")
             ) #Ebox
           ), #Ecolumn Middle  
-          column(width = 5,
+          column(width = 5, offset = 0, style='padding:0px;',
             box(title = "Results",width = 12,  
               splitLayout(
                 conditionalPanel(condition = "input.props == '1 Proportion'",numericInput("ph0","Null:",.5,width=NULL)),
@@ -282,7 +279,7 @@ ui <- dashboardPage(
       
       tabItem("Chi",
         fluidRow(
-          column(width = 6, 
+          column(width = 6, offset = 0, style='padding:0px;',
              box(title = "Data Input", width = 12, 
               splitLayout(
                 radioButtons("chic","",c("Independence","Goodness of Fit")),
@@ -299,7 +296,7 @@ ui <- dashboardPage(
               tableOutput("chicell"),
              ), #Ebox
           ), #Ecolumn left
-          column(width = 6, 
+          column(width = 6, offset = 0, style='padding:0px;',
            box(title = "Results", width = 12, 
              tableOutput("Chiresult"),
              tags$hr(style="border-color: blue;"),

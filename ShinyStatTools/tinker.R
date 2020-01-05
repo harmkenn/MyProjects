@@ -352,12 +352,22 @@ ui <- dashboardPage(
         column(width = 6,
           box(title = "Discrete Probability",width = NULL,status = "primary",
             rHandsontableOutput("disc.data"),
-            actionButton("disc.reset","Clear"),
+            splitLayout(
+              actionButton("disc.reset","Clear"),
+              actionButton("disc.run","Run")
+            ), #EsplitLayout
             tableOutput("disc.results")
           ), #Ebox
           box(title = "Binomial", width = NULL, status = "primary",
-            
-          ), #Ebox
+            splitLayout(
+              numericInput("bip","P(Hit)",.5),
+              numericInput("bih", "Hits",0),
+              numericInput("bit", "Tries",5)
+            ),
+            actionButton("bi.run","Run"),
+            tableOutput("biout"),
+            plotOutput("biplot")
+          ) #Ebox
         ), #Ecolumn
         column(width = 6,
           box(title = "Geometric", width = NULL, status = "primary",
@@ -1130,12 +1140,45 @@ server <- function(input, output, session) {
       lc <- ncol(data.disc)
       colnames(data.disc)[lc]<-paste("X",lc,sep = "")
       output$disc.data <- renderRHandsontable({rhandsontable(data.disc)})
-    }
-
-    
-    
+    } #Eif 
   }) #EobserveEvent
-  
+  observeEvent(input$disc.run,{
+    set <- hot_to_r(input$disc.data)
+    set <- set[1:(length(set)-1)]
+    x <- set[1,]
+    px <- set[2,]
+    m <- sum(x*px)
+    pre <- (x-m)^2*px
+    var <- sum(pre)
+    sd <- sqrt(var)
+    
+    dp <- matrix(formatC(c(m,var,sd),
+                       format="f",digits = 6,drop0trailing = TRUE),ncol=3,nrow=1)
+    colnames(dp) <- c("Mean","Variance","SD")
+    output$disc.results <- renderTable({dp})
+  })
+  observeEvent(input$bi.run,{
+    bip <- input$bip
+    bih <- input$bih
+    bit <- input$bit
+    bis <- dbinom(bih,bit,bip) 
+    bisl <- pbinom(bih,bit,bip)
+    bisg <- 1 + bis - bisl
+    bimean <- bit*bip
+    bisd <- sqrt(bit*bip*(1-bip))
+    
+    bt <- matrix(formatC(c(bis,bisl,bisg,bimean,bisd),
+                       format="f",digits = 6,drop0trailing = TRUE),ncol=5,nrow=1)
+    colnames(bt) <- c(paste("P=",bih),paste("P≤",bih),paste("P≥",bih),"Mean","SD")
+    output$biout <- renderTable({bt})
+    
+    biplot <- data.frame(hits = 0:bit, pmf = dbinom(x = 0:bit, size = bit, prob = bip)) %>%
+          ggplot(aes(x = factor(hits), y = pmf)) + geom_col() +
+          geom_text(aes(label = round(pmf,3), y = pmf + 0.01),
+          position = position_dodge(0.9), size = 3, vjust = 0) +
+          labs(x = "Successes (x)",y = "probability") 
+    output$biplot <- renderPlot({biplot})
+  }) #EobserveEvent
     ######################## End Discrete Probability Server #################
   
 } #end of the server

@@ -371,10 +371,22 @@ ui <- dashboardPage(
         ), #Ecolumn
         column(width = 6,
           box(title = "Geometric", width = NULL, status = "primary",
-            
+            splitLayout(
+              numericInput("gep","P(Hit)",.5),
+              numericInput("get", "Tries",5)
+            ),
+            actionButton("ge.run","Run"),
+            tableOutput("geout"),
+            plotOutput("geplot")
           ), #Ebox
           box(title = "Poisson", width = NULL, status = "primary",
-            
+            splitLayout(
+              numericInput("poil","E(Hit)",2),
+              numericInput("poih", "Hits",5)
+            ),
+            actionButton("poi.run","Run"),
+            tableOutput("poiout"),
+            plotOutput("poiplot")
           ), #Ebox
         ), #Ecolumn
       ) #EfluidRow
@@ -1166,18 +1178,60 @@ server <- function(input, output, session) {
     bisg <- 1 + bis - bisl
     bimean <- bit*bip
     bisd <- sqrt(bit*bip*(1-bip))
-    
     bt <- matrix(formatC(c(bis,bisl,bisg,bimean,bisd),
                        format="f",digits = 6,drop0trailing = TRUE),ncol=5,nrow=1)
     colnames(bt) <- c(paste("P=",bih),paste("P≤",bih),paste("P≥",bih),"Mean","SD")
     output$biout <- renderTable({bt})
-    
-    biplot <- data.frame(hits = 0:bit, pmf = dbinom(x = 0:bit, size = bit, prob = bip)) %>%
-          ggplot(aes(x = factor(hits), y = pmf)) + geom_col() +
+    low <- floor(max(0, bimean - 3*bisd))
+    high <- ceiling(min(bit, bimean + 3*bisd))
+    biplot <- data.frame(hits = low:high, pmf = dbinom(x = low:high, size = bit, prob = bip)) %>%
+          ggplot(aes(x = factor(hits), y = pmf)) + geom_col(fill="skyblue2") +
           geom_text(aes(label = round(pmf,3), y = pmf + 0.01),
-          position = position_dodge(0.9), size = 3, vjust = 0) +
+          position = position_dodge(0.9), size = 3, vjust = .2, angle = 90) +
           labs(x = "Successes (x)",y = "probability") 
     output$biplot <- renderPlot({biplot})
+  }) #EobserveEvent
+  observeEvent(input$ge.run,{
+    gep <- input$gep
+    get <- input$get
+    ges <- (1-gep)^(get-1)*gep 
+    gesl <- 1-(1-gep)^get
+    gesg <- 1 + ges - gesl
+    gemean <- 1/gep
+    gesd <- sqrt(gemean*(gemean-1))
+    gt <- matrix(formatC(c(ges,gesl,gesg,gemean,gesd),
+                       format="f",digits = 6,drop0trailing = TRUE),ncol=5,nrow=1)
+    colnames(gt) <- c(paste("P=",get),paste("P≤",get),paste("P≥",get),"Mean","SD")
+    output$geout <- renderTable({gt})
+    low <- 1
+    high <- ceiling(gemean + 3*gesd)
+    geplot <- data.frame(hits = low:high, pmf = dgeom(x = low:high, prob = gep)) %>%
+      ggplot(aes(x = factor(hits), y = pmf)) + geom_col(fill="skyblue2") +
+      geom_text(aes(label = round(pmf,3), y = pmf + 0.01),position = position_dodge(0.9),
+                size = 3,vjust = 0.2, angle = 90) +
+      labs(x = "First success (x)",y = "Probability") 
+    output$geplot <- renderPlot({geplot})
+  }) #EobserveEvent
+  observeEvent(input$poi.run,{
+    poil <- input$poil
+    poih <- input$poih
+    pois <- dpois(poih,poil) 
+    poisl <- ppois(poih,poil)
+    poisg <- 1 + pois - poisl
+    poimean <- poil
+    poisd <- sqrt(poil)
+    pt <- matrix(formatC(c(pois,poisl,poisg,poimean,poisd),
+                       format="f",digits = 6,drop0trailing = TRUE),ncol=5,nrow=1)
+    colnames(pt) <- c(paste("P=",poih),paste("P≤",poih),paste("P≥",poih),"Mean","SD")
+    output$poiout <- renderTable({pt})
+    low <- floor(max(0,poimean - 3*poisd))
+    high <- ceiling(poimean + 3*poisd)
+    poiplot <- data.frame(hits = low:high, pmf = dpois(x = low:high, lambda = poil)) %>%
+      ggplot(aes(x = factor(hits), y = pmf)) + geom_col(fill="skyblue2") +
+      geom_text(aes(label = round(pmf,3), y = pmf + 0.01),position = position_dodge(0.9),
+                size = 3,vjust = 0.2, angle = 90) +
+      labs(x = "Hits (x)",y = "Probability") 
+    output$poiplot <- renderPlot({poiplot})
   }) #EobserveEvent
     ######################## End Discrete Probability Server #################
   

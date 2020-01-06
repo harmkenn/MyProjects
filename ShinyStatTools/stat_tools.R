@@ -15,8 +15,8 @@ theme_set(theme_bw())
 
 chisq.test <- stats::chisq.test
 
-data.discr <- data.frame(matrix(numeric(), nrow=500, ncol=1))
-colnames(data.discr) <- "A"
+data.descr <- data.frame(matrix(numeric(), nrow=500, ncol=1))
+colnames(data.descr) <- "A"
 data.ttest <- data.frame(matrix(numeric(), nrow=500, ncol=1))
 colnames(data.ttest) <- "A"
 data.anova <- data.frame(matrix(numeric(), nrow=300, ncol=6))
@@ -32,6 +32,8 @@ colnames(data.Chi.gof) <- c("X1","X2","X3","X4","X5","X6")
 rownames(data.Chi.gof) <- c("Obs","Exp")
 data.lr <- data.frame(matrix(numeric(), nrow=500, ncol=2))
 colnames(data.lr) <- c("x","y")
+data.disc <- data.frame(matrix(numeric(), nrow= 2, ncol=5))
+rownames(data.disc) <- c("X","prob(x)")
 binwidth <- 1
 
 # >>>>>>>>>>>>>>>Start of UI
@@ -52,7 +54,7 @@ ui <- dashboardPage(
       menuItem("Proportions", tabName = "props"),
       menuItem("Chi-Square", tabName = "Chi"),
       menuItem("Linear Regression", tabName = "LR"),
-      menuItem("Discrete", tabName = "Disc"),
+      menuItem("Discrete", tabName = "disc"),
       menuItem("Data Sets", tabName = "datasets")
     ) #End sidebarMenu
   ), #End dashboardSidebar
@@ -64,7 +66,7 @@ ui <- dashboardPage(
     
     tabItems(
       
-      # >>>>>>>>>>>>>>Discrete Tab UI
+      # >>>>>>>>>>>>>> Descriptive Tab UI
       
       tabItem("ds",
         fluidRow(
@@ -98,7 +100,7 @@ ui <- dashboardPage(
         ) #EfluidRow
       ), #EtabItem ds
       
-      # <<<<<<<<<<<<< Discrete Tab UI
+      # <<<<<<<<<<<<< Descriptive Tab UI
       # >>>>>>>>>>>>> Normal Tab UI
       
       tabItem("normal",
@@ -343,8 +345,55 @@ ui <- dashboardPage(
     ), #EtabItem LR
       
       ######################## End Linear Rergression UI #####################
+    ########################## Discrete Probability UI #######################
+    
+    tabItem("disc",
+      fluidRow(
+        column(width = 6,
+          box(title = "Discrete Probability",width = NULL,status = "primary",
+            rHandsontableOutput("disc.data"),
+            splitLayout(
+              actionButton("disc.reset","Clear"),
+              actionButton("disc.run","Run")
+            ), #EsplitLayout
+            tableOutput("disc.results")
+          ), #Ebox
+          box(title = "Binomial", width = NULL, status = "primary",
+            splitLayout(
+              numericInput("bip","P(Hit)",.5),
+              numericInput("bih", "Hits",0),
+              numericInput("bit", "Tries",5)
+            ),
+            actionButton("bi.run","Run"),
+            tableOutput("biout"),
+            plotOutput("biplot")
+          ) #Ebox
+        ), #Ecolumn
+        column(width = 6,
+          box(title = "Geometric", width = NULL, status = "primary",
+            splitLayout(
+              numericInput("gep","P(Hit)",.5),
+              numericInput("get", "Tries",5)
+            ),
+            actionButton("ge.run","Run"),
+            tableOutput("geout"),
+            plotOutput("geplot")
+          ), #Ebox
+          box(title = "Poisson", width = NULL, status = "primary",
+            splitLayout(
+              numericInput("poil","E(Hit)",2),
+              numericInput("poih", "Hits",5)
+            ),
+            actionButton("poi.run","Run"),
+            tableOutput("poiout"),
+            plotOutput("poiplot")
+          ), #Ebox
+        ), #Ecolumn
+      ) #EfluidRow
+    ), #EtabItem LR
+    
+    ######################## End Discrete Probability UI #####################
       
-      tabItem("Disc","Disc goes Here"), #EtabItem Disc
       tabItem("datasets", "All the pre-built datasets will go here") #EtabItem Datasets
     ) #End tabItems
   ) #EdashboardBody
@@ -355,23 +404,24 @@ server <- function(input, output, session) {
   
   # >>>>>>>>>> Variables
   
-  disc.in <- reactiveValues(values = data.discr)
-  hist.x <- reactiveValues(values = data.discr)
+  desc.in <- reactiveValues(values = data.descr)
+  hist.x <- reactiveValues(values = data.descr)
   t.in <- reactiveValues(values = data.ttest)
   anova.in <- reactiveValues(values = data.anova)
   anova.s.in <- reactiveValues(values = data.anova.s)
   chi.ti.in <- reactiveValues(values =  data.Chi.ti)
   chi.gof.in <- reactiveValues(values =  data.Chi.gof)
   lr.in <- reactiveValues(values =  data.lr)
+  disc.in <- reactiveValues(values =  data.disc)
   
-  #>>>>>>>>>> Discriptive Tab Server  
+  #>>>>>>>>>> Descriptive Tab Server  
   
-  output$dt <- renderRHandsontable({rhandsontable(disc.in$values)})
+  output$dt <- renderRHandsontable({rhandsontable(desc.in$values)})
   
   observeEvent(eventExpr = input$plot, {
-    disc.in$values <- hot_to_r(input$dt)
-    if(sum(!is.na(disc.in$values[,1]))>1){
-      hist.x <- disc.in$values[!is.na(disc.in$values)]
+    desc.in$values <- hot_to_r(input$dt)
+    if(sum(!is.na(desc.in$values[,1]))>1){
+      hist.x <- desc.in$values[!is.na(desc.in$values)]
       count <- length(hist.x)
       bins <- ceiling(1+3.322*log10(count))
       if (count > 2) {binwidth <- (max(hist.x)-min(hist.x)+2)/(bins-2)}
@@ -419,21 +469,21 @@ server <- function(input, output, session) {
     }#Eif
   }) #EobserveEvent
   observeEvent(eventExpr = input$clear, {
-    data.discr <- data.frame(matrix(NA_real_, nrow = 500, ncol = 1))
-    colnames(data.discr) <- "A"
-    disc.in <- reactiveValues(values = data.discr)
-    output$dt <- renderRHandsontable({rhandsontable(disc.in$values)})
+    data.descr <- data.frame(matrix(NA_real_, nrow = 500, ncol = 1))
+    colnames(data.descr) <- "A"
+    desc.in <- reactiveValues(values = data.descr)
+    output$dt <- renderRHandsontable({rhandsontable(desc.in$values)})
   }) #EobserveEvent
   observeEvent(eventExpr = input$goptile, {
-    disc.in$values <- hot_to_r(input$dt)
-    if(sum(!is.na(disc.in$values[,1]))>1){
-      hist.x <- disc.in$values[!is.na(disc.in$values)]
+    desc.in$values <- hot_to_r(input$dt)
+    if(sum(!is.na(desc.in$values[,1]))>1){
+      hist.x <- desc.in$values[!is.na(desc.in$values)]
     }
     ptileout <- quantile(hist.x, (input$ptile) / 100, type = 6)
     output$pptile <- renderText({paste("The ",input$ptile," percentile is: ",round(ptileout,2))})
   }) #EobserveEvent
   
-  # <<<<<<<<<<<<<< End of Discriptive Tab Server
+  # <<<<<<<<<<<<<< End of descriptive Tab Server
   # >>>>>>>>>>>>>> Start of Normal Tab Server
   
   x <- seq(from = -4, to = 4, by = .01)
@@ -1087,6 +1137,103 @@ server <- function(input, output, session) {
     output$pi.y <- renderText({paste(cl*100,"% prediction interval for y: (",piy.l,",",piy.u,")")})
   }) #EobserveEvent
     ########################## End Linear Regression Server ################
+    ########################## Discrete Probability Server #################
+  
+  output$disc.data <- renderRHandsontable({rhandsontable(disc.in$values)})
+  
+  observeEvent(input$disc.reset,{
+    output$disc.data <- renderRHandsontable({rhandsontable(disc.in$values)})
+  }) #EobserveEvent
+  
+  observeEvent(input$disc.data,{
+    disc.data <- hot_to_r(input$disc.data)
+    if(sum(is.na(disc.data[1,])) == 0){
+      data.disc <- cbind(disc.data,as.numeric(c(NA,NA)))
+      lc <- ncol(data.disc)
+      colnames(data.disc)[lc]<-paste("X",lc,sep = "")
+      output$disc.data <- renderRHandsontable({rhandsontable(data.disc)})
+    } #Eif 
+  }) #EobserveEvent
+  observeEvent(input$disc.run,{
+    set <- hot_to_r(input$disc.data)
+    set <- set[1:(length(set)-1)]
+    x <- set[1,]
+    px <- set[2,]
+    m <- sum(x*px)
+    pre <- (x-m)^2*px
+    var <- sum(pre)
+    sd <- sqrt(var)
+    
+    dp <- matrix(formatC(c(m,var,sd),
+                       format="f",digits = 6,drop0trailing = TRUE),ncol=3,nrow=1)
+    colnames(dp) <- c("Mean","Variance","SD")
+    output$disc.results <- renderTable({dp})
+  })
+  observeEvent(input$bi.run,{
+    bip <- input$bip
+    bih <- input$bih
+    bit <- input$bit
+    bis <- dbinom(bih,bit,bip) 
+    bisl <- pbinom(bih,bit,bip)
+    bisg <- 1 + bis - bisl
+    bimean <- bit*bip
+    bisd <- sqrt(bit*bip*(1-bip))
+    bt <- matrix(formatC(c(bis,bisl,bisg,bimean,bisd),
+                       format="f",digits = 6,drop0trailing = TRUE),ncol=5,nrow=1)
+    colnames(bt) <- c(paste("P=",bih),paste("P≤",bih),paste("P≥",bih),"Mean","SD")
+    output$biout <- renderTable({bt})
+    low <- floor(max(0, bimean - 3*bisd))
+    high <- ceiling(min(bit, bimean + 3*bisd))
+    biplot <- data.frame(hits = low:high, pmf = dbinom(x = low:high, size = bit, prob = bip)) %>%
+          ggplot(aes(x = factor(hits), y = pmf)) + geom_col(fill="skyblue2") +
+          geom_text(aes(label = round(pmf,3), y = pmf + 0.01),
+          position = position_dodge(0.9), size = 3, vjust = .2, angle = 90) +
+          labs(x = "Successes (x)",y = "probability") 
+    output$biplot <- renderPlot({biplot})
+  }) #EobserveEvent
+  observeEvent(input$ge.run,{
+    gep <- input$gep
+    get <- input$get
+    ges <- (1-gep)^(get-1)*gep 
+    gesl <- 1-(1-gep)^get
+    gesg <- 1 + ges - gesl
+    gemean <- 1/gep
+    gesd <- sqrt(gemean*(gemean-1))
+    gt <- matrix(formatC(c(ges,gesl,gesg,gemean,gesd),
+                       format="f",digits = 6,drop0trailing = TRUE),ncol=5,nrow=1)
+    colnames(gt) <- c(paste("P=",get),paste("P≤",get),paste("P≥",get),"Mean","SD")
+    output$geout <- renderTable({gt})
+    low <- 1
+    high <- ceiling(gemean + 3*gesd)
+    geplot <- data.frame(hits = low:high, pmf = dgeom(x = low:high, prob = gep)) %>%
+      ggplot(aes(x = factor(hits), y = pmf)) + geom_col(fill="skyblue2") +
+      geom_text(aes(label = round(pmf,3), y = pmf + 0.01),position = position_dodge(0.9),
+                size = 3,vjust = 0.2, angle = 90) +
+      labs(x = "First success (x)",y = "Probability") 
+    output$geplot <- renderPlot({geplot})
+  }) #EobserveEvent
+  observeEvent(input$poi.run,{
+    poil <- input$poil
+    poih <- input$poih
+    pois <- dpois(poih,poil) 
+    poisl <- ppois(poih,poil)
+    poisg <- 1 + pois - poisl
+    poimean <- poil
+    poisd <- sqrt(poil)
+    pt <- matrix(formatC(c(pois,poisl,poisg,poimean,poisd),
+                       format="f",digits = 6,drop0trailing = TRUE),ncol=5,nrow=1)
+    colnames(pt) <- c(paste("P=",poih),paste("P≤",poih),paste("P≥",poih),"Mean","SD")
+    output$poiout <- renderTable({pt})
+    low <- floor(max(0,poimean - 3*poisd))
+    high <- ceiling(poimean + 3*poisd)
+    poiplot <- data.frame(hits = low:high, pmf = dpois(x = low:high, lambda = poil)) %>%
+      ggplot(aes(x = factor(hits), y = pmf)) + geom_col(fill="skyblue2") +
+      geom_text(aes(label = round(pmf,3), y = pmf + 0.01),position = position_dodge(0.9),
+                size = 3,vjust = 0.2, angle = 90) +
+      labs(x = "Hits (x)",y = "Probability") 
+    output$poiplot <- renderPlot({poiplot})
+  }) #EobserveEvent
+    ######################## End Discrete Probability Server #################
   
 } #end of the server
 

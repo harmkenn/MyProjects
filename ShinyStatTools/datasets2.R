@@ -33,7 +33,7 @@ ui=fluidPage(
   rHandsontableOutput("table_output")
 )
 
-server=function(input,output) {
+server=function(input,output) { 
 
 #  getdata <- reactive({ get(input$data_input, .GlobalEnv) })
 #  a <- as.data.frame(getdata())

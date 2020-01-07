@@ -8,9 +8,7 @@
 
 #save(list = ls(.GlobalEnv), file = "BYUIdata.Rdata")
 
-load("BYUIdata.Rdata")
 
-dslist <- ls()[sapply(ls(), function(x) any(is.data.frame(get(x))))]
 
 library(ggpmisc)
 library(janitor)
@@ -27,7 +25,17 @@ library(grid)
 library(gridExtra)
 theme_set(theme_bw())
 
+
+#  load("BYUIdata.Rdata")
+
+dslist <- ls()[sapply(ls(), function(x) any(is.data.frame(get(x))))]
+
+
+
 ui=fluidPage(
+  
+
+
   selectInput("data_input",label="Select data",
               choices=dslist),
   rHandsontableOutput("table_output")

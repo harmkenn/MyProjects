@@ -10,7 +10,7 @@
 
 load("BYUIdata.Rdata")
 
-dslist <- ls()[sapply(ls(), function(x) any(is.data.frame(get(x))))]
+#dslist <- ls()[sapply(ls(), function(x) any(is.data.frame(get(x))))]
 
 library(ggpmisc)
 library(janitor)

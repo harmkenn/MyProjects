@@ -30,7 +30,7 @@ theme_set(theme_bw())
 ui=fluidPage(
   selectInput("data_input",label="Select data",
               choices=dslist),
-  tableOutput("table_output")
+  rHandsontableOutput("table_output")
 )
 
 server=function(input,output) {
@@ -41,7 +41,7 @@ server=function(input,output) {
   
   observeEvent(input$data_input,{
     getdata <- get(input$data_input, .GlobalEnv)
-    output$table_output <- renderTable({getdata})
+    output$table_output <- renderRHandsontable({rhandsontable(getdata)})
   })
   
 }

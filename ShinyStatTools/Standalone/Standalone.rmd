@@ -1,0 +1,31 @@
+---
+title: "Stand Alone"
+author: "Ken Harmon"
+date: "1/9/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+https://github.com/ColumbusCollaboratory/electron-quick-start
+
+https://github.com/ksasso/Electron_ShinyApp_Deployment
+
+https://www.youtube.com/watch?v=ARrbbviGvjc
+
+
+# Clone this repository
+git clone https://github.com/ColumbusCollaboratory/electron-quick-start
+# Install Electron Packager (if first time)
+npm install electron-packager -g 
+# Go into the repository
+cd electron-quick-start
+# Install dependencies
+npm install
+# Run the app.R
+npm start
+# Build the Executable/App
+npm run package-win

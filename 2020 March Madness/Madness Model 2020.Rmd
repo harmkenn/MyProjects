@@ -21,8 +21,10 @@ knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
 
 ```{r load_libraries, include=FALSE}
 # Use this R-Chunk to load all your libraries!
-pacman::p_load(tidyverse, DT)
+pacman::p_load(tidyverse, DT, rpart, DMwR, caret, rpart.plot, rattle, Metrics, ipred, randomForest, gbm, glm.predict,e1071)
 theme_set(theme_bw())
+confusionMatrix <- caret::confusionMatrix
+select <- dplyr::select
 ```
 
 ```{r swd, eval=FALSE, echo=FALSE}
@@ -64,3 +66,283 @@ AG0219FsUs <- left_join(AG0219FsU,colsort,by = c("Year"="Year","U.Team"="Team"))
 colnames(AG0219FsUs)[63:104] <- paste("U.", colnames(AG0219FsUs)[63:104], sep = "")
 ```
 
+## Regression Tree
+
+Split the data
+
+```{r std}
+
+# Set seed and create assignment
+
+assignment <- sample(1:3, size = nrow(AG0219FsUs), prob = c(.7,.15,.15), replace = TRUE)
+
+# Create a train, validation and tests from the original data frame 
+NCAA_train <- AG0219FsUs[assignment == 1, ]    # subset NCAA to training indices only
+NCAA_valid <- AG0219FsUs[assignment == 2, ]  # subset NCAA to validation indices only
+NCAA_test <- AG0219FsUs[assignment == 3, ]   # subset NCAA to test indices only
+```
+
+Train the Regression Tree Model
+
+```{r trtm}
+# Train the model
+NCAA_model <- rpart(formula = Score.D ~ ., 
+                     data = NCAA_train %>% select(16,18:28,30:60,62:72,74:104),
+                     method = "anova", model = TRUE)
+
+# Look at the model output                      
+print(NCAA_model)
+
+# Plot the tree model
+rpart.plot(x = NCAA_model, yesno = 2, type = 0, extra = 0)
+```
+
+Evaluate the Regression Tree Model
+
+```{r ertm}
+# Generate predictions on a test set
+pred <- predict(object = NCAA_model,   # model object 
+                newdata = NCAA_test %>% select(16,18:28,30:60,62:72,74:104))  # test dataset
+
+# Compute the RMSE
+rmse(actual = NCAA_test$Score.D, 
+     predicted = pred)
+```
+
+Tuning the Model
+
+```{r ttm}
+# Plot the "CP Table"
+plotcp(NCAA_model)
+
+# Print the "CP Table"
+print(NCAA_model$cptable)
+
+# Retrieve optimal cp value based on cross-validated error
+opt_index <- which.min(NCAA_model$cptable[, "xerror"])
+cp_opt <- NCAA_model$cptable[opt_index, "CP"]
+
+# Prune the model (to optimized cp value)
+NCAA_model_opt <- prune(tree = NCAA_model, cp = cp_opt)
+                          
+# Plot the optimized model
+rpart.plot(x = NCAA_model_opt, yesno = 2, type = 0, extra = 0, roundint = FALSE)
+```
+
+Generate a grid of hyperparameter values
+
+```{r gghv}
+# Establish a list of possible values for minsplit and maxdepth
+minsplit <- seq(1, 4, 1)
+maxdepth <- seq(1, 6, 1)
+
+# Create a data frame containing all combinations 
+hyper_grid <- expand.grid(minsplit = minsplit, maxdepth = maxdepth)
+
+# Check out the grid
+head(hyper_grid)
+
+# Print the number of grid combinations
+nrow(hyper_grid)
+```
+
+Generate a grid of models
+
+```{r ggm}
+# Number of potential models in the grid
+num_models <- nrow(hyper_grid)
+
+# Create an empty list to store models
+NCAA_models <- list()
+
+# Write a loop over the rows of hyper_grid to train the grid of models
+for (i in 1:num_models) {
+
+    # Get minsplit, maxdepth values at row i
+    minsplit <- hyper_grid$minsplit[i]
+    maxdepth <- hyper_grid$maxdepth[i]
+
+    # Train a model and store in the list
+    NCAA_models[[i]] <- rpart(formula = Score.D ~ ., 
+                               data = NCAA_train%>%
+                                select(16,18:28,30:60,62:72,74:104), 
+                               method = "anova",
+                               minsplit = minsplit,
+                               maxdepth = maxdepth, model = TRUE)
+}
+```
+
+Evaluate the Grid
+
+```{r etg}
+
+# Number of potential models in the grid
+num_models <- length(NCAA_models)
+
+# Create an empty vector to store RMSE values
+rmse_values <- c()
+
+# Write a loop over the models to compute validation RMSE
+for (i in 1:num_models) {
+
+    # Retrieve the i^th model from the list
+    model <- NCAA_models[[i]]
+    
+    # Generate predictions on NCAA_valid 
+    pred <- predict(object = model,
+                    newdata = NCAA_valid %>% select(16,18:28,30:60,62:72,74:104))
+    
+    # Compute validation RMSE and add to the 
+    rmse_values[i] <- rmse(actual = NCAA_valid$Score.D, 
+                           predicted = pred)
+}
+
+# Identify the model with smallest validation set RMSE
+best_model <- NCAA_models[[which.min(rmse_values)]]
+
+# Print the model paramters of the best model
+best_model$control
+
+# Compute test set RMSE on best_model
+pred <- predict(object = best_model,
+                newdata = NCAA_test %>% select(16,18:28,30:60,62:72,74:104))
+rmse(actual = NCAA_test$Score.D, 
+     predicted = pred)
+```
+
+Plot Results
+
+```{r pr}
+plot(NCAA_test$Score.D,pred)
+```
+
+## Linear Regression
+
+
+```{r glm}
+
+go <- AG0219FsUs %>% select(c(16,38,43,49,50,57,69,70,71,72,78,79,91,92,93,94)) 
+
+# Set seed and create assignment
+
+assignment <- sample(1:2, size = nrow(go), prob = c(.8,2), replace = TRUE)
+
+# Create a train, validation and tests from the original data frame 
+NCAA_train <- go[assignment == 2, ]    # subset NCAA to training indices only
+NCAA_test <- go[assignment == 1, ]   # subset NCAA to test indices only
+
+NCAA_model <- lm(Score.D ~ .,data =NCAA_train)
+
+p <- predict(NCAA_model, NCAA_test, type = "response")
+
+actual <- NCAA_test$Score.D
+error <- p - actual
+
+# Calculate RMSE
+sqrt(mean((p - actual) ^ 2))
+
+plot(p,actual)
+
+actual.P <- actual>0
+p.P <- p>0
+
+
+
+confusionMatrix(table(actual.P,p.P))
+```
+
+## Logistic Regression
+
+```{r lr}
+go <- AG0219FsUs %>% select(-c(1:14,16,17,19,29,33,61,63,73,77)) 
+
+# Set seed and create assignment
+
+assignment <- sample(1:2, size = nrow(go), prob = c(.8,2), replace = TRUE)
+
+# Create a train, validation and tests from the original data frame 
+NCAA_train <- go[assignment == 1, ]    # subset NCAA to training indices only
+NCAA_test <- go[assignment == 2, ]   # subset NCAA to test indices only
+
+
+# Fit glm model: model
+NCAA_model <- glm(Result ~ ., family = "binomial", NCAA_train)
+
+# Predict on test: p
+p <- predict(NCAA_model, NCAA_test, type = "response")
+```
+
+### Confusion Matrix
+
+```{r ccm}
+# If p exceeds threshold of 0.5, M else R: m_or_r
+F_or_U <- ifelse(p < .5, "F", "U")
+
+
+# Convert to factor: p_class
+p_class <- factor(F_or_U, levels = levels(NCAA_test[["Result"]]))
+
+# Create confusion matrix
+confusionMatrix(p_class, NCAA_test$Result)
+```
+
+## Regression Tree
+
+Split the data
+
+```{r std}
+
+go <- AG0219FsUs %>% select(c(16,38,43,49,50,57,69,70,71,72,78,79,91,92,93,94)) 
+
+# Set seed and create assignment
+
+assignment <- sample(1:2, size = nrow(go), prob = c(.8,2), replace = TRUE)
+
+# Create a train, validation and tests from the original data frame 
+NCAA_train <- go[assignment == 2, ]    # subset NCAA to training indices only
+NCAA_test <- go[assignment == 1, ]   # subset NCAA to test indices only
+```
+
+Train the Regression Tree Model
+
+```{r trtm}
+# Train the model
+NCAA_model <- rpart(formula = Score.D ~ ., 
+                     data = NCAA_train,
+                     method = "anova", model = TRUE)
+
+# Look at the model output                      
+print(NCAA_model)
+
+# Plot the tree model
+rpart.plot(x = NCAA_model, yesno = 2, type = 0, extra = 0)
+```
+
+Evaluate the Regression Tree Model
+
+```{r ertm}
+# Generate predictions on a test set
+pred <- predict(object = NCAA_model,   # model object 
+                newdata = NCAA_test) # test dataset
+
+# Compute the RMSE
+rmse(actual = NCAA_test$Score.D, 
+     predicted = pred)
+
+
+
+actual <- NCAA_test$Score.D
+error <- pred - actual
+
+# Calculate RMSE
+sqrt(mean((pred - actual) ^ 2))
+
+plot(pred,actual)
+
+actual.P <- actual>0
+p.P <- pred>0
+
+
+
+confusionMatrix(table(actual.P,p.P))
+```

@@ -24,6 +24,7 @@ knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
 pacman::p_load(tidyverse, DT, rpart, DMwR, caret, rpart.plot, rattle, Metrics, ipred, randomForest, gbm)
 theme_set(theme_bw())
 confusionMatrix <- caret::confusionMatrix
+select <- dplyr::select
 ```
 
 ```{r swd, eval=FALSE, echo=FALSE}
@@ -99,7 +100,7 @@ nrow(train)/nrow(NCAARock)
 
 ```{r lr}
 # Fit glm model: model
-model <- glm(bresult ~ ., family = "binomial", train %>% select(10:51,53))
+model <- glm(bresult ~ ., family = "binomial", train %>% select(12:51,53))
 
 # Predict on test: p
 p <- predict(model, test, type = "response")

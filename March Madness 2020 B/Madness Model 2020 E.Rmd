@@ -56,9 +56,9 @@ teamcomb <- teamcomb %>% select(-c(MP,PF))
 ### Build and test the model
 
 ```{r btm}
-pyear <- 2018
+pyear <- 2019
 rm <- 0
-rsd <- 3
+rsd <- 0
 
 # Separate Favored and Underdogs 02 to 18 
 AG0218F <- teamcomb %>% filter(Favored == "F" & Year != pyear)
@@ -290,4 +290,6 @@ cresults
 sum(cresults$match)
 score <- c(rep(10,32),rep(20,16),rep(40,8),rep(80,4),rep(160,2),rep(320,1))
 sum(cresults$match*score)
+track <- c(track,sum(cresults$match*score))
+summary(track)
 ```

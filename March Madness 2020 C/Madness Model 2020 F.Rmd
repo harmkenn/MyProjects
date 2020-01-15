@@ -56,7 +56,7 @@ nas <- teamcomb %>% summarise_all(~ sum(is.na(.)))
 ### Build and test the model
 
 ```{r btm}
-pyear <- 2019
+pyear <- 2018
 rm <- 0
 rsd <- 3
 
@@ -65,8 +65,8 @@ AG0318F <- teamcomb %>% filter(Favored == "F" & Year != pyear & Year != 2020)
 AG0318U <- teamcomb %>% filter(Favored == "U" & Year != pyear & Year != 2020)
 
 #Get the difference of the just stats
-AG0318FS <- AG0318F %>% select(7,10,16:61)
-AG0318US <- AG0318U %>% select(7,10,16:61)
+AG0318FS <- AG0318F %>% select(7,10,16:59)
+AG0318US <- AG0318U %>% select(7,10,16:59)
 dStats0318 <- AG0318FS - AG0318US
 
 # Set seed and create assignment
@@ -80,10 +80,10 @@ NCAA_test <- dStats0318[assignment == 2, ]   # subset NCAA to test indices only
 NCAA_model <- lm(Score ~ .,data =NCAA_train)
 
 p <- predict(NCAA_model, NCAA_test, type = "response")
-
 actual <- NCAA_test$Score
 
-plot(p,actual)
+ggplot(data.frame(actual,p),aes(x=p,y=actual)) + geom_point() + 
+  abline(c(0,min(actual)),c(0,max(actual)))
 
 actual.P <- actual>0
 p.P <- p>0
@@ -100,15 +100,15 @@ confusionMatrix(table(actual.P,p.P))
 ######################## Predict Round 1 ############################
 
 # Need to assign F and U to Predictions from round 1
-The64 <- teamcomb %>% filter(Year == pyear & Round == 1) %>% select(1,3:8,10,16:61)
+The64 <- teamcomb %>% filter(Year == pyear & Round == 1) %>% select(1,3:8,10,16:59)
 
 # Separate Favored and Underdogs for Round 1 
 The64F <- The64 %>% filter(Favored == "F")
 The64U <- The64 %>% filter(Favored == "U")
 
 #Get the difference of the just stats
-The64FS <- The64F %>% select(6,9:54)
-The64US <- The64U %>% select(6,9:54)
+The64FS <- The64F %>% select(6,9:52)
+The64US <- The64U %>% select(6,9:52)
 The64DS <- The64FS - The64US
 
 #Combine the F and U Leading Columns with dif stats
@@ -126,9 +126,9 @@ pred1 <- ifelse(p>0,New64$Team,New64$U.Team)
 ########################## Precict Round 2 ############################
 
 # Need to assign F and U to Predictions from round 1
-The32 <- teamcomb %>% filter(Year == pyear & Round == 1 & Team %in% pred1) %>% select(1,3:8,10,16:61)
+The32 <- teamcomb %>% filter(Year == pyear & Round == 1 & Team %in% pred1) %>% select(1,3:8,10,16:59)
 The32$GameN <- rep(33:48, each=2)
-The32 <- The32 %>% arrange(GameN, desc(SRS7))
+The32 <- The32 %>% arrange(GameN, desc(SRS))
 The32$Favored <- rep(c("F","U"),16)
 
 # Separate Favored and Underdogs for Round 2 
@@ -136,8 +136,8 @@ The32F <- The32 %>% filter(Favored == "F")
 The32U <- The32 %>% filter(Favored == "U")
 
 #Get the difference of the just stats
-The32FS <- The32F %>% select(6,9:54)
-The32US <- The32U %>% select(6,9:54)
+The32FS <- The32F %>% select(6,9:52)
+The32US <- The32U %>% select(6,9:52)
 The32DS <- The32FS - The32US
 
 #Combine the F and U Leading Columns with dif stats
@@ -155,9 +155,9 @@ pred2 <- ifelse(p>0,New32$Team,New32$U.Team)
 ########################## Precict Round 3 ############################
 
 # Need to assign F and U to Predictions from round 2
-The16 <- teamcomb %>% filter(Year == pyear & Round == 1 & Team %in% pred2) %>% select(1,3:8,10,16:61)
+The16 <- teamcomb %>% filter(Year == pyear & Round == 1 & Team %in% pred2) %>% select(1,3:8,10,16:59)
 The16$GameN <- rep(49:56, each=2)
-The16 <- The16 %>% arrange(GameN, desc(SRS7))
+The16 <- The16 %>% arrange(GameN, desc(SRS))
 The16$Favored <- rep(c("F","U"),8)
 
 # Separate Favored and Underdogs for Round 3 
@@ -165,8 +165,8 @@ The16F <- The16 %>% filter(Favored == "F")
 The16U <- The16 %>% filter(Favored == "U")
 
 #Get the difference of the just stats
-The16FS <- The16F %>% select(6,9:54)
-The16US <- The16U %>% select(6,9:54)
+The16FS <- The16F %>% select(6,9:52)
+The16US <- The16U %>% select(6,9:52)
 The16DS <- The16FS - The16US
 
 #Combine the F and U Leading Columns with dif stats
@@ -184,9 +184,9 @@ pred3 <- ifelse(p>0,New16$Team,New16$U.Team)
 ########################## Precict Round 4 ############################
 
 # Need to assign F and U to Predictions from round 3
-The8 <- teamcomb %>% filter(Year == pyear & Round == 1 & Team %in% pred3) %>% select(1,3:8,10,16:61)
+The8 <- teamcomb %>% filter(Year == pyear & Round == 1 & Team %in% pred3) %>% select(1,3:8,10,16:59)
 The8$GameN <- rep(57:60, each=2)
-The8 <- The8 %>% arrange(GameN, desc(SRS7))
+The8 <- The8 %>% arrange(GameN, desc(SRS))
 The8$Favored <- rep(c("F","U"),4)
 
 # Separate Favored and Underdogs for Round 4 
@@ -194,8 +194,8 @@ The8F <- The8 %>% filter(Favored == "F")
 The8U <- The8 %>% filter(Favored == "U")
 
 #Get the difference of the just stats
-The8FS <- The8F %>% select(6,9:54)
-The8US <- The8U %>% select(6,9:54)
+The8FS <- The8F %>% select(6,9:52)
+The8US <- The8U %>% select(6,9:52)
 The8DS <- The8FS - The8US
 
 #Combine the F and U Leading Columns with dif stats
@@ -213,9 +213,10 @@ pred4 <- ifelse(p>0,New8$Team,New8$U.Team)
 ########################## Precict Round 5 ############################
 
 # Need to assign F and U to Predictions from round 4
-The4 <- teamcomb %>% filter(Year == pyear & Round == 1 & Team %in% pred4) %>% select(1,3:8,10,16:61)
-The4 <- The4 %>% arrange(desc(Region), SRS7)
+The4 <- teamcomb %>% filter(Year == pyear & Round == 1 & Team %in% pred4) %>% select(1,3:8,10,16:59)
+The4 <- The4 %>% arrange(desc(Region), SRS)
 The4$GameN <- rep(61:62, each=2)
+The4 <- The4 %>% arrange(GameN, desc(SRS))
 The4$Favored <- rep(c("F","U"),2)
 
 # Separate Favored and Underdogs for Round 5 
@@ -223,8 +224,8 @@ The4F <- The4 %>% filter(Favored == "F")
 The4U <- The4 %>% filter(Favored == "U")
 
 #Get the difference of the just stats
-The4FS <- The4F %>% select(6,9:54)
-The4US <- The4U %>% select(6,9:54)
+The4FS <- The4F %>% select(6,9:52)
+The4US <- The4U %>% select(6,9:52)
 The4DS <- The4FS - The4US
 
 #Combine the F and U Leading Columns with dif stats
@@ -242,9 +243,9 @@ pred5 <- ifelse(p>0,New4$Team,New4$U.Team)
 ########################## Precict Round 6 ############################
 
 # Need to assign F and U to Predictions from round 5
-The2 <- teamcomb %>% filter(Year == pyear & Round == 1 & Team %in% pred5) %>% select(1,3:8,10,16:61)
+The2 <- teamcomb %>% filter(Year == pyear & Round == 1 & Team %in% pred5) %>% select(1,3:8,10,16:59)
 The2$GameN <- rep(63, each=2)
-The2 <- The2 %>% arrange(GameN, desc(SRS7))
+The2 <- The2 %>% arrange(GameN, desc(SRS))
 The2$Favored <- rep(c("F","U"),1)
 
 # Separate Favored and Underdogs for Round 6 
@@ -252,8 +253,8 @@ The2F <- The2 %>% filter(Favored == "F")
 The2U <- The2 %>% filter(Favored == "U")
 
 #Get the difference of the just stats
-The2FS <- The2F %>% select(6,9:54)
-The2US <- The2U %>% select(6,9:54)
+The2FS <- The2F %>% select(6,9:52)
+The2US <- The2U %>% select(6,9:52)
 The2DS <- The2FS - The2US
 
 #Combine the F and U Leading Columns with dif stats

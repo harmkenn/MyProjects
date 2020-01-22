@@ -352,6 +352,9 @@ polar_ll <- function(lat1d,lng1d,dist,shotd){
 ui <- fluidPage(
   titlePanel("Shots by Ken Harmon", windowTitle = "Shots"),
   tabsetPanel(
+    
+    ####################### Tab 1 UI
+    
     tabPanel("Deflection",
       sidebarLayout(
         sidebarPanel(
@@ -378,7 +381,7 @@ ui <- fluidPage(
       )
     ),
 
-# TAB 2
+###################### TAB 2 UI
 
     tabPanel("Point to Point",
       sidebarLayout(
@@ -403,7 +406,7 @@ ui <- fluidPage(
       )
     ),
 
-# TAB 3
+#################### TAB 3 UI
 
     tabPanel("Polar Shot",
       sidebarLayout(
@@ -424,7 +427,8 @@ ui <- fluidPage(
         ),
         mainPanel(
           textOutput("shot3"),
-          leafletOutput("mymap3", width = "600px", height = "600px")
+          leafletOutput("mymap3", width = "600px", height = "600px"),
+          plotlyOutput("plotly3")
         ) # end of the mainPanal 3
       ) # end of the sidebarPanel 3
     ) # end of tabpanel polar
@@ -432,6 +436,9 @@ ui <- fluidPage(
 ) #end of the ui
 
 server <- function(input, output) {
+  
+###################### Tab 1 Server
+  
   output$mymap <- renderLeaflet({
     if (input$get_map == 0) 
       return()
@@ -491,7 +498,7 @@ server <- function(input, output) {
       addPolylines(data = pointdf, ~lng, ~lat, group = "new_point")
   })
   
-# TAB 2
+############################# TAB 2 Server
   
   output$mymap2 <- renderLeaflet({
     if (input$get_map2 == 0) 
@@ -556,12 +563,9 @@ server <- function(input, output) {
   })
 
 
-# Tab 3
-
-output$mymap3 <- renderLeaflet({
-  if (input$get_map3 == 0) 
-    return()
-  isolate({
+########################## Tab 3 Server
+  
+observeEvent(input$get_map3, {
     From <- MGRS2UTM2LL(input$From3)
     flat <- as.numeric(as.vector(From[1,6]))
     flng <- as.numeric(as.vector(From[1,7]))
@@ -632,14 +636,36 @@ output$mymap3 <- renderLeaflet({
     TMGRS <- LL2UTM2mgrs(tlat,rlng)
     output$shot3 <- renderText({paste("Target MGRS: ", TMGRS[1,7],
                                      "    Landing Bearing: ", tbear)})
+    output$mymap3 <- renderLeaflet({
     leaflet() %>% 
       setView(mlng,mlat,zoom=zoom) %>%
       addProviderTiles(input$maptype3) %>%
       addPolylines(data = gcroute, weight = 2, color = "orange") %>%
       addCircleMarkers(lng = flng, lat = flat, radius = 5, color = "Blue") %>%
       addCircleMarkers(lng = tlng, lat = tlat, radius = 5, color = "Brown")
-  })
-})
+    })
+    
+    geo <- list(showland = TRUE,showlakes = TRUE,showcountries = TRUE,showocean = TRUE,
+                countrywidth = 0.5,landcolor = 'rgb(230, 145, 56)',lakecolor = 'rgb(0, 255, 255)',oceancolor = 'rgb(0, 255, 255)',
+                projection = list(type = 'orthographic',rotation = list(lon = -100,lat = 40,roll = 0)),
+                lonaxis = list(showgrid = TRUE,gridcolor = toRGB("gray40"),gridwidth = 0.5),
+                lataxis = list(showgrid = TRUE,gridcolor = toRGB("gray40"),gridwidth = 0.5))
+    
+    # annotations
+    annot <- list(x = 0, y=0.8, text = "Projection", yanchor = 'bottom',  xref = 'paper', 
+                  xanchor = 'right',showarrow = FALSE)
+    
+    # original d3-globe with contours
+    mess <- as_tibble(gcroute@lines[[1]]@Lines[[1]]@coords)
+    plotlyp <- plot_geo(mess,x = ~lon, y = ~lat) %>% add_lines() %>%
+      layout(showlegend = FALSE, geo = geo)
+    
+    output$plotly3 <- renderPlotly({
+      plotlyp
+    })
+}) #end of observe event get_map3
+
+
 observeEvent(input$get_mgrs3, {
   output$lMGRS3 <- renderText({paste(" ")})
   output$lLngLat3 <- renderText({paste(" ")})

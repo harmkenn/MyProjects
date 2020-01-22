@@ -248,8 +248,73 @@ p <- p %>%
 p
 ```
 
+### Data Tricks
+
+https://datatricks.co.uk/3d-world-map-with-plotly
+
+```{r dt}
+library(plotly)
+df <- read.csv('https://raw.githubusercontent.com/plotly/datasets/master/2014_world_gdp_with_codes.csv')
+df[,2] <- as.numeric(df[,2])
+df[,2] <- log(df[,2])
+
+#Set country boundaries as light grey
+l <- list(color = toRGB("#d1d1d1"), width = 0.5)
+#Specify map projection and options
+g <- list(
+     showframe = FALSE,
+     showcoastlines = FALSE,
+     projection = list(type = 'orthographic'),
+     resolution = '100',
+     showcountries = TRUE,
+     countrycolor = '#d1d1d1',
+     showocean = TRUE,
+     oceancolor = '#c9d2e0',
+     showlakes = TRUE,
+     lakecolor = '#99c0db',
+     showrivers = TRUE,
+     rivercolor = '#99c0db')
 
 
+p <- plot_geo(df) %>%
+     add_trace(opacity = 0.5, locations = ~CODE, colors = 'Reds', marker = list(size=~(10*GDP..BILLIONS.)),
+               type="scattergeo", mode="markers") %>%
+     add_trace(z = ~GDP..BILLIONS., color = ~GDP..BILLIONS., colors = 'Reds', text = ~COUNTRY, locations = ~CODE, 
+               marker = list(line = l)) %>%
+     colorbar(title = 'GDP (log)') %>%
+     layout(title = '', geo = g)
+print(p)
+```
+
+
+```{r}
+library(plotly)
+library(dplyr)
+
+flights <- read.csv('https://raw.githubusercontent.com/plotly/datasets/master/2011_february_aa_flight_paths.csv')
+flights$id <- seq_len(nrow(flights))
+
+geo <- list(
+  scope = 'world',
+  projection = list(type = 'orthographic'),  #equirectangular, natural earth, orthographic, kavrayskiy7, miller
+  showland = TRUE,
+  showcountries = TRUE,
+  landcolor = toRGB("gray95"),
+  countrycolor = toRGB("gray80")
+)
+
+p <- plot_geo(
+  locationmode = 'country-names') %>%
+  layout(geo = geo) %>%
+  add_segments(
+    data = flights, 
+    x = ~start_lon, xend = ~end_lon,
+    y = ~start_lat, yend = ~end_lat,
+    alpha = 0.3,
+    size = I(2.5),
+    hoverinfo = "none"
+  )
+```
 
 
 

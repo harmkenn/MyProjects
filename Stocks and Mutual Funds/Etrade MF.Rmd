@@ -60,7 +60,23 @@ nogVpySmnNaLgZLZCpJH
 
 ```
 
+## Etrade Data
 
+```{r}
+etrade_all <- left_join(Etrade_Ovr,Etrade_por)
+etrade_all <- left_join(etrade_all,Etrade_ave)
+etrade_all <- left_join(etrade_all,Etrade_cum)
+etrade_all <- left_join(etrade_all,Etrade_Cur)
+etrade_all <- left_join(etrade_all,Etrade_fee)
+etrade_all <- left_join(etrade_all,Etrade_ris)
+
+save(etrade_all,file = "etrade_all.rda")
+write.csv(etrade_all, file = "etrade_all.csv")
+```
+
+```{r}
+etrade_all <- as_tibble(etrade_all)
+```
 
 
 

@@ -56,9 +56,9 @@ nas <- teamcomb %>% summarise_all(~ sum(is.na(.)))
 ### Build and test the model
 
 ```{r btm}
-pyear <- 2020
+pyear <- 2018
 rm <- 0
-rsd <- 3
+rsd <- 0
 
 # Separate Favored and Underdogs 02 to 18 
 AG1018F <- teamcomb %>% filter(Favored == "F" & Year != pyear & Year != 2020)
@@ -71,7 +71,7 @@ dStats1018 <- AG1018FS - AG1018US
 
 # Set seed and create assignment
 
-assignment <- sample(1:2, size = nrow(dStats1018), prob = c(.8,.2), replace = TRUE)
+assignment <- sample(1:2, size = nrow(dStats1018), prob = c(.9,.1), replace = TRUE)
 
 # Create a train, validation and tests from the original data frame 
 NCAA_train <- dStats1018[assignment == 1, ]    # subset NCAA to training indices only
@@ -115,13 +115,14 @@ The64DS <- The64FS - The64US
 LThe64F <- The64F %>% select(1:7)
 LThe64U <- The64U %>% select(5:7)
 New64 <- cbind(LThe64F,LThe64U,The64DS)
-colnames(New64)[10]<-"U.Team"
+colnames(New64)[9:10]<-c("U.Seed","U.Team")
 
 #Now the prediction for round 1
 p <- predict(NCAA_model, The64DS, type = "response")
 p <- p + rnorm(n=length(p),rm,rsd)
 
 pred1 <- ifelse(p>0,New64$Team,New64$U.Team)
+st1 <- ifelse(p>0,paste(New64$Seed,New64$Team,round(p,0)),paste(New64$U.Seed,New64$U.Team,round(p,0)))
 
 ########################## Precict Round 2 ############################
 
@@ -144,13 +145,14 @@ The32DS <- The32FS - The32US
 LThe32F <- The32F %>% select(1:7)
 LThe32U <- The32U %>% select(5:7)
 New32 <- cbind(LThe32F,LThe32U,The32DS)
-colnames(New32)[10]<-"U.Team"
+colnames(New32)[9:10]<-c("U.Seed","U.Team")
 
 #Now the prediction for round 2
 p <- predict(NCAA_model, The32DS, type = "response")
 p <- p + rnorm(n=length(p),rm,rsd)
 
 pred2 <- ifelse(p>0,New32$Team,New32$U.Team)
+st2 <- ifelse(p>0,paste(New32$Seed,New32$Team,round(p,0)),paste(New32$U.Seed,New32$U.Team,round(p,0)))
 
 ########################## Precict Round 3 ############################
 
@@ -173,14 +175,14 @@ The16DS <- The16FS - The16US
 LThe16F <- The16F %>% select(1:7)
 LThe16U <- The16U %>% select(5:7)
 New16 <- cbind(LThe16F,LThe16U,The16DS)
-colnames(New16)[10]<-"U.Team"
+colnames(New16)[9:10]<-c("U.Seed","U.Team")
 
 #Now the prediction for round 3
 p <- predict(NCAA_model, The16DS, type = "response")
 p <- p + rnorm(n=length(p),rm,rsd)
 
 pred3 <- ifelse(p>0,New16$Team,New16$U.Team)
-
+st3 <- ifelse(p>0,paste(New16$Seed,New16$Team,round(p,0)),paste(New16$U.Seed,New16$U.Team,round(p,0)))
 ########################## Precict Round 4 ############################
 
 # Need to assign F and U to Predictions from round 3
@@ -202,13 +204,14 @@ The8DS <- The8FS - The8US
 LThe8F <- The8F %>% select(1:7)
 LThe8U <- The8U %>% select(5:7)
 New8 <- cbind(LThe8F,LThe8U,The8DS)
-colnames(New8)[10]<-"U.Team"
+colnames(New8)[9:10]<-c("U.Seed","U.Team")
 
 #Now the prediction for round 4
 p <- predict(NCAA_model, The8DS, type = "response")
 p <- p + rnorm(n=length(p),rm,rsd)
 
 pred4 <- ifelse(p>0,New8$Team,New8$U.Team)
+st4 <- ifelse(p>0,paste(New8$Seed,New8$Team,round(p,0)),paste(New8$U.Seed,New8$U.Team,round(p,0)))
 
 ########################## Precict Round 5 ############################
 
@@ -232,13 +235,14 @@ The4DS <- The4FS - The4US
 LThe4F <- The4F %>% select(1:7)
 LThe4U <- The4U %>% select(5:7)
 New4 <- cbind(LThe4F,LThe4U,The4DS)
-colnames(New4)[10]<-"U.Team"
+colnames(New4)[9:10]<-c("U.Seed","U.Team")
 
 #Now the prediction for round 5
 p <- predict(NCAA_model, The4DS, type = "response")
 p <- p + rnorm(n=length(p),rm,rsd)
 
 pred5 <- ifelse(p>0,New4$Team,New4$U.Team)
+st5 <- ifelse(p>0,paste(New4$Seed,New4$Team,round(p,0)),paste(New4$U.Seed,New4$U.Team,round(p,0)))
 
 ########################## Precict Round 6 ############################
 
@@ -261,19 +265,20 @@ The2DS <- The2FS - The2US
 LThe2F <- The2F %>% select(1:7)
 LThe2U <- The2U %>% select(5:7)
 New2 <- cbind(LThe2F,LThe2U,The2DS)
-colnames(New2)[10]<-"U.Team"
+colnames(New2)[9:10]<-c("U.Seed","U.Team")
 
 #Now the prediction for round 5
 p <- predict(NCAA_model, The2DS, type = "response")
 p <- p + rnorm(n=length(p),rm,rsd)
 
 pred6 <- ifelse(p>0,New2$Team,New2$U.Team)
+st6 <- ifelse(p>0,paste(New2$Seed,New2$Team,round(p,0)),paste(New2$U.Seed,New2$U.Team,round(p,0)))
 
 ```
 
 ## Results
 
-```{r r}
+```{r r1}
 presults <- c(pred1,pred2,pred3,pred4,pred5,pred6)
 aresults <- teamcomb %>% filter(Year == pyear & Favored == "F" & Round != "PI") %>% select(Winner)
 cresults <- cbind(aresults,presults)
@@ -284,5 +289,5 @@ score <- c(rep(10,32),rep(20,16),rep(40,8),rep(80,4),rep(160,2),rep(320,1))
 sum(cresults$match*score)
 track <- c(track,sum(cresults$match*score))
 summary(track)
-cbind(pred1,pred2,pred3,pred4,pred5,pred6)
+cbind(st1,st2,st3,st4,st5,st6)
 ```

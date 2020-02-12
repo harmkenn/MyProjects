@@ -34,70 +34,32 @@ setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
 ```
 
 ```{r fun}
-growth_graph(c("RMQHX","GABSX"))
-
- onemetric_graph(tickers = c("RMQHX","GABSX"),
-                 plot.list = list(ylim = c(0, 50)))
- 
-
- threefunds_graph(tickers = c("GABSX", "FNCMX", "NBGAX"),
-                  reference.tickers = c("RMQHX", "RYOCX"))
- 
- twometrics_graph(tickers = c("VFINX", "SSO", "UPRO"))
- 
-           
-```
-
-## Quandl
-
-https://docs.quandl.com/docs/getting-started
-
-Welcome to Quandl!
-YOUR API KEY IS:
-nogVpySmnNaLgZLZCpJH
-
-```{r quandl}
-
-```
-
-## Etrade Data
-
-```{r}
-etrade_all <- left_join(Etrade_Ovr,Etrade_por)
-etrade_all <- left_join(etrade_all,Etrade_ave)
-etrade_all <- left_join(etrade_all,Etrade_cum)
-etrade_all <- left_join(etrade_all,Etrade_Cur)
-etrade_all <- left_join(etrade_all,Etrade_fee)
-etrade_all <- left_join(etrade_all,Etrade_ris)
-
-save(etrade_all,file = "etrade_all.rda")
-write.csv(etrade_all, file = "etrade_all.csv")
+EMF <- load_prices(c("AMAGX","AMANX","BGAFX","DXQLX","ETGLX","NBGEX","NNLEX","NNTWX","OBCHX","PGRTX","PRMTX","PYVLX","RYOCX","SEEKX","SFLNX","SMPIX","SVAAX","TMFGX","UOPIX","WPSGX"),from = "2019-01-01" ,initial = 1000)
+dates <- row.names(EMF)
+MF <- colnames(EMF)
+rend <- c(.52259,.61136,1.05453,1.06439,1.45918,1.11357,1.92769,1.64709,7.00920,1.53851,1.05434,1.23956,1.15593,.75372,.81409,1.11899,1.50540,.87236,1.17204,1.13947)
+end <- as.numeric(last(EMF))
+scale <- rend / end * 1000
+trip <- EMF %*% diag(scale)
+EMF <- data.frame(trip)
+rownames(EMF) <- dates
+colnames(EMF) <- MF
+EMF$total <- rowSums( EMF[,1:20] )
+EMF$inc <- (EMF$total-EMF$total[1])/EMF$total[1] 
 ```
 
 ```{r}
-etrade_all <- as_tibble(etrade_all)
+EMF <- load_prices(c("AMAGX","AMANX","BGAFX","DXQLX","ETGLX","NBGEX","NNLEX","NNTWX","OBCHX","PGRTX","PRMTX","PYVLX"),from = "2019-01-01" ,initial = 1000)
+dates <- row.names(EMF)
+MF <- colnames(EMF)
+rend <- c(.52259,.61136,1.05453,1.06439,1.45918,1.11357,1.92769,1.64709,7.00920,1.53851,1.05434,1.23956)
+end <- as.numeric(last(EMF))
+scale <- rend / end * 1000
+trip <- EMF %*% diag(scale)
+EMF <- data.frame(trip)
+rownames(EMF) <- dates
+colnames(EMF) <- MF
+EMF$total <- rowSums( EMF[,1:dim(EMF)[2]] )
+EMF$inc <- (EMF$total-EMF$total[1])/EMF$total[1] 
 ```
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 

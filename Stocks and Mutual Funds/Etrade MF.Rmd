@@ -32,29 +32,14 @@ select <- dplyr::select
 # this sets the working directory to the file location
 setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
 ```
-
+###ETRADE OLD
 ```{r fun}
-EMF <- load_prices(c("AMAGX","AMANX","BGAFX","DXQLX","ETGLX","NBGEX","NNLEX","NNTWX","OBCHX","PGRTX","PRMTX","PYVLX","RYOCX","SEEKX","SFLNX","SMPIX","SVAAX","TMFGX","UOPIX","WPSGX"),from = "2019-01-01" ,initial = 1000)
+EMF <- load_prices(c("AMAGX","AMANX","BGAFX","ETGLX","NBGEX","NNLEX","NNTWX","OBCHX","PGRTX","PRMTX","PYVLX","SEEKX","SFLNX","WPSGX"),from = "2019-09-01",to = "2020-01-01" ,initial = 1000)
 dates <- row.names(EMF)
 MF <- colnames(EMF)
-rend <- c(.52259,.61136,1.05453,1.06439,1.45918,1.11357,1.92769,1.64709,7.00920,1.53851,1.05434,1.23956,1.15593,.75372,.81409,1.11899,1.50540,.87236,1.17204,1.13947)
+rend <- c(527.19,614.87,1068.41,1472.09,1118.74,1927.69,1656.94,7130.33,1549.30,1067.61,1242.87,759.55,819.96,1150.92)
 end <- as.numeric(last(EMF))
-scale <- rend / end * 1000
-trip <- EMF %*% diag(scale)
-EMF <- data.frame(trip)
-rownames(EMF) <- dates
-colnames(EMF) <- MF
-EMF$total <- rowSums( EMF[,1:20] )
-EMF$inc <- (EMF$total-EMF$total[1])/EMF$total[1] 
-```
-
-```{r}
-EMF <- load_prices(c("AMAGX","AMANX","BGAFX","DXQLX","ETGLX","NBGEX","NNLEX","NNTWX","OBCHX","PGRTX","PRMTX","PYVLX"),from = "2019-01-01" ,initial = 1000)
-dates <- row.names(EMF)
-MF <- colnames(EMF)
-rend <- c(.52259,.61136,1.05453,1.06439,1.45918,1.11357,1.92769,1.64709,7.00920,1.53851,1.05434,1.23956)
-end <- as.numeric(last(EMF))
-scale <- rend / end * 1000
+scale <- rend / end
 trip <- EMF %*% diag(scale)
 EMF <- data.frame(trip)
 rownames(EMF) <- dates
@@ -63,3 +48,50 @@ EMF$total <- rowSums( EMF[,1:dim(EMF)[2]] )
 EMF$inc <- (EMF$total-EMF$total[1])/EMF$total[1] 
 ```
 
+###IRA OLD
+```{r fun}
+EMF <- load_prices(c("GABSX","SFLNX","AMAGX","GOLDX","TMFGX"),from = "2018-09-01",to = "2019-01-01" ,initial = 1000)
+dates <- row.names(EMF)
+MF <- colnames(EMF)
+rend <- c(2055.96,324.72,575.00,2063.43,860.30)
+end <- as.numeric(last(EMF))
+scale <- rend / end
+trip <- EMF %*% diag(scale)
+EMF <- data.frame(trip)
+rownames(EMF) <- dates
+colnames(EMF) <- MF
+EMF$total <- rowSums( EMF[,1:dim(EMF)[2]] )
+EMF$inc <- (EMF$total-EMF$total[1])/EMF$total[1] 
+```
+
+###ETRADE New
+```{r fun}
+EMF <- load_prices(c("AMAGX","AMANX","BGAFX","ETGLX","NBGEX","NNLEX","NNTWX","OBCHX","PGRTX","PRMTX","PYVLX","SEEKX","SFLNX","WPSGX"),from = "2019-09-01",to = "2020-01-01" ,initial = 1000)
+dates <- row.names(EMF)
+MF <- colnames(EMF)
+rend <- c(527.19,614.87,1068.41,1472.09,1118.74,1927.69,1656.94,7130.33,1549.30,1067.61,1242.87,759.55,819.96,1150.92)
+end <- as.numeric(last(EMF))
+scale <- rend / end
+trip <- EMF %*% diag(scale)
+EMF <- data.frame(trip)
+rownames(EMF) <- dates
+colnames(EMF) <- MF
+EMF$total <- rowSums( EMF[,1:dim(EMF)[2]] )
+EMF$inc <- (EMF$total-EMF$total[1])/EMF$total[1] 
+```
+
+###IRA New
+```{r fun}
+EMF <- load_prices(c("GABSX","SFLNX","AMAGX","GOLDX","TMFGX"),from = "2018-09-01",to = "2019-01-01" ,initial = 1000)
+dates <- row.names(EMF)
+MF <- colnames(EMF)
+rend <- c(2055.96,324.72,575.00,2063.43,860.30)
+end <- as.numeric(last(EMF))
+scale <- rend / end
+trip <- EMF %*% diag(scale)
+EMF <- data.frame(trip)
+rownames(EMF) <- dates
+colnames(EMF) <- MF
+EMF$total <- rowSums( EMF[,1:dim(EMF)[2]] )
+EMF$inc <- (EMF$total-EMF$total[1])/EMF$total[1] 
+```

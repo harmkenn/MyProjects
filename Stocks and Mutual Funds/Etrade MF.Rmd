@@ -32,53 +32,6 @@ select <- dplyr::select
 # this sets the working directory to the file location
 setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
 ```
-###ETRADE OLD
-```{r fun}
-EMF <- load_prices(c("AMAGX","AMANX","BGAFX","ETGLX","NBGEX","NNLEX","NNTWX","OBCHX","PGRTX","PRMTX","PYVLX","SEEKX","SFLNX","WPSGX"),from = "2019-09-01",to = "2020-01-01" ,initial = 1000)
-dates <- row.names(EMF)
-MF <- colnames(EMF)
-rend <- c(527.19,614.87,1068.41,1472.09,1118.74,1927.69,1656.94,7130.33,1549.30,1067.61,1242.87,759.55,819.96,1150.92)
-end <- as.numeric(last(EMF))
-scale <- rend / end
-trip <- EMF %*% diag(scale)
-EMF <- data.frame(trip)
-rownames(EMF) <- dates
-colnames(EMF) <- MF
-EMF$total <- rowSums( EMF[,1:dim(EMF)[2]] )
-EMF$inc <- (EMF$total-EMF$total[1])/EMF$total[1] 
-```
-
-###IRA OLD
-```{r fun}
-EMF <- load_prices(c("GABSX","SFLNX","AMAGX","GOLDX","TMFGX"),from = "2018-09-01",to = "2019-01-01" ,initial = 1000)
-dates <- row.names(EMF)
-MF <- colnames(EMF)
-rend <- c(2055.96,324.72,575.00,2063.43,860.30)
-end <- as.numeric(last(EMF))
-scale <- rend / end
-trip <- EMF %*% diag(scale)
-EMF <- data.frame(trip)
-rownames(EMF) <- dates
-colnames(EMF) <- MF
-EMF$total <- rowSums( EMF[,1:dim(EMF)[2]] )
-EMF$inc <- (EMF$total-EMF$total[1])/EMF$total[1] 
-```
-
-###ETRADE New
-```{r fun}
-EMF <- load_prices(c("AMAGX","AMANX","BGAFX","ETGLX","NBGEX","NNLEX","NNTWX","OBCHX","PGRTX","PRMTX","PYVLX","SEEKX","SFLNX","WPSGX"),from = "2019-09-01",to = "2020-01-01" ,initial = 1000)
-dates <- row.names(EMF)
-MF <- colnames(EMF)
-rend <- c(527.19,614.87,1068.41,1472.09,1118.74,1927.69,1656.94,7130.33,1549.30,1067.61,1242.87,759.55,819.96,1150.92)
-end <- as.numeric(last(EMF))
-scale <- rend / end
-trip <- EMF %*% diag(scale)
-EMF <- data.frame(trip)
-rownames(EMF) <- dates
-colnames(EMF) <- MF
-EMF$total <- rowSums( EMF[,1:dim(EMF)[2]] )
-EMF$inc <- (EMF$total-EMF$total[1])/EMF$total[1] 
-```
 
 ###ETRADE All
 ```{r fun}
@@ -96,4 +49,9 @@ rownames(EMF) <- dates
 colnames(EMF) <- MF
 EMF$total <- rowSums( EMF[,1:dim(EMF)[2]] )
 EMF$inc <- (EMF$total-EMF$total[1])/EMF$total[1] 
+
+dates <- as.Date(dates)
+EMFplot <- as.numeric(EMF[,46])
+pp <- data.frame(cbind(dates,EMFplot))
+ggplot(pp,aes(dates,EMFplot))+geom_point()+geom_smooth(method = "auto")
 ```

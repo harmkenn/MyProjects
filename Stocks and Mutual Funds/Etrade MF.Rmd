@@ -21,7 +21,7 @@ knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
 
 ```{r load_libraries, include=FALSE}
 # Use this R-Chunk to load all your libraries!
-pacman::p_load(tidyverse, caret, stocks, BatchGetSymbols, Quandl)
+pacman::p_load(tidyverse, caret, stocks, BatchGetSymbols, Quandl, scales)
 theme_set(theme_bw())
 confusionMatrix <- caret::confusionMatrix
 select <- dplyr::select
@@ -35,11 +35,12 @@ setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
 
 ###ETRADE All
 ```{r fun}
-EMF <- load_prices(c("AKREX","AMAGX","AMANX","BGAFX","BGSAX","BMGAX","BPTRX","DXQLX","DXSLX","FKDNX","FNCMX","GOLDX","INPIX","JAGTX","LDVAX","MFEGX","NBGEX","NNLEX","NNTWX","OBCHX","PGRTX","PGTAX","PRMTX","PYVAX","PYVLX","RMQHX","ROGSX","RYOCX","RYVYX","SEEKX","SFLNX","SMPIX","SVAAX","SWPPX","TEPSX","TMFGX","ULPIX","UOPIX"
-),from = "2019-12-01")
+days <- Sys.Date() - 0:180
+begin <- days[181]
+EMF <- load_prices(c("AKREX","AMAGX","AMANX","BGAFX","BGSAX","BMGAX","BPTRX","DXQLX","DXSLX","FKDNX","FNCMX","GOLDX","INPIX","JAGTX","LDVAX","MFEGX","NBGEX","NNLEX","NNTWX","OBCHX","PGRTX","PGTAX","PRMTX","PYVAX","PYVLX","RMQHX","ROGSX","RYOCX","RYVYX","SEEKX","SFLNX","SMPIX","SVAAX","SWPPX","TEPSX","TMFGX","ULPIX","UOPIX"),from = begin)
 dates <- row.names(EMF)
 MF <- colnames(EMF)
-shares <- c(21.393,8.716,9.114,49.758,27.457,51.194,20.329,46.655,38.575,11.04,8.357,113.06,13.281,26.787,25.85,9.234,16.369,65.653,53.439,296.168,98.622,22.682,8.542,33.094,59.918,4.621,53.039,60.322,4.681,13.177,48.712,26.198,266.663,13.757,25.79,54.323,16.388,17.427)
+shares <- c(21.393,8.716,9.114,49.758,27.457,51.194,20.329,46.655,38.575,11.04,8.357,77.211,13.281,26.787,25.85,9.234,16.369,65.653,53.439,296.168,98.622,22.682,8.542,33.094,59.918,4.621,53.039,60.322,4.681,13.177,48.712,26.198,266.663,13.757,25.79,54.323,16.388,17.427)
  
 # Multiply prices in EMF by shares to get Value
 
@@ -54,8 +55,8 @@ value$total <- rowSums( value[,1:dim(value)[2]] )
 
 value$inc <- (value$total-value$total[1])/value$total[1] 
 
-dates <- as.Date(dates)
-EMFplot <- as.numeric(value[,41])
+EMFplot <- as.numeric(value[,39])
 pp <- data.frame(cbind(dates,EMFplot))
-ggplot(pp,aes(dates,EMFplot))+geom_point()+geom_smooth(method = "auto")
+
+ggplot(data=pp,aes(x=as.Date(dates),y=EMFplot)) + geom_point() +geom_smooth(method = "auto") 
 ```

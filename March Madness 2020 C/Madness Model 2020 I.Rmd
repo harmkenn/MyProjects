@@ -56,7 +56,7 @@ nas <- teamcomb %>% summarise_all(~ sum(is.na(.)))
 ### Build and test the model
 
 ```{r btm}
-pyear <- 2020
+pyear <- floor(runif(1, min=2011, max=2019))
 rm <- 0
 rsd <- 1
 
@@ -71,7 +71,7 @@ dStats1120 <- AG1120FS - AG1120US
 
 # Set seed and create assignment
 
-assignment <- sample(1:2, size = nrow(dStats1120), prob = c(.8,.2), replace = TRUE)
+assignment <- sample(1:2, size = nrow(dStats1120), prob = c(.9,.1), replace = TRUE)
 
 # Create a train, validation and tests from the original data frame 
 NCAA_train <- dStats1120[assignment == 1, ]    # subset NCAA to training indices only
@@ -286,6 +286,16 @@ cresults$match <- aresults == presults
 cresults
 sum(cresults$match)
 score <- c(rep(10,32),rep(20,16),rep(40,8),rep(80,4),rep(160,2),rep(320,1))
+blank2 <- rep("",16)
+st2 <- c(blank2,st2)
+blank3 <- rep("",24)
+st3 <- c(blank3,st3)
+blank4 <- rep("",28)
+st4 <- c(blank4,st4)
+blank5 <- rep("",30)
+st5 <- c(blank5,st5)
+blank6 <- rep("",31)
+st6 <- c(blank6, st6)
 cbind(st1,st2,st3,st4,st5,st6)
 sum(cresults$match*score)
 track <- c(track,sum(cresults$match*score))

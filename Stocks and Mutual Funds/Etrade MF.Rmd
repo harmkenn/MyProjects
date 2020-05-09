@@ -35,23 +35,27 @@ setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
 
 ###ETRADE All
 ```{r fun}
-EMF <- load_prices(c("AMAGX","AMANX","BGAFX","BMGAX","DXQLX","ETGLX","FKDNX","MFEGX","NBGEX","NNLEX","NNTWX","OBCHX","PGRTX","PRMTX","PYVLX","ROGSX","RYOCX","SEEKX","SFLNX","SMPIX","SVAAX","TMFGX","UOPIX","WPSGX","AKREX","AMAGX","BGSAX","BPTRX","DXSLX","FNCMX","GOLDX","INPIX","JAGTX","LDVAX","PGTAX","PYVAX","RMQHX","RYOCX","RYVYX","SFLNX","SWPPX","TEPSX","TMFGX","ULPIX"
-),from = "2019-09-01",initial = 1000)
+EMF <- load_prices(c("AKREX","AMAGX","AMANX","BGAFX","BGSAX","BMGAX","BPTRX","DXQLX","DXSLX","FKDNX","FNCMX","GOLDX","INPIX","JAGTX","LDVAX","MFEGX","NBGEX","NNLEX","NNTWX","OBCHX","PGRTX","PGTAX","PRMTX","PYVAX","PYVLX","RMQHX","ROGSX","RYOCX","RYVYX","SEEKX","SFLNX","SMPIX","SVAAX","SWPPX","TEPSX","TMFGX","ULPIX","UOPIX"
+),from = "2019-12-01")
 dates <- row.names(EMF)
 MF <- colnames(EMF)
-rend <- c(491.91,570.34,1018.51,1123.53,919.22,1367.79,1008.84,1013.88,1050.62,1816.57,1560.19,3983.21,1458.67,1109.69,1170.04,911.51,1073.08,699.44,754.97,962.44,1436.74,834.19,1006.44,1058.54,988.14,536.52,972.8,1536.09,942.62,940.83,2197.26,879.81,1050.59,466.45,918.64,581.29,767.17,1017.04,913.22,298.98,659.79,907.31,813.1,953.87
-)
-end <- as.numeric(last(EMF))
-scale <- rend / end
-trip <- EMF %*% diag(scale)
-EMF <- data.frame(trip)
-rownames(EMF) <- dates
-colnames(EMF) <- MF
-EMF$total <- rowSums( EMF[,1:dim(EMF)[2]] )
-EMF$inc <- (EMF$total-EMF$total[1])/EMF$total[1] 
+shares <- c(21.393,8.716,9.114,49.758,27.457,51.194,20.329,46.655,38.575,11.04,8.357,113.06,13.281,26.787,25.85,9.234,16.369,65.653,53.439,296.168,98.622,22.682,8.542,33.094,59.918,4.621,53.039,60.322,4.681,13.177,48.712,26.198,266.663,13.757,25.79,54.323,16.388,17.427)
+ 
+# Multiply prices in EMF by shares to get Value
+
+value <- sweep(EMF, MARGIN=2, shares, `*`)
+
+rownames(value) <- dates
+colnames(value) <- MF
+
+value <- data.frame(value)
+
+value$total <- rowSums( value[,1:dim(value)[2]] )
+
+value$inc <- (value$total-value$total[1])/value$total[1] 
 
 dates <- as.Date(dates)
-EMFplot <- as.numeric(EMF[,46])
+EMFplot <- as.numeric(value[,41])
 pp <- data.frame(cbind(dates,EMFplot))
 ggplot(pp,aes(dates,EMFplot))+geom_point()+geom_smooth(method = "auto")
 ```

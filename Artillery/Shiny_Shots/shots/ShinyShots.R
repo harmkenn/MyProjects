@@ -64,8 +64,8 @@ LL2UTM2mgrs<-function(lat,lng){
   Northing <- Ki + Kii * p^2 + Kiii * p^4
   if (lat < 0) {Northing <- 10000000 + Northing} # In the Southern Hemisphere is Northing is measured from the south pole instead of from the equator
   
-  Easting <- round(Easting,0)
-  Northing <- round(Northing,0)
+  Easting <- floor(Easting)
+  Northing <- floor(Northing)
   
   
   ## Now let's turn UTM into MGRS

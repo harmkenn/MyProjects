@@ -6,15 +6,12 @@ library(leaflet)
 library(gridExtra)
 library(grid)
 
-
-
 #database start
 load("northdes.rda")
 load("4H.rda")
-c.elev <- glm(Elev~poly(Range,16,raw=TRUE), data = M232_4H)
-c.TOF <- glm(TOF~poly(Range,16,raw=TRUE), data = M232_4H)
-c.drift <- glm(Drift~poly(Range,16,raw=TRUE), data = M232_4H)
-c.maxord <- glm(MaxOrd~poly(Elev,6,raw=TRUE), data = M232_4H)
+c.elev <- glm(Elev~poly(Range,16,raw=TRUE), data = M232.4H)
+c.TOF <- glm(TOF~poly(Range,16,raw=TRUE), data = M232.4H)
+c.drift <- glm(Drift~poly(Range,16,raw=TRUE), data = M232.4H)
 
 #database end
 
@@ -180,7 +177,7 @@ MGRS2UTM2LL <-function(MGRS){
   lat <- FiR/pi*180
   lng <- dLam/pi*180+Czone
   
-  as.data.frame(rbind(c("MGRS"=MGRS,"Easting"=Easting,"Northing"=Northing,"Zone"=gzn,"Hemisphere"=hem,"Latitude"=lat,"Longitude"=lng,2)))
+  as.data.frame(rbind(c("MGRS"=MGRS,"Easting"=Easting,"Northing"=Northing,"Zone"=gzn,"Hemisphere"=hem,"Latitude"=round(lat,2),"Longitude"=round(lng,2))))
 }
 
 UTM2MGRS2LL <- function(Easting,Northing,gzn,hem){
@@ -280,7 +277,7 @@ shot_ll <- function(lat1d,lng1d,lat2d,lng2d){
   er <-6371 #mean radius of the earth in km
   
   #Distance between points
-  dist <- theta*er*16000/15970
+  dist <- theta*er
   
   #Bearing of the shot in radians
   shotr <- atan2(sin(lng2r-lng1r)*cos(lat2r),
@@ -423,7 +420,7 @@ ui <- fluidPage(
                         "Terrain"="Stamen.Terrain",
                         "Satellite"="Esri.WorldImagery",
                         "Night Lights" = "NASAGIBS.ViirsEarthAtNight2012")),
-          textInput("From3","Launch From MGRS:","11SNV3000000000"),
+          textInput("From3","Launch From MGRS:","11SNV3000010000"),
           textInput("Direction3","Direction in Degrees:",45),
           textInput("Distance3","Distance in km",10),
           actionButton(inputId = "get_map3", label = "Get Map"),
@@ -444,11 +441,11 @@ ui <- fluidPage(
 tabPanel("AFATDS",
        sidebarLayout(
          sidebarPanel(
-           textInput("From_4","Launch From MGRS:","11SNV3000000000"),
-           textInput("From_alt","Launch Altitude M:","1000"),
-           textInput("To_4","Land to MGRS:","11SNV4600000000"),
-           textInput("To_alt","Impact Altitude M:","200"),
-           textInput("AOF4","Azimuth of Fire:","1600"),
+           textInput("From_4","Launch From MGRS:","11SNV3131314141"),
+           textInput("From_alt","Launch Altitude M:","750"),
+           textInput("To_4","Land to MGRS:","11SNV2626231313"),
+           textInput("To_alt","Impact Altitude M:","650"),
+           textInput("AOF4","Azimuth of Fire:","2000"),
            actionButton(inputId = "get_sol", label = "Get Solution"),
            textInput("lookup4","MGRS lookup"),
            actionButton(inputId = "get_mgrs4", label = "Get Grid"),
@@ -697,13 +694,13 @@ observeEvent(input$get_sol, {
   Tlng <- as.numeric(as.vector(Tlatlng[1,7]))
   out <- shot_ll(Flat,Flng,Tlat,Tlng)
   range <- round(1000*out[1,5],0)
-  RangeD <- data.frame(Range=range)
-  Elev <- as.numeric(predict(c.elev, RangeD, type = "response"))
-  TOF <- as.numeric(predict(c.TOF, RangeD, type = "response"))
-  drift <- as.numeric(predict(c.drift, RangeD, type = "response"))
+  test <- data.frame(Range=range)
+  Elev <- as.numeric(predict(c.elev, test, type = "response"))
+  TOF <- as.numeric(predict(c.TOF, test, type = "response"))
+  drift <- as.numeric(predict(c.drift, test, type = "response"))
   az <- as.numeric(as.vector(out[1,6]))*3200/180
   if (az<0) {az <- az + 6400}
-  #az <- round(az,1)
+  az <- round(az,1)
   aof <- as.numeric(input$AOF4)
   defl <- 3200+(aof-az)+drift
   if (defl < 0) {defl <- defl + 6400}
@@ -714,30 +711,10 @@ observeEvent(input$get_sol, {
   CAS <- round(abs(AOS)*CSF,1)
   site <- AOS+CAS
   QE <- Elev +site
-  MaxOrd <- as.numeric(predict(c.maxord, data.frame(Elev=QE), type = "response"))
-  MaxOrd.p <- MaxOrd + F_alt
-  FM <- data.frame(cbind(c(range,az,aof,drift,defl,"M795","M232 4H",Elev,site,QE,TOF,MaxOrd.p)))
+  FM <- data.frame(cbind(c(range,az,aof,drift,defl,"M795","M232 4H",Elev,site,QE,TOF)))
   colnames(FM) <- c("Fire Mission")
-  rownames(FM) <- c("Range","Azimuth to Target","Azimuth of Fire","Drift","Deflection","Shell","Charge","Elevation","Site","QE","TOF","MaxOrd (MSL)")
-  x <- seq(from = 0, to = range)
-  tr.p <- data.frame(cbind(xs=c(0,range*.5,range*.6,range),ys=c(F_alt,MaxOrd.p,MaxOrd.p,T_alt)))
-  tr.m <- glm(ys~poly(xs,4,raw=TRUE), data = tr.p)
-  y.p <- as.numeric(predict(tr.m,data.frame(xs=x), type = "response"))
-  y.p <- y.p*MaxOrd.p/max(y.p)
-  tr.df <- data.frame(x=x,y=y.p)
-  tp <- tr.df %>% ggplot(aes(x,y))+geom_line(size = 1) + 
-    coord_fixed(ratio = 1, ylim = c(min(tr.df$x),max(tr.df$y))) + 
-    geom_abline(intercept = F_alt, slope = 0,color = "green") +
-    geom_abline(intercept = T_alt, slope = 0,color = "red")
-  if (QE < 800){
-    output$plot4 <- renderPlot({grid.arrange(tableGrob(FM),tp,ncol=1)})
-  } else {
-    FM <- data.frame(cbind(c(range,"NA","NA","NA","NA","NA","NA","NA","NA","NA","NA","NA")))
-    colnames(FM) <- c("Fire Mission")
-    rownames(FM) <- c("Range","Azimuth to Target","Azimuth of Fire","Drift","Deflection","Shell","Charge","Elevation","Site","QE","TOF","MaxOrd (MSL)")
-    
-    output$plot4 <- renderPlot({grid.arrange(tableGrob(FM),ncol=1)})
-  }
+  rownames(FM) <- c("Range","Azimuth to Target","Azimuth of Fire","Drift","Deflection","Shell","Charge","Elevation","Site","QE","TOF")
+  output$plot4 <- renderPlot({grid.arrange(tableGrob(FM),ncol=1)})
    
 }) #observeEvent get mgrs4
 

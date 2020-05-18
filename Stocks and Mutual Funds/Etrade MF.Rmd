@@ -35,28 +35,47 @@ setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
 
 ###ETRADE All
 ```{r fun}
-days <- Sys.Date() - 0:180
-begin <- days[181]
-EMF <- load_prices(c("AKREX","AMAGX","AMANX","BGAFX","BGSAX","BMGAX","BPTRX","DXQLX","DXSLX","FKDNX","FNCMX","GOLDX","INPIX","JAGTX","LDVAX","MFEGX","NBGEX","NNLEX","NNTWX","OBCHX","PGRTX","PGTAX","PRMTX","PYVAX","PYVLX","RMQHX","ROGSX","RYOCX","RYVYX","SEEKX","SFLNX","SMPIX","SVAAX","SWPPX","TEPSX","TMFGX","ULPIX","UOPIX"),from = begin)
-dates <- row.names(EMF)
+days <- Sys.Date() - 0:90
+begin <- days[91]
+EMF <- load_prices(c("AKREX","AMAGX","AMANX","BGAFX","BGSAX","BMGAX","BPTRX","DXQLX","DXSLX","FKDNX","FNCMX","GOLDX","INPIX","JAGTX","LDVAX","MFEGX","NBGEX","NNLEX","NNTWX","OBCHX","PGRTX","PGTAX","PRMTX","PYVAX","PYVLX","RMQHX","ROGSX","RYOCX","RYVYX","SEEKX","SFLNX","SMPIX","SVAAX","SWPPX","TEPSX","TMFGX","ULPIX","UOPIX"),from = begin, to = "2020-05-15")
+
+dates <- as.Date(row.names(EMF))
 MF <- colnames(EMF)
 shares <- c(21.393,8.716,9.114,49.758,27.457,51.194,20.329,46.655,38.575,11.04,8.357,77.211,13.281,26.787,25.85,9.234,16.369,65.653,53.439,296.168,98.622,22.682,8.542,33.094,59.918,4.621,53.039,60.322,4.681,13.177,48.712,26.198,266.663,13.757,25.79,54.323,16.388,17.427)
  
 # Multiply prices in EMF by shares to get Value
 
 value <- sweep(EMF, MARGIN=2, shares, `*`)
-
-rownames(value) <- dates
+rownames(value) <- as.Date(dates)
 colnames(value) <- MF
-
 value <- data.frame(value)
-
 value$total <- rowSums( value[,1:dim(value)[2]] )
-
 value$inc <- (value$total-value$total[1])/value$total[1] 
 
-EMFplot <- as.numeric(value[,39])
-pp <- data.frame(cbind(dates,EMFplot))
+NASDAQ <- load_prices(c("^IXIC"),from = begin, to = "2020-05-15")
+rownames(NASDAQ) <- as.Date(dates)
+colnames(NASDAQ) <- "NASDAQ"
+NASDAQ <- data.frame(NASDAQ)
+NASDAQ$inc <- (NASDAQ$NASDAQ-NASDAQ$NASDAQ[1])/NASDAQ$NASDAQ[1]
 
-ggplot(data=pp,aes(x=as.Date(dates),y=EMFplot)) + geom_point() +geom_smooth(method = "auto") 
+DOW <- load_prices(c("^DJI"),from = begin, to = "2020-05-15")
+rownames(DOW) <- as.Date(dates)
+colnames(DOW) <- "DOW"
+DOW <- data.frame(DOW)
+DOW$inc <- (DOW$DOW-DOW$DOW[1])/DOW$DOW[1]
+
+SP <- load_prices(c("^GSPC"),from = begin, to = "2020-05-15")
+rownames(SP) <- as.Date(dates)
+colnames(SP) <- "SP"
+SP <- data.frame(SP)
+SP$inc <- (SP$SP-SP$SP[1])/SP$SP[1]
+
+colors <- c("Harmon" = "black", "NASDAQ" = "red", "S&P" = "orange", "DOW" = "blue")
+
+ggplot(data= value, aes(x=dates)) + 
+  geom_point(data= value, aes(y=inc, color = "Harmon")) +
+  geom_point(data = NASDAQ, aes(y=inc, color = "NASDAQ")) +
+  geom_point(data = DOW, aes(y=inc, color = "DOW")) +
+  geom_point(data = SP, aes(y=inc, color = "S&P")) +
+  labs(color = "") + scale_color_manual(values = colors)
 ```

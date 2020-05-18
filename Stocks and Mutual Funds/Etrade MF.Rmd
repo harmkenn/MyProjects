@@ -37,7 +37,8 @@ setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
 ```{r fun}
 days <- Sys.Date() - 0:90
 begin <- days[91]
-EMF <- load_prices(c("AKREX","AMAGX","AMANX","BGAFX","BGSAX","BMGAX","BPTRX","DXQLX","DXSLX","FKDNX","FNCMX","GOLDX","INPIX","JAGTX","LDVAX","MFEGX","NBGEX","NNLEX","NNTWX","OBCHX","PGRTX","PGTAX","PRMTX","PYVAX","PYVLX","RMQHX","ROGSX","RYOCX","RYVYX","SEEKX","SFLNX","SMPIX","SVAAX","SWPPX","TEPSX","TMFGX","ULPIX","UOPIX"),from = begin, to = "2020-05-15")
+end <- days[3]
+EMF <- load_prices(c("AKREX","AMAGX","AMANX","BGAFX","BGSAX","BMGAX","BPTRX","DXQLX","DXSLX","FKDNX","FNCMX","GOLDX","INPIX","JAGTX","LDVAX","MFEGX","NBGEX","NNLEX","NNTWX","OBCHX","PGRTX","PGTAX","PRMTX","PYVAX","PYVLX","RMQHX","ROGSX","RYOCX","RYVYX","SEEKX","SFLNX","SMPIX","SVAAX","SWPPX","TEPSX","TMFGX","ULPIX","UOPIX"),from = begin, to = end)
 
 dates <- as.Date(row.names(EMF))
 MF <- colnames(EMF)
@@ -52,19 +53,19 @@ value <- data.frame(value)
 value$total <- rowSums( value[,1:dim(value)[2]] )
 value$inc <- (value$total-value$total[1])/value$total[1] 
 
-NASDAQ <- load_prices(c("^IXIC"),from = begin, to = "2020-05-15")
+NASDAQ <- load_prices(c("^IXIC"),from = begin, to = end)
 rownames(NASDAQ) <- as.Date(dates)
 colnames(NASDAQ) <- "NASDAQ"
 NASDAQ <- data.frame(NASDAQ)
 NASDAQ$inc <- (NASDAQ$NASDAQ-NASDAQ$NASDAQ[1])/NASDAQ$NASDAQ[1]
 
-DOW <- load_prices(c("^DJI"),from = begin, to = "2020-05-15")
+DOW <- load_prices(c("^DJI"),from = begin, to = end)
 rownames(DOW) <- as.Date(dates)
 colnames(DOW) <- "DOW"
 DOW <- data.frame(DOW)
 DOW$inc <- (DOW$DOW-DOW$DOW[1])/DOW$DOW[1]
 
-SP <- load_prices(c("^GSPC"),from = begin, to = "2020-05-15")
+SP <- load_prices(c("^GSPC"),from = begin, to = end)
 rownames(SP) <- as.Date(dates)
 colnames(SP) <- "SP"
 SP <- data.frame(SP)
@@ -79,3 +80,16 @@ ggplot(data= value, aes(x=dates)) +
   geom_point(data = SP, aes(y=inc, color = "S&P")) +
   labs(color = "") + scale_color_manual(values = colors)
 ```
+
+```{r trans}
+load("EMF_Trans.rda")
+NASDAQ$Dates <- rownames(NASDAQ)
+NASDAQ$Date <- as.POSIXct(60*60*24*as.integer(as.character(NASDAQ$Dates)),origin="1970-01-01")
+NASDAQ$Date <- as.Date(NASDAQ$Date, format = "%Y-%M-%d")
+EMF_Trans$Date <- as.Date(EMF_Trans$Date, format = "%Y-%M-%d")
+trans <- left_join(NASDAQ,EMF_Trans)
+ggplot() + 
+  geom_point(data= trans, aes(x=Date,y=NASDAQ), color = "grey", shape = 5) +
+  geom_point(data= trans %>% filter(!is.na(Trans)), aes(x=Date,y=NASDAQ, color = Trans, size = Amount, alpha = .5))
+```
+

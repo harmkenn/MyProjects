@@ -5,7 +5,8 @@ library(geosphere)
 library(leaflet)
 library(gridExtra)
 library(grid)
-
+library(googleway)
+set_key("AIzaSyAfnLNZjvYdMx-cyga_qA1oJ6P36dRGalA")
 
 
 #database start
@@ -745,11 +746,12 @@ observeEvent(input$get_mgrs4, {
   output$lMGRS4 <- renderText({paste(" ")})
   output$lLngLat4 <- renderText({paste(" ")})
   register_google(key = "AIzaSyAfnLNZjvYdMx-cyga_qA1oJ6P36dRGalA")
-  lLatLon <- geocode(input$lookup4)
+  lLatLon <- geocode(input$lookup4, outoutput = "all")
   llng <- lLatLon$lon
   llat <- lLatLon$lat
   lmgrs <- LL2UTM2mgrs(llat,llng)
-  output$lMGRS4 <- renderText({paste("MGRS: ", lmgrs[1,7])})
+  lalt <- google_elevation(df_locations = data.frame(lat = llat, lon = llng), simplify = TRUE)
+  output$lMGRS4 <- renderText({paste("MGRS: ", lmgrs[1,7], "Alt: ", round(lalt$results$elevation,0)," M")})
   output$lLngLat4 <- renderText({paste("Longitude: ", llng, "Latitude: ", llat)})
 }) #observeEvent get mgrs4
 } #End of the server

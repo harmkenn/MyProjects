@@ -718,18 +718,27 @@ observeEvent(input$get_sol, {
   range <- round(out[1,5],0)
   RangeD <- data.frame(Range=range)
   if (input$chg == "Auto"){
-    chg <- as.character(cut(range, breaks=c(0,2500,5000,8000,11000,14000,21000,99999),
-               labels = c("NA","M231 1L","M231 2L","M232A1 3H","M232A1 4H","M232A1 5H","NA")))
+    chg <- as.character(cut(range, breaks=c(-1,2500,5000,8000,11000,14000,22000,99999),
+               labels = c("Nope","M231 1L","M231 2L","M232A1 3H","M232A1 4H","M232A1 5H","Nope")))
   } else {chg <- input$chg}
+  if (chg == "Nope") {
+    FM <- data.frame(cbind(c(range,"NA","NA","NA","NA","NA","NA","NA","NA","NA","NA","NA")))
+    colnames(FM) <- c("Fire Mission")
+    rownames(FM) <- c("Range","Azimuth to Target","Azimuth of Fire","Drift","Deflection","Shell","Charge","Elevation","Site","QE","TOF","MaxOrd (MSL)")
+    output$plot4 <- renderPlot({grid.arrange(tableGrob(FM),ncol=1)})
+  } else {
   MACs_1 <- MACs %>% filter(Charge == chg)
   c.elev <- glm(Elev~poly(Range,16,raw=TRUE), data = MACs_1)
   c.TOF <- glm(TOF~poly(Range,16,raw=TRUE), data = MACs_1)
   c.drift <- glm(Drift~poly(Range,16,raw=TRUE), data = MACs_1)
   c.maxord <- glm(Maxord.z~poly(Elev,6,raw=TRUE), data = MACs_1)
+  c.cas.p <- glm(Cas.p~poly(Range,6,raw=TRUE), data = MACs_1)
+  c.cas.n <- glm(Cas.n~poly(Range,6,raw=TRUE), data = MACs_1)
   
   Elev <- as.numeric(predict(c.elev, RangeD, type = "response"))
   TOF <- as.numeric(predict(c.TOF, RangeD, type = "response"))
   drift <- as.numeric(predict(c.drift, RangeD, type = "response"))
+ 
   az <- as.numeric(as.vector(out[1,6]))*3200/180
   if (az<0) {az <- az + 6400}
   #az <- round(az,1)
@@ -739,15 +748,21 @@ observeEvent(input$get_sol, {
   T_alt <- as.numeric(input$To_alt)
   F_alt <- as.numeric(input$From_alt)
   AOS <- atan((T_alt-F_alt)/range)*3200/pi
-  CSF <- 0 
-  CAS <- round(abs(AOS)*CSF,1)
+  CAS <- 0 
+  if (AOS > 0) {
+    CAS <- as.numeric(predict(c.cas.p, data.frame(Range=range), type = "response"))*AOS
+  } else if (AOS < 0) {
+    CAS <- as.numeric(predict(c.cas.n, data.frame(Range=range), type = "response"))*AOS
+  }
   site <- AOS+CAS
   QE <- Elev +site
   MaxOrd <- as.numeric(predict(c.maxord, data.frame(Elev=QE), type = "response"))
   MaxOrd.p <- MaxOrd + F_alt
-  FM <- data.frame(cbind(c(range,az,aof,drift,defl,"M795",chg,Elev,site,QE,TOF,MaxOrd.p)))
+  FM <- data.frame(cbind(c(range,round(az,1),round(drift,1),round(defl,1),"M795",
+                           chg,round(Elev,1),round(AOS,1),round(CAS,1),round(site,1),
+                           round(QE,1),round(TOF,1),round(MaxOrd.p,0))))
   colnames(FM) <- c("Fire Mission")
-  rownames(FM) <- c("Range","Azimuth to Target","Azimuth of Fire","Drift","Deflection","Shell","Charge","Elevation","Site","QE","TOF","MaxOrd (MSL)")
+  rownames(FM) <- c("Range (Meters)","Azimuth to Target (mils)","Drift (mils)","Deflection (mils)","Shell","Charge","Elevation (mils)","Angle of Site (mils)","Complementary Angle of Site (mils)","Site (mils)","QE (mils)","TOF (seconds)","MaxOrd (MSL Meters)")
   x <- seq(from = 0, to = range)
   tr.p <- data.frame(cbind(xs=c(0,range*.5,range*.6,range),ys=c(F_alt,MaxOrd.p,MaxOrd.p,T_alt)))
   tr.m <- glm(ys~poly(xs,4,raw=TRUE), data = tr.p)
@@ -766,8 +781,8 @@ observeEvent(input$get_sol, {
     rownames(FM) <- c("Range","Azimuth to Target","Azimuth of Fire","Drift","Deflection","Shell","Charge","Elevation","Site","QE","TOF","MaxOrd (MSL)")
     
     output$plot4 <- renderPlot({grid.arrange(tableGrob(FM),ncol=1)})
-  }
-   
+  } # end of QE < 800 if
+  } # end of the chg = "NA" if
 }) #observeEvent get mgrs4
 
 observeEvent(input$get_mgrs4, {

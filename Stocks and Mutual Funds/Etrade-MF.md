@@ -1,7 +1,7 @@
 ---
 title: "Pick the Next Etrade Mutual Fund"
 author: "Ken Harmon"
-date: "2020 April 24"
+date: "2020 May 20"
 output:
   html_document:  
     keep_md: true
@@ -24,23 +24,66 @@ editor_options:
 ###ETRADE All
 
 ```r
-EMF <- load_prices(c("AKREX","AMAGX","AMANX","BGAFX","BGSAX","BMGAX","BPTRX","DXQLX","DXSLX","ETGLX","FKDNX","FNCMX","GOLDX","INPIX","JAGTX","LDVAX","MFEGX","NBGEX","NNLEX","NNTWX","OBCHX","PGRTX","PGTAX","PRMTX","PYVAX","PYVLX","RMQHX","ROGSX","RYOCX","RYVYX","SEEKX","SFLNX","SMPIX","SVAAX","SWPPX","TEPSX","TMFGX","ULPIX","UOPIX","WPSGX"),from = "2019-10-01",initial = 1000)
-dates <- row.names(EMF)
-MF <- colnames(EMF)
-rend <- c(967.3915,1016.9254,556.5145,1409.9162,965.1136,1330.5321,1412.6756,1117.2352,1107.793,1250.8098,998.1264,917.0972,2041.1832,1079.9738,1036.389,455.6952,1095.1524,1003.7246,1744.1344,1479.0805,3889.4611,1396.0966,914.1531,1092.8635,561.1896,1128.9828,735.9648,1221.8468,2551.0527,872.1171,667.2516,1006.708,1042.0436,1412.8391,638.1872,1110.5696,1592.8249,1117.4977,1195.9206,1021.937)
-end <- as.numeric(last(EMF))
-scale <- rend / end
-trip <- EMF %*% diag(scale)
-EMF <- data.frame(trip)
-rownames(EMF) <- dates
-colnames(EMF) <- MF
-EMF$total <- rowSums( EMF[,1:dim(EMF)[2]] )
-EMF$inc <- (EMF$total-EMF$total[1])/EMF$total[1] 
+days <- Sys.Date() - 0:90
+begin <- days[91]
+end <- days[3]
+EMF <- load_prices(c("AKREX","AMANX","BGAFX","BGSAX","BMGAX","BPTRX","DXQLX","DXSLX","FKDNX","FNCMX","GOLDX","INPIX","JAGTX","LDVAX","MFEGX","NBGEX","NNLEX","NNTWX","OBCHX","PGRTX","PGTAX","PRMTX","PYVAX","PYVLX","RMQHX","ROGSX","RYOCX","RYVYX","SEEKX","SFLNX","SMPIX","SVAAX","SWPPX","TEPSX","ULPIX","UOPIX"),from = begin, to = end)
 
-dates <- as.Date(dates)
-EMFplot <- as.numeric(EMF[,42])
-pp <- data.frame(cbind(dates,EMFplot))
-ggplot(pp,aes(dates,EMFplot))+geom_point()+geom_smooth(method = "auto")
+dates <- as.Date(row.names(EMF))
+MF <- colnames(EMF)
+shares <- c(21.393,9.114,49.758,27.457,55.073,21.872,46.655,42.719,12.096,8.357,66.181,13.281,26.787,25.85,10.074,16.369,65.653,53.439,296.168,98.622,22.682,8.542,39.708,59.918,4.621,53.039,60.322,5.223,13.177,48.712,266.663,13.757,25.79,18.239,18.589)
+ 
+# Multiply prices in EMF by shares to get Value
+
+value <- sweep(EMF, MARGIN=2, shares, `*`)
+rownames(value) <- as.Date(dates)
+colnames(value) <- MF
+value <- data.frame(value)
+value$total <- rowSums( value[,1:dim(value)[2]] )
+value$inc <- (value$total-value$total[1])/value$total[1] 
+
+NASDAQ <- load_prices(c("^IXIC"),from = begin, to = end)
+rownames(NASDAQ) <- as.Date(dates)
+colnames(NASDAQ) <- "NASDAQ"
+NASDAQ <- data.frame(NASDAQ)
+NASDAQ$inc <- (NASDAQ$NASDAQ-NASDAQ$NASDAQ[1])/NASDAQ$NASDAQ[1]
+
+DOW <- load_prices(c("^DJI"),from = begin, to = end)
+rownames(DOW) <- as.Date(dates)
+colnames(DOW) <- "DOW"
+DOW <- data.frame(DOW)
+DOW$inc <- (DOW$DOW-DOW$DOW[1])/DOW$DOW[1]
+
+SP <- load_prices(c("^GSPC"),from = begin, to = end)
+rownames(SP) <- as.Date(dates)
+colnames(SP) <- "SP"
+SP <- data.frame(SP)
+SP$inc <- (SP$SP-SP$SP[1])/SP$SP[1]
+
+colors <- c("Harmon" = "black", "NASDAQ" = "red", "S&P" = "orange", "DOW" = "blue")
+
+ggplot(data= value, aes(x=dates)) + 
+  geom_point(data= value, aes(y=inc, color = "Harmon")) +
+  geom_point(data = NASDAQ, aes(y=inc, color = "NASDAQ")) +
+  geom_point(data = DOW, aes(y=inc, color = "DOW")) +
+  geom_point(data = SP, aes(y=inc, color = "S&P")) +
+  labs(color = "") + scale_color_manual(values = colors)
 ```
 
 ![](Etrade-MF_files/figure-html/fun-1.png)<!-- -->
+
+
+```r
+load("EMF_Trans.rda")
+NASDAQ$Dates <- rownames(NASDAQ)
+NASDAQ$Date <- as.POSIXct(60*60*24*as.integer(as.character(NASDAQ$Dates)),origin="1970-01-01")
+NASDAQ$Date <- as.Date(NASDAQ$Date, format = "%Y-%M-%d")
+EMF_Trans$Date <- as.Date(EMF_Trans$Date, format = "%Y-%M-%d")
+trans <- left_join(NASDAQ,EMF_Trans)
+ggplot() + 
+  geom_point(data= trans, aes(x=Date,y=NASDAQ), color = "grey", shape = 5) +
+  geom_point(data= trans %>% filter(!is.na(Trans)), aes(x=Date,y=NASDAQ, color = Trans, size = Amount, alpha = .5))
+```
+
+![](Etrade-MF_files/figure-html/trans-1.png)<!-- -->
+

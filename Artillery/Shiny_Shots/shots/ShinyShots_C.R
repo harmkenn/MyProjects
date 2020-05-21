@@ -109,12 +109,14 @@ LL2UTM2mgrs<-function(lat,lng){
   utmz <- f_pad_zero(gzn, width = 2, pad.char = "0") #pad the zone with a zero, if needed
   MGRS <- paste(utmz,gzl,gsel,gsnl,easting5,northing5,sep = "") #Paste all six pieces together
   
-  final <- as.data.frame(rbind(c(lat,lng, Easting,Northing,utmz,hem,MGRS)))
+  final <- data.frame(rbind(c(lat,lng, Easting,Northing,utmz,hem,MGRS)))
   colnames(final) <- c("Latitude","Longitude","Easting","Northing","zone","Hemisphere","MGRS")
   
+  indx <- c(T,T,T,T,T,F,F)
+  final[indx] <- lapply(final[indx], function(x) as.numeric(as.character(x)))
   
   return(final)
-}
+} # End of LL2UTM2MGRS
 
 MGRS2UTM2LL <-function(MGRS){
   
@@ -181,8 +183,13 @@ MGRS2UTM2LL <-function(MGRS){
   lat <- FiR/pi*180
   lng <- dLam/pi*180+Czone
   
-  as.data.frame(rbind(c("MGRS"=MGRS,"Easting"=Easting,"Northing"=Northing,"Zone"=gzn,"Hemisphere"=hem,"Latitude"=lat,"Longitude"=lng,2)))
-}
+  final <- data.frame(rbind(c("MGRS"=MGRS,"Easting"=Easting,"Northing"=Northing,"Zone"=gzn,"Hemisphere"=hem,"Latitude"=lat,"Longitude"=lng)))
+  
+  indx <- c(F,T,T,T,F,T,T)
+  final[indx] <- lapply(final[indx], function(x) as.numeric(as.character(x)))
+  
+  return(final)
+} # end of MGRS2UTM2LL
 
 UTM2MGRS2LL <- function(Easting,Northing,gzn,hem){
   # Outside Functions I used
@@ -264,8 +271,13 @@ UTM2MGRS2LL <- function(Easting,Northing,gzn,hem){
   utmz <- f_pad_zero(gzn, width = 2, pad.char = "0") #pad the zone with a zero, if needed
   MGRS <- paste(utmz,gzl,gsel,gsnl,easting5,northing5,sep = "") #Paste all six pieces together
   
-  as.data.frame(rbind(c("Easting" = Easting,"Northing" = Northing, "Zone" = gzn, "Hemisphere" = hem, "Latitude" = round(lat,2), "Longitude"=round(lng,2), "MGRS" = MGRS)))
-}
+  final <- data.frame(rbind(c("Easting" = Easting,"Northing" = Northing, "Zone" = gzn, "Hemisphere" = hem, "Latitude" = lat, "Longitude"=lng, "MGRS" = MGRS)))
+  
+  indx <- c(T,T,T,F,T,T,F)
+  final[indx] <- lapply(final[indx], function(x) as.numeric(as.character(x)))
+  
+  return(final)
+} # End of UTM2MGRS2LL
 
 shot_ll <- function(lat1d,lng1d,lat2d,lng2d){
   #in Radians
@@ -323,14 +335,19 @@ shot_ll <- function(lat1d,lng1d,lat2d,lng2d){
   lngmd <- lngmr*180/pi
   
   
-  data.frame("Launch Latitude" = lat1d, "Launch Longitude" = lng1d,
+  final <- data.frame("Launch Latitude" = lat1d, "Launch Longitude" = lng1d,
              "Landing Latitude" = lat2d, "Landing Longitude" = lng2d,
              "Distance km" = dist,
-             "Launch Bearing" = paste(round(shotd,2)),
-             "Landing Bearing" = paste(round(impd,2)),
-             "Midpoint Lat" = round(latmd,2),
-             "Midpoint Lng" = round(lngmd,2))
-}
+             "Launch Bearing" = shotd,
+             "Landing Bearing" = impd,
+             "Midpoint Lat" = latmd,
+             "Midpoint Lng" = lngmd)
+  
+  indx <- c(T,T,T,T,T,T,T,T,T)
+  final[indx] <- lapply(final[indx], function(x) as.numeric(as.character(x)))
+  
+  return(final)
+} # End of shot_ll
 
 polar_ll <- function(lat1d,lng1d,dist,shotd){
   #in Radians
@@ -362,16 +379,21 @@ polar_ll <- function(lat1d,lng1d,dist,shotd){
   latmd <- latmr*180/pi
   lngmd <- lngmr*180/pi
   
-  data.frame("Launch Latitude" = lat1d,
+  final <- data.frame("Launch Latitude" = lat1d,
              "Launch Longitude" = lng1d,
              "Distance km" = dist,
-             "Launch Bearing" = paste(round(shotd,2)),
+             "Launch Bearing" = shotd,
              "Landing Latitude" = lat2d,
              "Landing Longitude" = lng2d,
-             "Landing Bearing" = round(impd,2),
-             "Midpoint Lat" = round(latmd,2),
-             "Midpoint Lng" = round(lngmd,2))
-}
+             "Landing Bearing" = impd,
+             "Midpoint Lat" = latmd,
+             "Midpoint Lng" = lngmd)
+  
+  indx <- c(T,T,T,T,T,T,T,T,T)
+  final[indx] <- lapply(final[indx], function(x) as.numeric(as.character(x)))
+  
+  return(final)
+} # End of polar_ll
 
 
 
@@ -418,7 +440,7 @@ ui <- fluidPage(
                         "Satellite"="Esri.WorldImagery",
                         "Night Lights" = "NASAGIBS.ViirsEarthAtNight2012")),
           textInput("From","Launch From MGRS:","11SNV3000010000"),
-          textInput("To","Land at MGRS:","11SNV3000020000"),
+          textInput("To","Land at MGRS:","12TVP1585016052"),
           actionButton(inputId = "get_map2", label = "Get Map"),
           textInput("lookup2","MGRS lookup"),
           actionButton(inputId = "get_mgrs2", label = "Get Grid"),
@@ -464,9 +486,9 @@ tabPanel("AFATDS",
        sidebarLayout(
          sidebarPanel(
            textInput("From_4","Launch From MGRS:","11SNV3000000000"),
-           textInput("From_alt","Launch Altitude M:","1000"),
+           textInput("From_alt","Launch Altitude M:","725"),
            textInput("To_4","Land to MGRS:","11SNV4600000000"),
-           textInput("To_alt","Impact Altitude M:","200"),
+           textInput("To_alt","Impact Altitude M:","725"),
            textInput("AOF4","Azimuth of Fire:","1600"),
            actionButton(inputId = "get_sol", label = "Get Solution"),
            textInput("lookup4","MGRS lookup"),
@@ -522,9 +544,9 @@ server <- function(input, output) {
     mgrs <- MGRS2UTM2LL(input$MGRS)
     clat <- as.numeric(as.vector(mgrs[1,6]))
     clng <- as.numeric(as.vector(mgrs[1,7]))
-    output$Target <-  renderText({paste("Target: ", LL2UTM2mgrs(clat,clng)[1,7])})
+    output$Target <-  renderText({paste("Target: ", LL2UTM2mgrs(tlat,tlng)[1,7])})
     shot <- shot_ll(clat,clng,tlat,tlng)
-    output$dist <- renderText({paste("Distance to Target: ", shot[1,5])})
+    output$dist <- renderText({paste("Distance to Target: ", round(shot[1,5],0), "M")})
     aof <- input$aof
     az <- as.numeric(as.vector(shot[1,6]))*6400/360
       if (az<0) {az <- az + 6400}
@@ -585,7 +607,7 @@ server <- function(input, output) {
       }
       launchb <- as.numeric(as.vector(shot[1,6]))
       if (launchb < 0) {launchb <- launchb + 360}
-      output$shot <- renderText({paste("Distance: ", round(dist,1), "km  Launch Bearing: ",
+      output$shot <- renderText({paste("Distance: ", round(dist,0), "M  Launch Bearing: ",
                                        launchb,
                                        "    Landing Bearing: ", as.numeric(as.vector(shot[1,7])))})
       leaflet() %>% 
@@ -728,9 +750,9 @@ observeEvent(input$get_sol, {
     output$plot4 <- renderPlot({grid.arrange(tableGrob(FM),ncol=1)})
   } else {
   MACs_1 <- MACs %>% filter(Charge == chg)
-  c.elev <- glm(Elev~poly(Range,16,raw=TRUE), data = MACs_1)
-  c.TOF <- glm(TOF~poly(Range,16,raw=TRUE), data = MACs_1)
-  c.drift <- glm(Drift~poly(Range,16,raw=TRUE), data = MACs_1)
+  c.elev <- glm(Elev~poly(Range,6,raw=TRUE), data = MACs_1)
+  c.TOF <- glm(TOF~poly(Range,6,raw=TRUE), data = MACs_1)
+  c.drift <- glm(Drift~poly(Range,6,raw=TRUE), data = MACs_1)
   c.maxord <- glm(Maxord.z~poly(Elev,6,raw=TRUE), data = MACs_1)
   c.cas.p <- glm(Cas.p~poly(Range,6,raw=TRUE), data = MACs_1)
   c.cas.n <- glm(Cas.n~poly(Range,6,raw=TRUE), data = MACs_1)

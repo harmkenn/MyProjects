@@ -1,3 +1,18 @@
+Flatlng <- MGRS2UTM2LL("11SNV3000000000")
+Tlatlng <- MGRS2UTM2LL("11SNV3000010000")
+
+Flat <- as.numeric(as.vector(Flatlng[1,6]))
+Flng <- as.numeric(as.vector(Flatlng[1,7]))
+Tlat <- as.numeric(as.vector(Tlatlng[1,6]))
+Tlng <- as.numeric(as.vector(Tlatlng[1,7]))
+
+New <- atan2((sin(Tlng-Flng)*))
+
+lat1d <- Flat
+lng1d <- Flng
+lat2d <- Tlat
+lng2d <- Tlng
+
 lat1r <- lat1d*pi/180 # Start Lat to radians
 lng1r <- lng1d*pi/180 # Start Longitude to radians
 lat2r <- lat2d*pi/180 # End Lat to radians
@@ -32,8 +47,7 @@ dist <- b*A*(sigma-Ds)
 
 #Bearing of the shot in radians
 
-
-shotr <- atan2(cos(U2)*sin(lamda),cos(U1)*sin(U2)-sin(U1)*cos(U2)*cos(lamda))
+shotr <- atan(cos(U2)*sin(lamda)/(cos(U1)*sin(U2)-sin(U1)*cos(U2)*cos(lamda)))
 #Bearing of the shot in degrees
 shotd <- shotr*180/pi
 

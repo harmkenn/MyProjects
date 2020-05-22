@@ -37,7 +37,7 @@ setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
 ```{r fun}
 days <- Sys.Date() - 0:180
 begin <- days[181]
-end <- days[3]
+end <- days[2]
 EMF <- load_prices(c("AKREX","AMANX","BGAFX","BGSAX","BMGAX","BPTRX","DXQLX","DXSLX","FKDNX","FNCMX","GOLDX","INPIX","JAGTX","LDVAX","MFEGX","NBGEX","NNLEX","NNTWX","OBCHX","PGRTX","PGTAX","PRMTX","PYVAX","PYVLX","RMQHX","ROGSX","RYOCX","RYVYX","SEEKX","SFLNX","SMPIX","SVAAX","SWPPX","TEPSX","ULPIX","UOPIX"),from = begin, to = end)
 
 dates <- as.Date(row.names(EMF))

@@ -156,6 +156,7 @@ MGRS2UTM2LL <-function(MGRS){
   alln <- data.frame(hem = NA, gze = gze, gzl = gzl, gsnl = gsnl, ngsn = NA)
   fulln<-match_df(northdes,alln,on=c("gze","gzl","gsnl"))
   Northing <- 100000*fulln[1,5]+north5
+  Southing <- Northing - 100000
   
   NfEQ <- Northing
   if (hem == "S"){NfEQ <- Northing - 10000000}
@@ -183,9 +184,37 @@ MGRS2UTM2LL <-function(MGRS){
   lat <- FiR/pi*180
   lng <- dLam/pi*180+Czone
   
-  final <- data.frame(rbind(c("MGRS"=MGRS,"Easting"=Easting,"Northing"=Northing,"Zone"=gzn,"Hemisphere"=hem,"Latitude"=lat,"Longitude"=lng)))
+  SfEQ <- Southing
+  if (hem == "S"){SfEQ <- Southing - 10000000}
+  Fi <- (SfEQ)/(6366197.724*k0)
+  Ni <- (c/(1+e1sq*(cos(Fi))^2)^(1/2))*k0
+  Czone <- 6*gzn-183
+  dln <- (Easting-500000)/Ni
+  A1 <- sin(2*Fi)
+  A2 <- A1*(cos(Fi))^2
+  J2 <- Fi+(A1/2)
+  J4 <- (3*J2+A2)/4
+  J6 <- (5*J4+A2*(cos(Fi))^2)/3
+  alfa <- 3/4*e1sq
+  beta <- 5/3*alfa^2
+  gamma <- 35/27*alfa^3
+  Bfi <- k0*c*(Fi-(alfa*J2)+(beta*J4)-(gamma*J6))
+  BB <- (SfEQ-Bfi)/Ni
+  zeta <- ((e1sq*dln^2)/2)*(cos(Fi))^2
+  Xi <- dln*(1-(zeta/3))
+  Eta <- BB*(1-zeta)+Fi
+  ShXi <- (exp(Xi)-exp(-Xi))/2
+  dLam <- atan(ShXi/cos(Eta))
+  Tau <- atan(cos(dLam)*tan(Eta))
+  FiR <- Fi+(1+e1sq*(cos(Fi))^2-(3/2)*e1sq*sin(Fi)*cos(Fi)*(Tau-Fi))*(Tau-Fi)
+  slat <- FiR/pi*180
+  slng <- dLam/pi*180+Czone
   
-  indx <- c(F,T,T,T,F,T,T)
+  gd <- shot_ll(slat,slng,lat,lng)[1,6]
+  
+  final <- data.frame(rbind(c("MGRS"=MGRS,"Easting"=Easting,"Northing"=Northing,"Zone"=gzn,"Hemisphere"=hem,"Latitude"=lat,"Longitude"=lng, "Grid Declination"=gd)))
+  
+  indx <- c(F,T,T,T,F,T,T,T)
   final[indx] <- lapply(final[indx], function(x) as.numeric(as.character(x)))
   
   return(final)
@@ -485,10 +514,10 @@ ui <- fluidPage(
 tabPanel("AFATDS",
        sidebarLayout(
          sidebarPanel(
-           textInput("From_4","Launch From MGRS:","11SNV3000000000"),
+           textInput("From_4","Launch From MGRS:","11UPV9661987688"),
            textInput("From_alt","Launch Altitude M:","725"),
-           textInput("To_4","Land to MGRS:","11SNV4600000000"),
-           textInput("To_alt","Impact Altitude M:","725"),
+           textInput("To_4","Land to MGRS:","12UUE0422497653"),
+           textInput("To_alt","Impact Altitude M:","120"),
            textInput("AOF4","Azimuth of Fire:","1600"),
            actionButton(inputId = "get_sol", label = "Get Solution"),
            textInput("lookup4","MGRS lookup"),
@@ -512,12 +541,12 @@ server <- function(input, output) {
       return()
       isolate({
         mgrs <- MGRS2UTM2LL(input$MGRS)
-        clat <- as.numeric(as.vector(mgrs[1,6]))
-        clng <- as.numeric(as.vector(mgrs[1,7]))
+        clat <- mgrs[1,6]
+        clng <- mgrs[1,7]
         aof <- input$aof
         aoftip <- polar_ll(clat,clng,30,input$aof/6400*360)
-        aoftiplat <- as.numeric(as.vector(aoftip[1,5]))
-        aoftiplng <- as.numeric(as.vector(aoftip[1,6]))
+        aoftiplat <- aoftip[1,5]
+        aoftiplng <- aoftip[1,6]
         aofdf <- data.frame(lng = c(clng,aoftiplng),lat = c(clat,aoftiplat))
         leaflet() %>% 
           setView(clng,clat,zoom=10) %>%
@@ -542,13 +571,13 @@ server <- function(input, output) {
     tlng <- click$lng
     tlat <- click$lat
     mgrs <- MGRS2UTM2LL(input$MGRS)
-    clat <- as.numeric(as.vector(mgrs[1,6]))
-    clng <- as.numeric(as.vector(mgrs[1,7]))
+    clat <- mgrs[1,6]
+    clng <- mgrs[1,7]
     output$Target <-  renderText({paste("Target: ", LL2UTM2mgrs(tlat,tlng)[1,7])})
     shot <- shot_ll(clat,clng,tlat,tlng)
     output$dist <- renderText({paste("Distance to Target: ", round(shot[1,5],0), "M")})
     aof <- input$aof
-    az <- as.numeric(as.vector(shot[1,6]))*6400/360
+    az <- shot[1,6]*6400/360
       if (az<0) {az <- az + 6400}
       az <- round(az,1)
     output$az <- renderText({paste("Azimuth to Target: ", az, "mils")})
@@ -573,11 +602,11 @@ server <- function(input, output) {
       return()
     isolate({
       From <- MGRS2UTM2LL(input$From)
-      flat <- as.numeric(as.vector(From[1,6]))
-      flng <- as.numeric(as.vector(From[1,7]))
+      flat <- From[1,6]
+      flng <- From[1,7]
       To <- MGRS2UTM2LL(input$To)
-      tlat <- as.numeric(as.vector(To[1,6]))
-      tlng <- as.numeric(as.vector(To[1,7]))
+      tlat <- To[1,6]
+      tlng <- To[1,7]
       oflng <- flng
       otlng <- tlng
       flight <- "East"
@@ -592,9 +621,9 @@ server <- function(input, output) {
         } #End of the else
       } #End of the if
       shot <- shot_ll(flat,flng,tlat,tlng)
-      mlat <- as.numeric(as.vector(shot[1,8]))
-      mlng <- as.numeric(as.vector(shot[1,9]))
-      dist <- as.numeric(as.vector(shot[1,5]))
+      mlat <- shot[1,8]
+      mlng <- shot[1,9]
+      dist <- shot[1,5]
       zoom <- 15.3-log(dist/1000,2)
       gcroute <- gcIntermediate(c(flng,flat),c(tlng,tlat), breakAtDateLine = T, n = 100, 
                                        addStartEnd = TRUE, sp = T)
@@ -605,11 +634,11 @@ server <- function(input, output) {
         mess$lon[101] <- tlng
         gcroute@lines[[1]]@Lines[[1]]@coords <- as.matrix(mess)
       }
-      launchb <- as.numeric(as.vector(shot[1,6]))
+      launchb <- shot[1,6]
       if (launchb < 0) {launchb <- launchb + 360}
       output$shot <- renderText({paste("Distance: ", round(dist,0), "M  Launch Bearing: ",
                                        launchb,
-                                       "    Landing Bearing: ", as.numeric(as.vector(shot[1,7])))})
+                                       "    Landing Bearing: ", shot[1,7])})
       leaflet() %>% 
         setView(mlng,mlat,zoom=zoom) %>%
         addProviderTiles(input$maptype2) %>%
@@ -638,16 +667,16 @@ output$mymap3 <- renderLeaflet({
     return()
   isolate({
     From <- MGRS2UTM2LL(input$From3)
-    flat <- as.numeric(as.vector(From[1,6]))
-    flng <- as.numeric(as.vector(From[1,7]))
+    flat <- From[1,6]
+    flng <- From[1,7]
     dist <- as.numeric(input$Distance3)
     dir <- as.numeric(input$Direction3)
     polar <- polar_ll(flat,flng,dist,dir)
-    tlat <- as.numeric(as.vector(polar[1,5]))
-    tlng <- as.numeric(as.vector(polar[1,6]))
-    tbear <- as.numeric(as.vector(polar[1,7]))
-    mlat <- as.numeric(as.vector(polar[1,8]))
-    mlng <- as.numeric(as.vector(polar[1,9]))
+    tlat <- polar[1,5]
+    tlng <- polar[1,6]
+    tbear <- polar[1,7]
+    mlat <- polar[1,8]
+    mlng <- polar[1,9]
     
     zoom <- 15.3-log(dist,2)
     gcroute <- gcIntermediate(c(flng,flat),c(tlng,tlat), breakAtDateLine = T, n = 100, 
@@ -731,22 +760,31 @@ observeEvent(input$get_mgrs3, {
 observeEvent(input$get_sol, {
   output$shot4 <- renderText({paste(" ")})
   Flatlng <- MGRS2UTM2LL(input$From_4)
-  Flat <- as.numeric(as.vector(Flatlng[1,6]))
-  Flng <- as.numeric(as.vector(Flatlng[1,7]))
+  Flat <- Flatlng[1,6]
+  Flng <- Flatlng[1,7]
+  gd <- Flatlng[1,8]*3200/180
   Tlatlng <- MGRS2UTM2LL(input$To_4)
-  Tlat <- as.numeric(as.vector(Tlatlng[1,6]))
-  Tlng <- as.numeric(as.vector(Tlatlng[1,7]))
+  Tlat <- Tlatlng[1,6]
+  Tlng <- Tlatlng[1,7]
   out <- shot_ll(Flat,Flng,Tlat,Tlng)
   range <- round(out[1,5],0)
   RangeD <- data.frame(Range=range)
+  az <- out[1,6]*3200/180
+  if (az<0) {az <- az + 6400}
+  T_alt <- as.numeric(input$To_alt)
+  F_alt <- as.numeric(input$From_alt)
+  AOS <- atan((T_alt-F_alt)/range)*3200/pi
+
   if (input$chg == "Auto"){
-    chg <- as.character(cut(range, breaks=c(-1,2500,5000,8000,11000,14000,22000,99999),
+    chg <- as.character(cut(range, breaks=c(-1,2500,5000,8000,11000,14000,22000,99999999),
                labels = c("Nope","M231 1L","M231 2L","M232A1 3H","M232A1 4H","M232A1 5H","Nope")))
   } else {chg <- input$chg}
   if (chg == "Nope") {
-    FM <- data.frame(cbind(c(range,"NA","NA","NA","NA","NA","NA","NA","NA","NA","NA","NA")))
+    FM <- data.frame(cbind(c(range,round(az,1),round(gd,1),"NA","NA","NA",
+                             "NA","NA",round(AOS,1),"NA","NA",
+                             "NA","NA","NA")))
     colnames(FM) <- c("Fire Mission")
-    rownames(FM) <- c("Range","Azimuth to Target","Azimuth of Fire","Drift","Deflection","Shell","Charge","Elevation","Site","QE","TOF","MaxOrd (MSL)")
+    rownames(FM) <- c("Range (Meters)","Azimuth to Target (mils)","Grid Declination","Drift (mils)","Deflection (mils)","Shell","Charge","Elevation (mils)","Angle of Site (mils)","Complementary Angle of Site (mils)","Site (mils)","QE (mils)","TOF (seconds)","MaxOrd (MSL Meters)")
     output$plot4 <- renderPlot({grid.arrange(tableGrob(FM),ncol=1)})
   } else {
   MACs_1 <- MACs %>% filter(Charge == chg)
@@ -761,15 +799,12 @@ observeEvent(input$get_sol, {
   TOF <- as.numeric(predict(c.TOF, RangeD, type = "response"))
   drift <- as.numeric(predict(c.drift, RangeD, type = "response"))
  
-  az <- as.numeric(as.vector(out[1,6]))*3200/180
-  if (az<0) {az <- az + 6400}
-  #az <- round(az,1)
+
   aof <- as.numeric(input$AOF4)
-  defl <- 3200+(aof-az)+drift
+  defl <- 3200 + aof- az + drift + gd
   if (defl < 0) {defl <- defl + 6400}
-  T_alt <- as.numeric(input$To_alt)
-  F_alt <- as.numeric(input$From_alt)
-  AOS <- atan((T_alt-F_alt)/range)*3200/pi
+
+
   CAS <- 0 
   if (AOS > 0) {
     CAS <- as.numeric(predict(c.cas.p, data.frame(Range=range), type = "response"))*AOS
@@ -780,11 +815,11 @@ observeEvent(input$get_sol, {
   QE <- Elev +site
   MaxOrd <- as.numeric(predict(c.maxord, data.frame(Elev=QE), type = "response"))
   MaxOrd.p <- MaxOrd + F_alt
-  FM <- data.frame(cbind(c(range,round(az,1),round(drift,1),round(defl,1),"M795",
+  FM <- data.frame(cbind(c(range,round(az,1),round(gd,1),round(drift,1),round(defl,1),"M795",
                            chg,round(Elev,1),round(AOS,1),round(CAS,1),round(site,1),
                            round(QE,1),round(TOF,1),round(MaxOrd.p,0))))
   colnames(FM) <- c("Fire Mission")
-  rownames(FM) <- c("Range (Meters)","Azimuth to Target (mils)","Drift (mils)","Deflection (mils)","Shell","Charge","Elevation (mils)","Angle of Site (mils)","Complementary Angle of Site (mils)","Site (mils)","QE (mils)","TOF (seconds)","MaxOrd (MSL Meters)")
+  rownames(FM) <- c("Range (Meters)","Azimuth to Target (mils)","Grid Declination","Drift (mils)","Deflection (mils)","Shell","Charge","Elevation (mils)","Angle of Site (mils)","Complementary Angle of Site (mils)","Site (mils)","QE (mils)","TOF (seconds)","MaxOrd (MSL Meters)")
   x <- seq(from = 0, to = range)
   tr.p <- data.frame(cbind(xs=c(0,range*.5,range*.6,range),ys=c(F_alt,MaxOrd.p,MaxOrd.p,T_alt)))
   tr.m <- glm(ys~poly(xs,4,raw=TRUE), data = tr.p)
@@ -798,9 +833,11 @@ observeEvent(input$get_sol, {
   if (QE < 800){
     output$plot4 <- renderPlot({grid.arrange(tableGrob(FM),tp,ncol=1)})
   } else {
-    FM <- data.frame(cbind(c(range,"NA","NA","NA","NA","NA","NA","NA","NA","NA","NA","NA")))
+    FM <- data.frame(cbind(c(range,round(az,1),round(gd,1),"NA","NA","NA",
+                             "NA","NA",round(AOS,1),"NA","NA",
+                             "NA","NA","NA")))
     colnames(FM) <- c("Fire Mission")
-    rownames(FM) <- c("Range","Azimuth to Target","Azimuth of Fire","Drift","Deflection","Shell","Charge","Elevation","Site","QE","TOF","MaxOrd (MSL)")
+    rownames(FM) <- c("Range (Meters)","Azimuth to Target (mils)","Grid Declination","Drift (mils)","Deflection (mils)","Shell","Charge","Elevation (mils)","Angle of Site (mils)","Complementary Angle of Site (mils)","Site (mils)","QE (mils)","TOF (seconds)","MaxOrd (MSL Meters)")
     
     output$plot4 <- renderPlot({grid.arrange(tableGrob(FM),ncol=1)})
   } # end of QE < 800 if

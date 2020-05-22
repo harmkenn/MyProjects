@@ -5,9 +5,9 @@ account: harmkenn
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 1583973
-bundleId: 3176859
+bundleId: 3180075
 url: https://harmkenn.shinyapps.io/shots/
-when: 1590105735.73741
+when: 1590181912.69054
 asMultiple: FALSE
 asStatic: FALSE
-ignoredFiles: 4H.rda|app.R|ShinyShots.R|ShinyShots4H.R|ShinyShotsPlotly.R|shot.csv|tinker.R|Vincenty.R
+ignoredFiles: ~$M795.xlsx|4H.rda|app.R|M795.xlsx|ShinyShots.R|ShinyShots4H.R|ShinyShotsPlotly.R|shot.csv|tinker.R|Vincenty.R

@@ -11,7 +11,7 @@ set_key("AIzaSyAfnLNZjvYdMx-cyga_qA1oJ6P36dRGalA")
 
 #database start
 load("northdes.rda")
-options(digits = 2)
+options(digits = 5)
 load("MACs.rda")
 
 options(digits = 22)
@@ -515,9 +515,9 @@ tabPanel("AFATDS",
        sidebarLayout(
          sidebarPanel(
            textInput("From_4","Launch From MGRS:","11UPV9661987688"),
-           textInput("From_alt","Launch Altitude M:","725"),
-           textInput("To_4","Land to MGRS:","12UUE0422497653"),
-           textInput("To_alt","Impact Altitude M:","120"),
+           textInput("From_alt","Launch Altitude M:","0"),
+           textInput("To_4","Land to MGRS:","12UUE0363190678"),
+           textInput("To_alt","Impact Altitude M:","0"),
            textInput("AOF4","Azimuth of Fire:","1600"),
            actionButton(inputId = "get_sol", label = "Get Solution"),
            textInput("lookup4","MGRS lookup"),
@@ -773,7 +773,9 @@ observeEvent(input$get_sol, {
   if (az<0) {az <- az + 6400}
   T_alt <- as.numeric(input$To_alt)
   F_alt <- as.numeric(input$From_alt)
-  AOS <- atan((T_alt-F_alt)/range)*3200/pi
+  VI <- T_alt-F_alt
+  AOSd <- atan((VI)/range)
+  AOS <- AOSd * 3200/pi
 
   if (input$chg == "Auto"){
     chg <- as.character(cut(range, breaks=c(-1,2500,5000,8000,11000,14000,22000,99999999),
@@ -789,55 +791,60 @@ observeEvent(input$get_sol, {
   } else {
   MACs_1 <- MACs %>% filter(Charge == chg)
   c.elev <- glm(Elev~poly(Range,6,raw=TRUE), data = MACs_1)
-  c.TOF <- glm(TOF~poly(Range,6,raw=TRUE), data = MACs_1)
-  c.drift <- glm(Drift~poly(Range,6,raw=TRUE), data = MACs_1)
+  c.TOF <- glm(TOF~poly(Elev,6,raw=TRUE), data = MACs_1)
+  c.drift <- glm(Drift~poly(Elev,6,raw=TRUE), data = MACs_1)
   c.maxord <- glm(Maxord.z~poly(Elev,6,raw=TRUE), data = MACs_1)
-  c.cas.p <- glm(Cas.p~poly(Range,6,raw=TRUE), data = MACs_1)
-  c.cas.n <- glm(Cas.n~poly(Range,6,raw=TRUE), data = MACs_1)
+  c.csf.p <- glm(csf.p~poly(Range,6,raw=TRUE), data = MACs_1)
+  c.csf.n <- glm(csf.n~poly(Range,6,raw=TRUE), data = MACs_1)
+  c.range <- glm(Range~poly(Elev,6,raw=TRUE), data = MACs_1)
   
   Elev <- as.numeric(predict(c.elev, RangeD, type = "response"))
-  TOF <- as.numeric(predict(c.TOF, RangeD, type = "response"))
-  drift <- as.numeric(predict(c.drift, RangeD, type = "response"))
- 
 
-  aof <- as.numeric(input$AOF4)
-  defl <- 3200 + aof- az + drift + gd
-  if (defl < 0) {defl <- defl + 6400}
-
-
-  CAS <- 0 
+  CSF <- 0 
   if (AOS > 0) {
-    CAS <- as.numeric(predict(c.cas.p, data.frame(Range=range), type = "response"))*AOS
+    CSF <- as.numeric(predict(c.csf.p, data.frame(Range=range), type = "response"))
   } else if (AOS < 0) {
-    CAS <- as.numeric(predict(c.cas.n, data.frame(Range=range), type = "response"))*AOS
+    CSF <- as.numeric(predict(c.csf.n, data.frame(Range=range), type = "response"))
   }
-  site <- AOS+CAS
+  CAS <- abs(AOS)*CSF
+  site <- AOS + CAS
   QE <- Elev +site
+  
+  
   MaxOrd <- as.numeric(predict(c.maxord, data.frame(Elev=QE), type = "response"))
   MaxOrd.p <- MaxOrd + F_alt
-  FM <- data.frame(cbind(c(range,round(az,1),round(gd,1),round(drift,1),round(defl,1),"M795",
+  
+  TOF <- as.numeric(predict(c.TOF, data.frame(Elev=QE), type = "response"))
+  drift <- as.numeric(predict(c.drift, data.frame(Elev=QE), type = "response"))
+  CR <- as.numeric(predict(c.range, data.frame(Elev=QE), type = "response"))
+  
+  aof <- as.numeric(input$AOF4)
+  defl <- 3200 + aof + drift
+  if (defl > 6400) {defl <- defl - 6400}
+  
+  FM <- data.frame(cbind(c(range,round(CR,0),round(az,1),round(gd,1),round(drift,1),round(defl,1),"M795",
                            chg,round(Elev,1),round(AOS,1),round(CAS,1),round(site,1),
                            round(QE,1),round(TOF,1),round(MaxOrd.p,0))))
   colnames(FM) <- c("Fire Mission")
-  rownames(FM) <- c("Range (Meters)","Azimuth to Target (mils)","Grid Declination","Drift (mils)","Deflection (mils)","Shell","Charge","Elevation (mils)","Angle of Site (mils)","Complementary Angle of Site (mils)","Site (mils)","QE (mils)","TOF (seconds)","MaxOrd (MSL Meters)")
+  rownames(FM) <- c("Range (Meters)","Corrected Range (Meters)","Azimuth to Target (mils)","Grid Declination","Drift (mils)","Deflection (mils)","Shell","Charge","Elevation (mils)","Angle of Site (mils)","Complementary Angle of Site (mils)","Site (mils)","QE (mils)","TOF (seconds)","MaxOrd (MSL Meters)")
   x <- seq(from = 0, to = range)
-  tr.p <- data.frame(cbind(xs=c(0,range*.5,range*.6,range),ys=c(F_alt,MaxOrd.p,MaxOrd.p,T_alt)))
+  tr.p <- data.frame(cbind(xs=c(0,range*(2.5*AOSd+.57),min(range,CR),max(range,CR)),ys=c(F_alt,MaxOrd.p,max(F_alt,T_alt),min(F_alt,T_alt))))
   tr.m <- glm(ys~poly(xs,4,raw=TRUE), data = tr.p)
   y.p <- as.numeric(predict(tr.m,data.frame(xs=x), type = "response"))
   y.p <- y.p*MaxOrd.p/max(y.p)
   tr.df <- data.frame(x=x,y=y.p)
   tp <- tr.df %>% ggplot(aes(x,y))+geom_line(size = 1) + 
-    coord_fixed(ratio = 1, ylim = c(min(tr.df$x),max(tr.df$y))) + 
+    coord_fixed(ratio = 1, ylim = c(min(tr.df$y),max(tr.df$y))) + 
     geom_abline(intercept = F_alt, slope = 0,color = "green") +
     geom_abline(intercept = T_alt, slope = 0,color = "red")
   if (QE < 800){
     output$plot4 <- renderPlot({grid.arrange(tableGrob(FM),tp,ncol=1)})
   } else {
-    FM <- data.frame(cbind(c(range,round(az,1),round(gd,1),"NA","NA","NA",
+    FM <- data.frame(cbind(c(range,round(CR,0),round(az,1),round(gd,1),"NA","NA","NA",
                              "NA","NA",round(AOS,1),"NA","NA",
                              "NA","NA","NA")))
     colnames(FM) <- c("Fire Mission")
-    rownames(FM) <- c("Range (Meters)","Azimuth to Target (mils)","Grid Declination","Drift (mils)","Deflection (mils)","Shell","Charge","Elevation (mils)","Angle of Site (mils)","Complementary Angle of Site (mils)","Site (mils)","QE (mils)","TOF (seconds)","MaxOrd (MSL Meters)")
+    rownames(FM) <- c("Range (Meters)","Corrected Range (Meters)","Azimuth to Target (mils)","Grid Declination","Drift (mils)","Deflection (mils)","Shell","Charge","Elevation (mils)","Angle of Site (mils)","Complementary Angle of Site (mils)","Site (mils)","QE (mils)","TOF (seconds)","MaxOrd (MSL Meters)")
     
     output$plot4 <- renderPlot({grid.arrange(tableGrob(FM),ncol=1)})
   } # end of QE < 800 if

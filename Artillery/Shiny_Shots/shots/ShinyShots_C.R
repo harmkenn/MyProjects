@@ -514,9 +514,9 @@ ui <- fluidPage(
 tabPanel("AFATDS",
        sidebarLayout(
          sidebarPanel(
-           textInput("From_4","Launch From MGRS:","11UPV9661987688"),
+           textInput("From_4","Launch From MGRS:","11UNA0000000000"),
            textInput("From_alt","Launch Altitude M:","0"),
-           textInput("To_4","Land to MGRS:","12UUE0363190678"),
+           textInput("To_4","Land to MGRS:","11UNA0000008000"),
            textInput("To_alt","Impact Altitude M:","0"),
            textInput("AOF4","Azimuth of Fire:","1600"),
            actionButton(inputId = "get_sol", label = "Get Solution"),
@@ -791,8 +791,8 @@ observeEvent(input$get_sol, {
   } else {
   MACs_1 <- MACs %>% filter(Charge == chg)
   c.elev <- glm(Elev~poly(Range,6,raw=TRUE), data = MACs_1)
-  c.TOF <- glm(TOF~poly(Elev,6,raw=TRUE), data = MACs_1)
-  c.drift <- glm(Drift~poly(Elev,6,raw=TRUE), data = MACs_1)
+  c.TOF <- glm(TOF~poly(Range,6,raw=TRUE), data = MACs_1)
+  c.drift <- glm(Drift~poly(Range,6,raw=TRUE), data = MACs_1)
   c.maxord <- glm(Maxord.z~poly(Elev,6,raw=TRUE), data = MACs_1)
   c.csf.p <- glm(csf.p~poly(Range,6,raw=TRUE), data = MACs_1)
   c.csf.n <- glm(csf.n~poly(Range,6,raw=TRUE), data = MACs_1)
@@ -814,8 +814,8 @@ observeEvent(input$get_sol, {
   MaxOrd <- as.numeric(predict(c.maxord, data.frame(Elev=QE), type = "response"))
   MaxOrd.p <- MaxOrd + F_alt
   
-  TOF <- as.numeric(predict(c.TOF, data.frame(Elev=QE), type = "response"))
-  drift <- as.numeric(predict(c.drift, data.frame(Elev=QE), type = "response"))
+  TOF <- as.numeric(predict(c.TOF, data.frame(Range=range), type = "response"))
+  drift <- as.numeric(predict(c.drift, data.frame(Range=range), type = "response"))
   CR <- as.numeric(predict(c.range, data.frame(Elev=QE), type = "response"))
   
   aof <- as.numeric(input$AOF4)
@@ -828,13 +828,13 @@ observeEvent(input$get_sol, {
   colnames(FM) <- c("Fire Mission")
   rownames(FM) <- c("Range (Meters)","Corrected Range (Meters)","Azimuth to Target (mils)","Grid Declination","Drift (mils)","Deflection (mils)","Shell","Charge","Elevation (mils)","Angle of Site (mils)","Complementary Angle of Site (mils)","Site (mils)","QE (mils)","TOF (seconds)","MaxOrd (MSL Meters)")
   x <- seq(from = 0, to = range)
-  tr.p <- data.frame(cbind(xs=c(0,range*(2.5*AOSd+.57),min(range,CR),max(range,CR)),ys=c(F_alt,MaxOrd.p,max(F_alt,T_alt),min(F_alt,T_alt))))
-  tr.m <- glm(ys~poly(xs,4,raw=TRUE), data = tr.p)
+  tr.p <- data.frame(cbind(xs=c(0,CR*.57,CR*.58,CR),ys=c(F_alt,MaxOrd.p,MaxOrd.p,F_alt)))
+  tr.m <- glm(ys~poly(xs,3,raw=TRUE), data = tr.p)
   y.p <- as.numeric(predict(tr.m,data.frame(xs=x), type = "response"))
   y.p <- y.p*MaxOrd.p/max(y.p)
   tr.df <- data.frame(x=x,y=y.p)
   tp <- tr.df %>% ggplot(aes(x,y))+geom_line(size = 1) + 
-    coord_fixed(ratio = 1, ylim = c(min(tr.df$y),max(tr.df$y))) + 
+    coord_fixed(ratio = 1, ylim = c(min(F_alt,T_alt),max(y.p))) + 
     geom_abline(intercept = F_alt, slope = 0,color = "green") +
     geom_abline(intercept = T_alt, slope = 0,color = "red")
   if (QE < 800){

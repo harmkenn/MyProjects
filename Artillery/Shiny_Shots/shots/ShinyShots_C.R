@@ -778,7 +778,7 @@ observeEvent(input$get_sol, {
   AOS <- AOSd * 3200/pi
 
   if (input$chg == "Auto"){
-    chg <- as.character(cut(range, breaks=c(-1,2500,5000,8000,11000,14000,22000,99999999),
+    chg <- as.character(cut(range, breaks=c(-1,2000,5000,8000,11000,14000,25000,99999999),
                labels = c("Nope","M231 1L","M231 2L","M232A1 3H","M232A1 4H","M232A1 5H","Nope")))
   } else {chg <- input$chg}
   if (chg == "Nope") {
@@ -819,8 +819,8 @@ observeEvent(input$get_sol, {
   CR <- as.numeric(predict(c.range, data.frame(Elev=QE), type = "response"))
   
   aof <- as.numeric(input$AOF4)
-  defl <- 3200 + aof + drift
-  if (defl > 6400) {defl <- defl - 6400}
+  defl <- 3200 - az + aof + drift + gd
+  if (defl < 6400) {defl <- defl + 6400}
   
   FM <- data.frame(cbind(c(range,round(CR,0),round(az,1),round(gd,1),round(drift,1),round(defl,1),"M795",
                            chg,round(Elev,1),round(AOS,1),round(CAS,1),round(site,1),

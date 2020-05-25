@@ -39,19 +39,20 @@ today_shares <- read.csv("etrade_all.csv")
 shares <- data.frame(rbind(as.numeric(today_shares$Quantity)))
 colnames(shares) <- as.character(today_shares$Symbol)
 shares <- shares[1:(length(shares)-6)]
-pile <- cbind(Date=Sys.Date(),Action=NA,Trans=NA,Shares=NA,shares)
+pile <- cbind(Date=Sys.Date(),Action=NA,Trans=NA,Shares=NA,Amount=NA,shares)
 ```
 
 ###Load Transactions
 ```{r Trans}
 trans <- read.csv("Etrade_Tx.csv")
-
+ 
 try <- trans %>% filter(grepl("/", TransactionDate))
 try$Date <- as.Date(try$TransactionDate, format = "%m/%d/%y")
 try2 <- trans %>% filter(grepl("-", TransactionDate))
 try2$Date <- as.Date(try2$TransactionDate, format = "%m-%d-%y")
 
 Work_tx <- rbind(try,try2) %>% select(c(10,2:9)) %>% filter(Quantity != 0)
+Work_tx <- Work_tx %>% arrange(desc(Date))  
 ```
 
 ###Get transactions into shares
@@ -71,8 +72,9 @@ newrow[1,ct] <- newrow[1,ct] - Work_tx[i,5]
 newrow[1,2] <- as.character(Work_tx[i,2])
 newrow[1,3] <- as.character(Work_tx[i,4])
 newrow[1,4] <- as.character(Work_tx[i,5])
+newrow[1,5] <- as.character(Work_tx[i,6])
 pickup <- rbind(pickup,newrow)
-pickup[,5:ncol(pickup)] <-round(pickup[,5:ncol(pickup)],5)
+pickup[,6:ncol(pickup)] <- round(pickup[,6:ncol(pickup)],5)
 }
 ```
 
@@ -81,56 +83,47 @@ pickup[,5:ncol(pickup)] <-round(pickup[,5:ncol(pickup)],5)
 ```{r fun}
 begin <- min(pickup$Date)
 end <- max(pickup$Date)
-DP <- data.frame(load_prices(colnames(pickup)[5:ncol(pickup)],from = begin, to = end))
+DP <- data.frame(load_prices(colnames(pickup)[6:ncol(pickup)],from = begin, to = end))
 DP <- cbind(Date = as.Date(row.names(DP)),DP)
 rownames(DP) <- c(1:nrow(DP))
- 
-# Multiply prices in EMF by shares to get Value
-
-value <- sweep(EMF, MARGIN=2, pickup, `*`)
-rownames(value) <- as.Date(dates)
-colnames(value) <- MF
-value <- data.frame(value)
-value$total <- rowSums( value[,1:dim(value)[2]] )
-value$inc <- (value$total-value$total[1])/value$total[1] 
-
-NASDAQ <- load_prices(c("^IXIC"),from = begin, to = end)
-rownames(NASDAQ) <- as.Date(dates)
-colnames(NASDAQ) <- "NASDAQ"
-NASDAQ <- data.frame(NASDAQ)
-NASDAQ$inc <- (NASDAQ$NASDAQ-NASDAQ$NASDAQ[1])/NASDAQ$NASDAQ[1]
-
-DOW <- load_prices(c("^DJI"),from = begin, to = end)
-rownames(DOW) <- as.Date(dates)
-colnames(DOW) <- "DOW"
-DOW <- data.frame(DOW)
-DOW$inc <- (DOW$DOW-DOW$DOW[1])/DOW$DOW[1]
-
-SP <- load_prices(c("^GSPC"),from = begin, to = end)
-rownames(SP) <- as.Date(dates)
-colnames(SP) <- "SP"
-SP <- data.frame(SP)
-SP$inc <- (SP$SP-SP$SP[1])/SP$SP[1]
-
-colors <- c("Harmon" = "black", "NASDAQ" = "red", "S&P" = "orange", "DOW" = "blue")
-
-ggplot(data= value, aes(x=dates)) + 
-  geom_point(data= value, aes(y=inc, color = "Harmon")) +
-  geom_point(data = NASDAQ, aes(y=inc, color = "NASDAQ")) +
-  geom_point(data = DOW, aes(y=inc, color = "DOW")) +
-  geom_point(data = SP, aes(y=inc, color = "S&P")) +
-  labs(color = "") + scale_color_manual(values = colors)
 ```
 
-```{r trans}
-load("EMF_Trans.rda")
-NASDAQ$Dates <- rownames(NASDAQ)
-NASDAQ$Date <- as.POSIXct(60*60*24*as.integer(as.character(NASDAQ$Dates)),origin="1970-01-01")
-NASDAQ$Date <- as.Date(NASDAQ$Date, format = "%Y-%M-%d")
-EMF_Trans$Date <- as.Date(EMF_Trans$Date, format = "%Y-%M-%d")
-trans <- left_join(NASDAQ,EMF_Trans)
+### Multiply pickup rows shares by DP prices
+```{r DV}
+JS <- pickup %>% filter(Date == DP[1,1]) %>% select(5:ncol(pickup))
+SP <- as.numeric(DP[1,2:ncol(DP)])
+values <- sweep(JS[2:ncol(JS)], 2, SP, FUN="*")
+values <- cbind(Date = DP[1,1],Amount = JS[,1],values)
+DV <- values
+for (i in 2:nrow(DP)) {
+JS <- pickup %>% filter(Date == DP[i,1]) %>% select(5:ncol(pickup))
+SP <- as.numeric(DP[i,2:ncol(DP)])
+if (nrow(JS) == 0) {
+  values <- DV[nrow(DV),2:ncol(DV)]
+  values <- cbind(Date = DP[i,1],values)
+  values$Amount <- 0
+} else {
+  values <- sweep(JS[2:ncol(JS)], 2, SP, FUN="*")
+  values <- cbind(Date = DP[i,1],Amount = JS[,1],values)
+}
+
+DV <- rbind(DV,values)
+rownames(DV) <- 1:nrow(DV)
+}
+```
+
+### Get Daily Dollar Total
+```{r Total}
+DV$total <- rowSums(DV[,3:ncol(DV)])
+DV <- DV %>% mutate(Total_in = DV$total[1])
+for (i in 2:nrow(DV)) {
+  DV$Total_in[i] <- DV$Total_in[i-1] - as.numeric(DV$Amount[i])
+}
+DV <- DV %>% mutate(inc = total/Total_in-1)
 ggplot() + 
-  geom_point(data= trans, aes(x=Date,y=NASDAQ), color = "grey", shape = 5) +
-  geom_point(data= trans %>% filter(!is.na(Trans)), aes(x=Date,y=NASDAQ, color = Trans, size = Amount, alpha = .5))
+  geom_point(data=DV, aes(x=Date,y=total)) +
+  geom_point(data=DV, aes(x=Date,y=Total_in),color="red")
+ggplot() + 
+  geom_point(data=DV, aes(x=Date,y=inc))
 ```
 

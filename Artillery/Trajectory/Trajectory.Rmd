@@ -1,0 +1,88 @@
+---
+title: "Ballistic Trajectory with Drag"
+author: "Ken Harmon"
+date: "`r format(Sys.time(), '%Y %B %d')`"
+output:
+  html_document:  
+    keep_md: true
+    code_folding: hide
+    fig_height: 6
+    fig_width: 12
+    fig_align: 'center'
+editor_options: 
+  chunk_output_type: console
+---
+
+# {.tabset .tabset-fade}
+
+```{r, echo=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
+```
+
+```{r load_libraries, include=FALSE}
+# Use this R-Chunk to load all your libraries!
+pacman::p_load(tidyverse)
+theme_set(theme_bw())
+```
+
+```{r swd, eval=FALSE, echo=FALSE}
+# this is set to not run during the knit process
+# this sets the working directory to the file location
+setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
+```
+
+https://www.scielo.br/scielo.php?script=sci_arttext&pid=S1806-11172018000100408#eq12
+
+![Motion Formulas](MotionFormulas.png)
+
+```{r try}
+V0 <- 671 # initial velocity in m/s for M795 with M232A1 3H
+am0 <- 442.1 # QE in mils for a level 9000 m shot
+th0 <- am0 * pi / 3200 # initial angle in radians
+amt <- -697 # terminal angle in mils
+tht <- amt * pi / 3200 #Terminal angle in radians
+x0 <- 0 #Initial x
+y0 <- 0 # initial y
+t0 <- 0 # initial time
+g <- 9.80665 # gravitational force in m/s/s
+# All functions are in terms of angle of the trajectory
+
+k <- .00000225 # is the drag constant
+
+#Lets build a table along the trajectory
+
+TOF <- 43 #time of flight
+ths <- seq(th0, tht*.9, by = ((tht - th0)/(TOF*2)))
+
+f0 = sin(th0)/(cos(th0))^2 + log(tan(th0/2+pi/4))
+allf <- NA
+allV <- NA
+allx <- NA
+ally <- NA
+allt <- NA
+
+
+for (th in ths) {
+  f = sin(th)/(cos(th))^2 + log(tan(th/2+pi/4))
+  allf <- c(allf,f)
+  V = V0*cos(th0)/(cos(th)*sqrt(1+k*(V0*cos(th0))^2*(f0-f)))
+  allV <- c(allV,V)
+  xint <- integrate(function(x) 
+    {(V0*cos(th0)/(cos(x)*sqrt(1+k*(V0*cos(th0))^2*(f0-f))))^2},th0,th)
+  x <- x0 - 1/g*as.numeric(xint[1])
+  allx <- c(allx,x)
+  yint <- integrate(function(x) 
+    {tan(x)*(V0*cos(th0)/(cos(x)*sqrt(1+k*(V0*cos(th0))^2*(f0-f))))^2},th0,th)
+  y <- y0 - 1/g*as.numeric(yint[1])
+  ally <- c(ally,y)
+  tint <- integrate(function(x) 
+    {V0*cos(th0)/((cos(x))^2*sqrt(1+k*(V0*cos(th0))^2*(f0-f)))},th0,th)
+  t <- t0 - 1/g*as.numeric(tint[1])
+  allt <- c(allt,t)
+}
+traj <- data.frame(cbind(allf,allV,allt,allx,ally))
+trajp <- traj[2:nrow(traj),]%>%filter(ally>=0)
+trajp %>% ggplot(aes(allx,ally)) + geom_point() +
+    coord_fixed(ratio = 1)
+```
+

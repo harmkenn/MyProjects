@@ -1,7 +1,7 @@
 ---
 title: "Etrade Transactions"
 author: "Ken Harmon"
-date: "`r format(Sys.time(), '%Y %B %d')`"
+date: "2020 May 25"
 output:
   html_document:  
     keep_md: true
@@ -15,26 +15,15 @@ editor_options:
 
 # {.tabset .tabset-fade}
 
-```{r, echo=FALSE}
-knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
-```
 
-```{r load_libraries, include=FALSE}
-# Use this R-Chunk to load all your libraries!
-pacman::p_load(tidyverse, caret, stocks, BatchGetSymbols, Quandl, scales)
-theme_set(theme_bw())
-confusionMatrix <- caret::confusionMatrix
-select <- dplyr::select
-```
 
-```{r swd, eval=FALSE, echo=FALSE}
-# this is set to not run during the knit process
-# this sets the working directory to the file location
-setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
-```
+
+
+
 
 ###ETRADE Loadup Current Shares
-```{r shares}
+
+```r
 today_shares <- read.csv("etrade_all.csv")
 shares <- data.frame(rbind(as.numeric(today_shares$Quantity)))
 colnames(shares) <- as.character(today_shares$Symbol)
@@ -43,7 +32,8 @@ pile <- cbind(Date=Sys.Date(),Action=NA,Trans=NA,Shares=NA,Amount=NA,shares)
 ```
 
 ###Load Transactions
-```{r Trans}
+
+```r
 trans <- read.csv("Etrade_Tx.csv")
  
 try <- trans %>% filter(grepl("/", TransactionDate))
@@ -56,7 +46,8 @@ Work_tx <- Work_tx %>% arrange(desc(Date))
 ```
 
 ###Get transactions into shares
-```{r reload}
+
+```r
 pickup <- pile
 newrow <- pile 
 for (i in 1:nrow(Work_tx)){
@@ -80,7 +71,8 @@ pickup[,6:ncol(pickup)] <- round(pickup[,6:ncol(pickup)],5)
 
 ### Get Share Price per day
 
-```{r fun}
+
+```r
 begin <- min(pickup$Date)
 end <- max(pickup$Date)
 DP <- data.frame(load_prices(colnames(pickup)[6:ncol(pickup)],from = begin, to = end))
@@ -89,7 +81,8 @@ rownames(DP) <- c(1:nrow(DP))
 ```
 
 ### Multiply pickup rows shares by DP prices
-```{r DV}
+
+```r
 JS <- pickup %>% filter(Date == DP[1,1]) %>% select(5:ncol(pickup))
 SP <- as.numeric(DP[1,2:ncol(DP)])
 values <- sweep(JS[2:ncol(JS)], 2, SP, FUN="*")
@@ -113,7 +106,8 @@ rownames(DV) <- 1:nrow(DV)
 ```
 
 ### Get Daily Dollar Total
-```{r Total}
+
+```r
 DV$total <- rowSums(DV[,3:ncol(DV)])
 DV <- DV %>% mutate(Total_in = DV$total[1])
 for (i in 2:nrow(DV)) {
@@ -123,7 +117,14 @@ DV <- DV %>% mutate(inc = total/Total_in-1)
 ggplot() + 
   geom_point(data=DV, aes(x=Date,y=total)) +
   geom_point(data=DV, aes(x=Date,y=Total_in),color="red")
-ggplot() + 
-  geom_point(data=DV, aes(x=Date,y=inc),color = "blue")
 ```
+
+![](Etrade_Tx_files/figure-html/Total-1.png)<!-- -->
+
+```r
+ggplot() + 
+  geom_point(data=DV, aes(x=Date,y=inc))
+```
+
+![](Etrade_Tx_files/figure-html/Total-2.png)<!-- -->
 

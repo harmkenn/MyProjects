@@ -1,7 +1,7 @@
 ---
 title: "Etrade Transactions"
 author: "Ken Harmon"
-date: "2020 May 25"
+date: "2020 May 30"
 output:
   html_document:  
     keep_md: true
@@ -123,7 +123,7 @@ ggplot() +
 
 ```r
 ggplot() + 
-  geom_point(data=DV, aes(x=Date,y=inc))
+  geom_point(data=DV, aes(x=Date,y=inc),color = "blue")
 ```
 
 ![](Etrade_Tx_files/figure-html/Total-2.png)<!-- -->

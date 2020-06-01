@@ -3,7 +3,8 @@ title: "Ballistic Trajectory with Drag"
 author: "Ken Harmon"
 date: "`r format(Sys.time(), '%Y %B %d')`"
 output:
-  pdf_document: default
+  pdf_document:
+    latex_engine: xelatex
   html_document:
     keep_md: yes
     code_folding: hide
@@ -104,7 +105,7 @@ cross-section area of the object, and *Vt* is the terminal velocity.
 
 I will treat k as a constant even though ρ changes with altitude which may be
 significant with artillery shots; in this case k could become a function. All
-variables are functions of θ. Theta is the angle of trajectory that varies
+variables are functions of angle. Theta is the angle of trajectory that varies
 throughout the flight.
 
 Launch angle: $$\text{θϵ}\left\lbrack 0,\frac{\pi}{2} \right\rbrack$$ Impact
@@ -115,7 +116,7 @@ angle: $$- \text{θϵ}\left\lbrack 0,\frac{\pi}{2} \right\rbrack$$
 Here are the functions I am going to use to predict artillery shots given and
 initial velocity and launch angle.
 
-These first two equations I can compute directly from θ.
+These first two equations I can compute directly from angle.
 
 1.  $$f\left( \theta \right) = \frac{\text{sinθ}}{\cos^{2}\theta} + ln\left(
     \tan\left( \frac{\theta}{2} + \frac{\pi}{4} \right) \right)$$
@@ -125,7 +126,7 @@ These first two equations I can compute directly from θ.
     \theta \right) \right)}}$$
 
 The following formulas I cannot compute directly but I can get a numerical
-solution for each θ.
+solution for each angle.
 
 The velocity in the x and y directions is now based off of instantaneous
 velocity and trajectory angle; not just initial velocity and launch angle.
@@ -135,7 +136,7 @@ velocity and trajectory angle; not just initial velocity and launch angle.
     \frac{\text{dθ}}{\text{dt}} = \frac{- gcos\theta}{V},
     \frac{\text{dV}}{\text{dt}} = - gsin\theta - gkV^{2}$$
 
-Now convert all these so they are in terms of θ:
+Now convert all these so they are in terms of angle:
 
 1.  $$\frac{\text{dV}}{\text{dθ}} = Vtan\theta + \frac{kV^{3}}{\text{cosθ}},\ \
     \ \ \frac{\text{dx}}{\text{dθ}} = \frac{V^{2}}{- g},\ \ \ \
@@ -159,7 +160,7 @@ altitude of 1070 m. Also, impact angle of (-483 mils) with and impact velocity o
 ```{r try}
 
 v0 <- 547 # initial velocity in m/s for M795 with M232A1 4H
-am0 <- 330.2 # QE in mils for a level 15000 m shot
+am0 <- 230.2 # QE in mils for a level 15000 m shot
 
 th0 <- am0 * pi / 3200 # initial angle in radians
 x0 <- 0 #Initial x
@@ -179,14 +180,14 @@ k <- rho*pk/m # is the drag constant at 0 alt
 #k <- .0000075 # Drag
 
 
-traj <- data.frame(matrix(ncol = 7))
-colnames(traj)=c("Time s","k","Vel m/s","Angle r","Angle mils","Range m","Alt m")
+traj <- data.frame(matrix(ncol = 9))
+colnames(traj)=c("Time s","k","Vel m/s","Angle r","Angle mils","Range m","Alt m","xv","yv")
 t <- t0
 v <- v0
 th <- th0
 x <- x0
 y <- y0
-firstrow <- c(t,k,v,th,th*3200/pi,x,y)
+firstrow <- c(t,k,v,th,th*3200/pi,x,y,x,y)
 traj[1,] <- firstrow
 dt <- .1
 while (y > -1){
@@ -197,12 +198,15 @@ v <- v - (sin(th) + k*v^2) * g * dt
 th <- th - (g*cos(th)/v)*dt
 x <- x + v*dt*cos(th)
 y <- y + v*dt*sin(th)
-nextrow <- c(t,k,v,th,th*3200/pi,x,y)
+xv <- v0*t*cos(th0)
+yv <- v0*t*sin(th0)-.5*g*t^2
+nextrow <- c(t,k,v,th,th*3200/pi,x,y,xv,yv)
 traj <- rbind(traj,nextrow)
 }
 trajw <- traj[seq(1, nrow(traj), 10), ]
 traj %>% ggplot(aes(`Range m`,`Alt m`))+geom_point(size=.1) +
   geom_point(data=trajw,aes(`Range m`,`Alt m`),color="blue") +
+  geom_point(data=trajw,aes(`xv`,`yv`),color="orange") +
     coord_fixed(ratio = 1)
 pander(trajw)
 ```

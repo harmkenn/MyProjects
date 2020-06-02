@@ -530,7 +530,7 @@ tabPanel("AFATDS",
          ), # End of Sidebar Panel P2P
          mainPanel(
            selectInput("chg","Charge",choices = c("Auto","M231 1L","M231 2L","M232A1 3H","M232A1 4H","M232A1 5H")),
-           plotOutput("plot4", width = "600px", height = "600px")
+           plotOutput("plot4")
          ) # End of Main Panel AFATDS
        ) # End of Sidebar Layout AFATDS
     ), #End of Tabpanel AFATDS
@@ -546,7 +546,7 @@ tabPanel("AFATDS",
           actionButton(inputId = "get_sol5", label = "Get Solution")
         ), # End of Sidebar Panel P2P
         mainPanel(
-          plotOutput("plot5", width = "600px", height = "600px")
+          plotOutput("plot5")
         ) # End of Main Panel AFATDS
       ) # End of Sidebar Layout AFATDS
     ) #End of Tabpanel AFATDS
@@ -861,7 +861,7 @@ observeEvent(input$get_sol, {
     geom_abline(intercept = F_alt, slope = 0,color = "green") +
     geom_abline(intercept = T_alt, slope = 0,color = "red")
   if (QE < 800){
-    output$plot4 <- renderPlot({grid.arrange(tableGrob(FM),tp,ncol=1)})
+    output$plot4 <- renderPlot({grid.arrange(tableGrob(FM),tp,ncol=2,nrow=1)})
   } else {
     FM <- data.frame(cbind(c(range,round(CR,0),round(az,1),round(gd,1),"NA","NA","NA",
                              "NA","NA",round(AOS,1),"NA","NA",

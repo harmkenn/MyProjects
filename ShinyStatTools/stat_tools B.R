@@ -1202,8 +1202,10 @@ server <- function(input, output, session) {
     colnames(gt) <- c(paste("P=",get),paste("P≤",get),paste("P≥",get),"Mean","SD")
     output$geout <- renderTable({gt})
     low <- 1
+    lp <- 0
     high <- ceiling(gemean + 3*gesd)
-    geplot <- data.frame(hits = low:high, pmf = dgeom(x = low:high, prob = gep)) %>%
+    hp <- high -1
+    geplot <- data.frame(hits = low:high, pmf = dgeom(x = lp:hp, prob = gep)) %>%
       ggplot(aes(x = factor(hits), y = pmf)) + geom_col(fill="skyblue2") +
       geom_text(aes(label = round(pmf,3), y = pmf + 0.01),position = position_dodge(0.9),
                 size = 3,vjust = 0.2, angle = 90) +
@@ -1237,3 +1239,4 @@ server <- function(input, output, session) {
 
 # Run the application 
 shinyApp(ui = ui, server = server)
+

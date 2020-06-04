@@ -5,9 +5,9 @@ account: harmkenn
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 1607482
-bundleId: 2777525
+bundleId: 3229251
 url: https://harmkenn.shinyapps.io/ShinyStatTools/
-when: 1580927963.14601
+when: 1591295385.90423
 asMultiple: FALSE
 asStatic: FALSE
-ignoredFiles: App.R|BYUIdata.Rdata|datasets.R|datasets2.R|stat_tools_ex.R|stat_tools.R|tinker B.R|tinker.R|datasets3/app.R|Standalone/standalone.R|Standalone/Standalone.rmd|www/custom.css|datasetxl
+ignoredFiles: App.R|BYUIdata.Rdata|datasets.R|datasets2.R|stat_tools.R|stat_tools_ex.R|tinker B.R|tinker.R|tinkerB.R|datasets3/app.R|Standalone/.Rhistory|Standalone/standalone.R|Standalone/Standalone.rmd|www/custom.css|datasetxl

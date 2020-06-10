@@ -315,39 +315,32 @@ shot_ll <- function(lat1d,lng1d,lat2d,lng2d){
   lat2r <- lat2d*pi/180 # End Lat to radians
   lng2r <- lng2d*pi/180 # End Longitude to radians
 
-## https://en.wikipedia.org/wiki/Vincenty%27s_formulae#Inverse_problem  
+  #Constants https://en.wikipedia.org/wiki/Latitude#The_geometry_of_the_ellipsoid
+  a <- 6378137.0 #equitorial radius in meters (exact)
+  f <- 1/298.257223563 #flattening of the earth (exact)
+  b <- (1-f)*a #polar radius (shorter than a)
+  esq <- 2*f-f^2 #eccentricity squared
   
-  a <- 6378137.0 # length of the semi-major axis radius of the equator WGS-84
-  f <- 1/298.257223563 #Flattening of the ellipsoid
-  b <- (1-f)*a
-  U1 <- atan((1-f)*tan(lat1r))
-  U2 <- atan((1-f)*tan(lat2r))
-  L <- lng2r - lng1r
-  lamda <- L
-  i <- 1:10
+  #Reduced Latitudes https://en.wikipedia.org/wiki/Latitude#Parametric_(or_reduced)_latitude
+  lat1rr <- atan((1-f)*tan(lat1r))
+  lat2rr <- atan((1-f)*tan(lat2r))
   
-  #Loop to get best lamda
-  for (val in i) {
-    Ss <- sqrt((cos(U2)*sin(lamda))^2+(cos(U1)*sin(U2)-sin(U1)*cos(U2)*cos(lamda))^2)
-    Cs <- sin(U1)*sin(U2)+cos(U1)*cos(U2)*cos(lamda)
-    sigma <- atan2(Ss,Cs)
-    Sa <- cos(U1)*cos(U2)*sin(lamda)/Ss
-    C2sm <- cos(sigma)-2*sin(U1)*sin(U2)/(1-Sa^2)
-    C <- f/16*(1-Sa^2)*(4+f*(1+3*Sa^2))
-    lamda <- L+(1-C)*f*Sa*(sigma+C*Sa*(C2sm+C*Cs*(-1+2*C2sm^2)))
-  }
+  #Central Angle between the 2 points (latrr,lngr)using the Haversine formula
+  # https://en.wikipedia.org/wiki/Haversine_formula
+  HavC <- (1-cos(lat2rr-lat1rr))/2 + cos(lat1rr) * cos(lat2rr) * (1-cos(lng2r-lng1r))/2
+  ca <- acos(1-2*HavC)
   
-  # now continue with good lamda
-  Usq <- (1-Sa^2)*((a^2-b^2)/b^2)
-  A <- 1+Usq/16384*(4096+Usq*(-768+Usq*(320-175*Usq)))
-  B <- Usq/1024*(256+Usq*(-128+Usq*(74-47*Usq)))
-  Ds <- B*Ss*(C2sm+1/4*B*(Cs*(-1+2*C2sm^2)-B/6*C2sm*(-3+4*Ss^2)*(-3+4*C2sm^2)))
-  dist <- b*A*(sigma-Ds)
+  #Lamberts Distance inverse Geodesic https://en.wikipedia.org/wiki/Geographical_distance#Lambert's_formula_for_long_lines
+  P <- (lat2rr + lat1rr)/2
+  Q <- (lat2rr - lat1rr)/2
+  X <- (ca-sin(ca))*(sin(P)*cos(Q)/cos(ca/2))^2
+  Y <- (ca+sin(ca))*(sin(Q)*cos(P)/sin(ca/2))^2
+  dist <- a*(ca-f/2*(X+Y))
   
   #Bearing of the shot in radians
+  #θ = atan2( sin Δλ ⋅ cos φ2 , cos φ1 ⋅ sin φ2 − sin φ1 ⋅ cos φ2 ⋅ cos Δλ )
   
-  
-  shotr <- atan2(cos(U2)*sin(lamda),cos(U1)*sin(U2)-sin(U1)*cos(U2)*cos(lamda))
+  shotr <- atan2(sin(lng2r-lng1r)*cos(lat2r),cos(lat1r)*sin(lat2r)-sin(lat1r)*cos(lat2r)*cos(lng2r-lng1r))
   #Bearing of the shot in degrees
   shotd <- shotr*180/pi
   
@@ -842,7 +835,7 @@ observeEvent(input$get_sol, {
   TOF <- as.numeric(predict(c.TOF, data.frame(Range=range), type = "response"))
   drift <- as.numeric(predict(c.drift, data.frame(Range=range), type = "response"))
   CR <- as.numeric(predict(c.range, data.frame(Elev=QE), type = "response"))
-  if (AOS == 0){CR <- range}
+  
   aof <- as.numeric(input$AOF4)
   defl <- 3200 - az + aof + drift + gd
   if (defl < 0) {defl <- defl + 6400}

@@ -542,10 +542,15 @@ tabPanel("AFATDS",
     tabPanel("Artillery Physics",
       sidebarLayout(
         sidebarPanel(
+          numericInput("alt5","Gun Alt m:",700),
           numericInput("MV","Muzzle Velocity m/s:",500),
-          numericInput("QE","Elevation mils:",250),
+          numericInput("QE","Tube Elevation mils:",250),
           numericInput("sw","Shell Weight lbs:",103.5),
-          actionButton(inputId = "get_sol5", label = "Get Solution")
+          actionButton(inputId = "get_sol5", label = "Get Solution"),
+          textInput("lookup5","MGRS lookup"),
+          actionButton(inputId = "get_mgrs5", label = "Get Grid"),
+          textOutput("lMGRS5"),
+          textOutput("lLngLat5") 
         ), # End of Sidebar Panel P2P
         mainPanel(
           plotOutput("plot5")
@@ -897,7 +902,7 @@ observeEvent(input$get_sol5, {
   
   th0 <- am0 * pi / 3200 # initial angle in radians
   x0 <- 0 #Initial x
-  y0 <- 0 # initial y
+  y0 <- input$alt5 # initial y
   t0 <- 0 # initial time
   g <- 9.80665 # gravitational force in m/s/s
   press <- data.frame(cbind(
@@ -923,7 +928,7 @@ observeEvent(input$get_sol5, {
   firstrow <- c(t,k,v,th,th*3200/pi,x,y)
   traj[1,] <- firstrow
   dt <- .1
-  while (y > -1){
+  while (y > y0 - 1){
     t <- t + dt
     rho <- as.numeric(predict(c.press, data.frame(alt = y), type = "response"))
     k <- rho*pk/m # is the drag constant at y alt
@@ -940,11 +945,23 @@ observeEvent(input$get_sol5, {
   trajw <- traj[seq(1, nrow(traj), 10), ]
   tp <- traj %>% ggplot(aes(`Range m`,`Alt m`))+geom_point(size=.1) +
     geom_point(data=trajw,aes(`Range m`,`Alt m`),color="blue") +
-    coord_fixed(ratio = 1)
+    coord_fixed(ratio = 1) + ylim(min(0,min(traj$`Alt m`)),max(traj$`Alt m`))
   
   output$plot5 <- renderPlot({grid.arrange(tp,tableGrob(FM),ncol=1)})
 }) #end observeEvent get_sol5
 
+observeEvent(input$get_mgrs5, {
+  output$lMGRS5 <- renderText({paste(" ")})
+  output$lLngLat5 <- renderText({paste(" ")})
+  register_google(key = "AIzaSyAfnLNZjvYdMx-cyga_qA1oJ6P36dRGalA")
+  lLatLon <- geocode(input$lookup5, outoutput = "all")
+  llng <- lLatLon$lon
+  llat <- lLatLon$lat
+  lmgrs <- LL2UTM2mgrs(llat,llng)
+  lalt <- google_elevation(df_locations = data.frame(lat = llat, lon = llng), simplify = TRUE)
+  output$lMGRS5 <- renderText({paste("MGRS: ", lmgrs[1,7], "Alt: ", round(lalt$results$elevation,0)," M")})
+  output$lLngLat5 <- renderText({paste("Longitude: ", llng, "Latitude: ", llat)})
+}) #observeEvent get mgrs5
 
 
 } #End of the server

@@ -171,9 +171,9 @@ ui <- dashboardPage(
                 numericInput("tn","Count:",1)
              ), #End of conditionalPanel
              conditionalPanel(condition = "input.Statistics == 1 && input.tchoice == '2 Sample t-Test'",
-                  numericInput("tmean","Mean A:",0),
-                  numericInput("tsd","Standard Deviation A:",1),
-                  numericInput("tn","Count A:",1),
+                  numericInput("tmean.a","Mean A:",0),
+                  numericInput("tsd.a","Standard Deviation A:",1),
+                  numericInput("tn.a","Count A:",1),
                   numericInput("tmean.b","Mean B:",0),
                   numericInput("tsd.b","Standard Deviation B:",1),
                   numericInput("tn.b","Count B:",1)
@@ -200,7 +200,7 @@ ui <- dashboardPage(
                  radioButtons("ttail","",c("Left Tail"="less","Two Tail"="two.sided","Right Tail"="greater"),inline = FALSE,width = "50%"),
                  actionButton("ttest","Test")
                ), #EsplitLayout
-               conditionalPanel(condition = "input.tchoice == '2 Sample t-Test'",checkboxInput("eqvar","Equal Variances",TRUE)),
+               conditionalPanel(condition = "input.tchoice == '2 Sample t-Test'",checkboxInput("eqvar","Equal Variances",FALSE)),
                plotOutput("ttgraph")
            ), #Ebox
           ) #Ecolumn
@@ -645,29 +645,33 @@ server <- function(input, output, session) {
     alpha <- input$tAlpha
     mu <- input$th0
     tail <- input$ttail
+    cl <- 1 - 2 * alpha
+    if (tail == "two.sided") { cl <- 1 - alpha } #End of tail if
     
-    ################## t-Test Data ##########################    
+    ################## t-Test Data Server ##########################    
     
     if(input$Statistics == FALSE){
       t.in$values <- hot_to_r(input$dtt)
       if(sum(!is.na(t.in$values[,1]))>1){
-        t.x <- t.in$values[,1]
-        t.x <- t.x[!is.na(t.x)]
-        tse <- sd(t.x)/sqrt(length(t.x))
-      } #Eif
-      tmean <- mean(t.x)
-      if (tail == "less"){
-        cl <- 1 - 2*alpha
-        if(input$tchoice == "2 Sample t-Test"){
-          t.x.b <- t.in$values[,2]
-          t.x.b <- t.x.b[!is.na(t.x.b)]
-          tmean <- tmean - mean(t.x.b)
-          ttr <- t.test(t.x,t.x.b,alternative = tail,mu=mu, var.equal = input$eqvar, conf.level = cl)
-          tse <- sqrt(sd(t.x.b)^2/length(t.x.b)+sd(t.x)^2/length(t.x))
-        }else{
-          ttr <- t.test(t.x,alternative = tail,mu=mu, conf.level = cl)
-          
-        }
+        t.x.a <- t.in$values[,1]
+        t.x.a <- t.x.a[!is.na(t.x.a)]
+        tse <- sd(t.x.a)/sqrt(length(t.x.a))
+        tmean.a <- mean(t.x.a)
+        tmean <- tmean.a
+        ttr <- t.test(t.x.a,alternative = tail,mu=mu, conf.level = cl)
+      } #Eif t.x.a
+      
+      if(input$tchoice == "2 Sample t-Test"){
+        t.x.b <- t.in$values[,2]
+        t.x.b <- t.x.b[!is.na(t.x.b)]
+        tmean <- tmean.a - mean(t.x.b)
+        tse <- sqrt(sd(t.x.b)^2/length(t.x.b)+sd(t.x.a)^2/length(t.x.a))
+        ttr <- t.test(t.x.a,t.x.b,alternative = tail,mu=mu, var.equal = input$eqvar, conf.level = cl)
+      } #Eif t.x.b
+      
+      
+      
+      if(tail == "less") {
         df <- ttr$parameter
         tcv <- qt(alpha,df)
         t.s <- ttr$statistic
@@ -680,15 +684,6 @@ server <- function(input, output, session) {
           geom_area(data=subset(s.df,x<=tcv),aes(y=y), fill ="red", alpha = .5) +
           geom_area(data=subset(s.df,x<=t.s),aes(y=y), fill ="blue", alpha = .5)
       }else if(tail == "greater"){
-        cl <- 1 - 2*alpha
-        if(input$tchoice == "2 Sample t-Test"){
-          t.x.b <- t.in$values[,2]
-          t.x.b <- t.x.b[!is.na(t.x.b)]
-          ttr <- t.test(t.x,t.x.b,alternative = tail,mu=mu, var.equal = input$eqvar, conf.level = cl)
-          tse <- sqrt(sd(t.x.b)^2/length(t.x.b)+sd(t.x)^2/length(t.x))
-        }else{
-          ttr <- t.test(t.x,alternative = tail,mu=mu, conf.level = cl)
-        }
         df <- ttr$parameter
         tcv <- qt(1-alpha,df)
         t.s <- ttr$statistic
@@ -700,17 +695,7 @@ server <- function(input, output, session) {
         tp <- s.df %>% ggplot(aes(x,y))+geom_line()+
           geom_area(data=subset(s.df,x>=tcv),aes(y=y), fill ="red", alpha = .5) +
           geom_area(data=subset(s.df,x>=t.s),aes(y=y), fill ="blue", alpha = .5)
-      }else{
-        cl <- 1 - alpha
-        if(input$tchoice == "2 Sample t-Test"){
-          t.x.b <- t.in$values[,2]
-          t.x.b <- t.x.b[!is.na(t.x.b)]
-          ttr <- t.test(t.x,t.x.b,alternative = tail,mu=mu, var.equal = input$eqvar, conf.level = cl)
-          tse <- sqrt(sd(t.x.b)^2/length(t.x.b)+sd(t.x)^2/length(t.x))
-        }else{
-          ttr <- t.test(t.x,alternative = tail,mu=mu, conf.level = cl)
-        }
-        
+      }else if (tail == "two.sided"){
         df <- ttr$parameter
         tcv <- qt(alpha/2,df)
         t.s <- ttr$statistic
@@ -735,17 +720,19 @@ server <- function(input, output, session) {
         tse <- input$tsd/sqrt(df+1)
         t.s <- (tmean-mu)/(tse)
       }else if(input$tchoice == "2 Sample t-Test" && input$eqvar == TRUE){
-        tmean <- input$tmean - input$tmean.b
-        df <- input$tn + input$tn.b - 2
-        sea <- input$tsd/sqrt(input$tn)
+        tmean <- input$tmean.a - input$tmean.b
+        df <- input$tn.a + input$tn.b - 2
+        sea <- input$tsd.a/sqrt(input$tn.a)
         seb <- input$tsd.b/sqrt(input$tn.b)
         tse <- sqrt(sea^2+seb^2)
-        t.s <- (input$tmean-input$tmean.b)/tse
+        t.s <- (input$tmean.a-input$tmean.b)/tse
       }else if(input$tchoice == "2 Sample t-Test" && input$eqvar == FALSE){
-        sea <- input$tsd/sqrt(input$tn)
+        tmean <- input$tmean.a - input$tmean.b
+        sea <- input$tsd.a/sqrt(input$tn.a)
         seb <- input$tsd.b/sqrt(input$tn.b)
         tse <- sqrt(sea^2+seb^2)
-        df <- tse^4/(sea^4/(input$tn-1)+seb^4/(input$tn.b-1))
+        t.s <- (input$tmean.a-input$tmean.b)/tse
+        df <- tse^4/(sea^4/(input$tn.a-1)+seb^4/(input$tn.b-1))
       }
       
       if (tail == "less"){

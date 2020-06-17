@@ -520,9 +520,9 @@ tabPanel("AFATDS",
        sidebarLayout(
          sidebarPanel(
            textInput("From_4","Launch From MGRS:","11UNA0000000000"),
-           textInput("From_alt","Launch Altitude M:","0"),
-           textInput("To_4","Land to MGRS:","11UNA0000008000"),
-           textInput("To_alt","Impact Altitude M:","0"),
+           textInput("From_alt","Launch Altitude M:","800"),
+           textInput("To_4","Land to MGRS:","11UNA0000014000"),
+           textInput("To_alt","Impact Altitude M:","1200"),
            textInput("AOF4","Azimuth of Fire:","1600"),
            actionButton(inputId = "get_sol", label = "Get Solution"),
            textInput("lookup4","MGRS lookup"),
@@ -832,9 +832,9 @@ observeEvent(input$get_sol, {
 
   CSF <- 0 
   if (AOS > 0) {
-    CSF <- as.numeric(predict(c.csf.p, data.frame(Range=range), type = "response"))
+    CSF <- as.numeric(predict(c.csf.p, data.frame(Range=range, Alt = F_alt), type = "response"))
   } else if (AOS < 0) {
-    CSF <- as.numeric(predict(c.csf.n, data.frame(Range=range), type = "response"))
+    CSF <- as.numeric(predict(c.csf.n, data.frame(Range=range, Alt = F_alt), type = "response"))
   }
   CAS <- abs(AOS)*CSF
   site <- AOS + CAS

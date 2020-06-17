@@ -1,0 +1,13 @@
+name: shots
+title: shots
+username:
+account: harmkenn
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 1583973
+bundleId: 3280112
+url: https://harmkenn.shinyapps.io/shots/
+when: 1592359185.46959
+asMultiple: FALSE
+asStatic: FALSE
+ignoredFiles: 4H.rda|app.R|Grid Declination.R|LambertsDistance.R|M795.xlsx|ShinyShots.R|ShinyShots_C.R|ShinyShots_D.R|ShinyShots_L.R|ShinyShots4H.R|ShinyShotsPlotly.R|shot.csv|tinker.R|Trajectory.xlsx|Vincenty.R

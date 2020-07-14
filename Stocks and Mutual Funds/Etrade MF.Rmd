@@ -35,14 +35,15 @@ setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
 
 ###ETRADE All
 ```{r fun}
-days <- Sys.Date() - 0:180
-begin <- days[181]
+days <- Sys.Date() - 0:365
+begin <- days[366]
 end <- days[2]
-EMF <- load_prices(c("AKREX","AMANX","BGAFX","BGSAX","BMGAX","BPTRX","DXQLX","DXSLX","FKDNX","FNCMX","GOLDX","INPIX","JAGTX","LDVAX","MFEGX","NBGEX","NNLEX","NNTWX","OBCHX","PGRTX","PGTAX","PRMTX","PYVAX","PYVLX","RMQHX","ROGSX","RYOCX","RYVYX","SEEKX","SFLNX","SMPIX","SVAAX","SWPPX","TEPSX","ULPIX","UOPIX"),from = begin, to = end)
+load("etrade_all.rda")
+EMF <- load_prices(etrade_all$Symbol,from = begin, to = end)
 
 dates <- as.Date(row.names(EMF))
 MF <- colnames(EMF)
-shares <- c(21.393,9.114,49.758,27.457,55.073,21.872,46.655,42.719,12.096,8.357,66.181,13.281,26.787,25.85,10.074,16.369,65.653,53.439,296.168,98.622,22.682,8.542,39.708,59.918,4.621,53.039,60.322,5.223,13.177,48.712,28.235,266.663,13.757,25.79,18.239,18.589)
+shares <- etrade_all$Quantity
  
 # Multiply prices in EMF by shares to get Value
 
@@ -78,18 +79,74 @@ ggplot(data= value, aes(x=dates)) +
   geom_point(data = NASDAQ, aes(y=inc, color = "NASDAQ")) +
   geom_point(data = DOW, aes(y=inc, color = "DOW")) +
   geom_point(data = SP, aes(y=inc, color = "S&P")) +
+  geom_smooth(data= value, aes(y=inc, color = "Harmon")) +
   labs(color = "") + scale_color_manual(values = colors)
 ```
 
 ```{r trans}
 load("EMF_Trans.rda")
+
 NASDAQ$Dates <- rownames(NASDAQ)
 NASDAQ$Date <- as.POSIXct(60*60*24*as.integer(as.character(NASDAQ$Dates)),origin="1970-01-01")
 NASDAQ$Date <- as.Date(NASDAQ$Date, format = "%Y-%M-%d")
-EMF_Trans$Date <- as.Date(EMF_Trans$Date, format = "%Y-%M-%d")
-trans <- left_join(NASDAQ,EMF_Trans)
+Etrade_Tx$Date <- as.Date(Etrade_Tx$TransactionDate, format = "%m/%d/%y")
+boop <- left_join(NASDAQ,Etrade_Tx %>% 
+                    filter(TransactionType %in% c("Sold","Bought")))
 ggplot() + 
-  geom_point(data= trans, aes(x=Date,y=NASDAQ), color = "grey", shape = 5) +
-  geom_point(data= trans %>% filter(!is.na(Trans)), aes(x=Date,y=NASDAQ, color = Trans, size = Amount, alpha = .5))
+  geom_point(data= NASDAQ, aes(x=Date,y=NASDAQ), color = "grey", shape = 5) +
+  geom_point(data= boop, aes(x=Date,y=NASDAQ, color = TransactionType, 
+                              size = Amount, alpha = .5))
 ```
+
+#Etrade Value Step 1
+```{r value}
+Etrade_Tx <- Etrade_Tx %>% arrange(desc(Date)) %>% 
+  filter(TransactionType %in% c("Sold","Bought")) %>% 
+  select(Date,everything())
+
+MFShares <- data.frame(rbind(etrade_all$Quantity))
+colnames(MFShares) <- MF
+MFShares <- MFShares %>% mutate(Date = Sys.Date()) %>% 
+  select(Date,everything())
+
+symbols <- sort(unique(c(colnames(MFShares),Etrade_Tx$Symbol)))
+MFTrans <- as_tibble(cbind(Date = rownames(EMF))) 
+MFTrans[,symbols]=NA
+MFTrans <- MFTrans %>% mutate(Date = as.Date(rownames(EMF))) %>% 
+  arrange(desc(Date))
+MFTrans[2:47] <- sapply(MFTrans[2:47],as.numeric)
+
+for (i in 1:nrow(Etrade_Tx)) {
+  r <- which(MFTrans$Date == Etrade_Tx$Date[i])
+  c <- Etrade_Tx$Symbol[i]
+  MFTrans[r,c] <- Etrade_Tx$Quantity[i]
+} #end For Loop
+
+
+MFPrices <- data.frame(EMF) %>% mutate(Date = rownames(EMF)) %>% 
+  select(Date,everything()) %>% arrange(desc(Date))
+
+MFValue <- data.frame(rbind(MFPrices[1,-1]*MFShares[1,-1]))
+MFValue <- cbind(Date = Sys.Date(),MFValue)
+```
+
+#now build each row
+```{r nextrow}
+
+
+
+
+
+tag <- Sys.Date()
+for (i in MFPrices$Date) {
+  #tag <- c(tag,as.Date(i))
+  if (i %in% )
+} # End for Loop
+  
+```
+
+
+
+
+
 

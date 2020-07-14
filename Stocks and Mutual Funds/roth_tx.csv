@@ -2,6 +2,9 @@ For Account:,####0368
 
 TransactionDate,TransactionType,SecurityType,Symbol,Quantity,Amount,Price,Commission,Description
 
+07/13/20,Sold,MF,RMQHX,-0.767,200,260.82,0,RYDEX MONTHLY RBL NASDAQ-100????Rydex Funds                 
+07/13/20,Sold,MF,INPIX,-1.597,200,125.2,0,PROFUNDS INTERNET ULTRASECTOR PROFUNDS                      
+07/13/20,Sold,MF,GOLDX,-9.229,200,21.67,0,GABELLI GOLD AAA              GABELLI                       
 07/06/20,Sold,MF,INPIX,-1.571,200,127.28,0,PROFUNDS INTERNET ULTRASECTOR PROFUNDS                      
 07/06/20,Sold,MF,INPIX,-0.786,100,127.28,0,PROFUNDS INTERNET ULTRASECTOR PROFUNDS                      
 07/01/20,Sold,MF,GOLDX,-4.721,100,21.18,0,GABELLI GOLD AAA              GABELLI                       

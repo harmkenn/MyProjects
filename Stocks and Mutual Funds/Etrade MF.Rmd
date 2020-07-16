@@ -38,7 +38,8 @@ setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
 days <- Sys.Date() - 0:365
 begin <- days[366]
 end <- days[1]
-load("etrade_all.rda")
+etrade_all <- read.csv("etrade_all.csv")
+
 EMF <- load_prices(etrade_all$Symbol,from = begin, to = end)
 
 dates <- as.Date(row.names(EMF))
@@ -84,7 +85,7 @@ ggplot(data= value, aes(x=dates)) +
 ```
 
 ```{r trans}
-load("EMF_Trans.rda")
+Etrade_Tx <- read.csv("Etrade_Tx.csv")
 
 NASDAQ$Dates <- rownames(NASDAQ)
 NASDAQ$Date <- as.POSIXct(60*60*24*as.integer(as.character(NASDAQ$Dates)),origin="1970-01-01")
@@ -164,7 +165,7 @@ for (r in 2:nrow(MFValue)){
 ```
 
 ```{r Grph}
-MFValue %>% ggplot() + geom_point(aes(x = Date, y = sum)) + 
+MFValue[1:251,] %>% ggplot() + geom_point(aes(x = Date, y = sum)) + 
   geom_point(aes(x = Date, y = inv),color="blue")
 ```
 

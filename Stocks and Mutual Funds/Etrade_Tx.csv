@@ -1,6 +1,6 @@
 TransactionDate,TransactionType,SecurityType,Symbol,Quantity,Amount,Price,Commission,Description
-07/13/20,Sold,MF,RMQHX,-0.767,200,260.82,0,RYDEX MONTHLY RBL NASDAQ-100????Rydex Funds                 
 07/13/20,Sold,MF,INPIX,-1.597,200,125.2,0,PROFUNDS INTERNET ULTRASECTOR PROFUNDS                      
+07/13/20,Sold,MF,RMQHX,-0.767,200,260.82,0,RYDEX MONTHLY RBL NASDAQ-100????Rydex Funds                 
 07/13/20,Sold,MF,GOLDX,-9.229,200,21.67,0,GABELLI GOLD AAA              GABELLI                       
 07/06/20,Sold,MF,INPIX,-1.571,200,127.28,0,PROFUNDS INTERNET ULTRASECTOR PROFUNDS                      
 07/06/20,Sold,MF,INPIX,-0.786,100,127.28,0,PROFUNDS INTERNET ULTRASECTOR PROFUNDS                      
@@ -167,6 +167,7 @@ TransactionDate,TransactionType,SecurityType,Symbol,Quantity,Amount,Price,Commis
 08/01/19,Dividend,MF,PONAX,0.527,-6.38,0,0,PIMCO INCOME A                PIMCO                         
 08/01/19,Dividend,MF,PONAX,0,6.38,0,0,PIMCO INCOME A                PIMCO
 07/26/19,Interest,BOND,#2021396,0,0.06,0,0,E*TRADE SAVINGS BANK RSDA     INTEREST
+07/14/20,Bought,MF,VIHAX,118.374,-3000,25.28,0,VANGUARD INTL HI DIV YLD ADM  VANGUARD                      
 07/13/20,Sold,MF,RYOCX,-3.717,200,53.8,0,RYDEX NASDAQ-100?? INV         Rydex Funds                  
 07/13/20,Sold,MF,BGAFX,-4.985,200,40.12,0,BARON GLOBAL ADVANTAGE RETAIL BARON CAPITAL GROUP           
 07/13/20,Sold,MF,DXQLX,-4.491,200,44.5373,0,DIREXION MTHLY NASDAQ-100 BULLDIREXION FUNDS                
@@ -464,4 +465,5 @@ TransactionDate,TransactionType,SecurityType,Symbol,Quantity,Amount,Price,Commis
 07/22/19,Transfer,UNKNOWN, ,0,449,0,0,ACH DEPOSIT                   REFID:26805811482;
 07/17/19,Direct Debit,UNKNOWN, ,0,-2602.87,0,0,ACHDEBIT                      CHASE CREDIT CRD              
 07/16/19,Transfer,UNKNOWN, ,0,1500,0,0,TRANSFER FROM XXXXXX2340      REFID:26555651482;
-07/15/19,Transfer,UNKNOWN, ,0,449,0,0,ACH DEPOSIT                   REFID:26454006482;
+
+

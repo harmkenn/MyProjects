@@ -1,0 +1,74 @@
+---
+title: "MAchine Learning in R"
+author: "Ken Harmon"
+date: "`r format(Sys.time(), '%Y %B %d')`"
+output:
+  html_document:  
+    keep_md: true
+    code_folding: hide
+    fig_height: 6
+    fig_width: 12
+    fig_align: 'center'
+editor_options: 
+  chunk_output_type: console
+---
+
+# {.tabset .tabset-fade}
+
+```{r, echo=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
+```
+
+```{r load_libraries, include=FALSE}
+# Use this R-Chunk to load all your libraries!
+pacman::p_load(tidyverse)
+theme_set(theme_bw())
+```
+
+```{r swd, eval=FALSE, echo=FALSE}
+# this is set to not run during the knit process
+# this sets the working directory to the file location
+setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
+```
+
+https://www.analyticsvidhya.com/blog/2017/09/creating-visualizing-neural-network-in-r/?__cf_chl_captcha_tk__=d8e4d93115b797c0279c2121d25552a0b62bc5dc-1595147665-0-AQQ8w4eBdm--_sT66LjXjCp3iNyFFt6Bv-65aA9kpDkFoikGX5Lhv3KoAnRKvA-DKSi6HRVc_AICi9vrjFTfq0IWs9_k9xhV8T828n--Bpl2k5DMvLL8GmAtQxiAar40cByAwRFKLIlgfmNjhm5CvE3tjJfH-Ob9_NQu50jY70SMiANA6pMBV2242rr-K-rqpCm7vWwmgIf3mmG5XjBoxhBoeiuUatjZlNJuMT2ofUtVpF5oFVDZiQGh7n9CZ2JUD4X1d4VAH-cgbAqpGAG07HVaLFSTfRB54_VeO4oDw33YdjKDMNTAZPenlbS7pA7YCAWxja8zeXOK8Wr6MjWa73t26V-ZndLTh1k2iX4j8Tpw0vw9C_RZYz72fbOUJ-WqeMT01_IYohT_B6ztrvyFJtWMY8T3lXlvA7ZEVh81wqom0jzgCipO6QgoSqY8pxjE_tI0m58dv3d4TtKWIhf3sqA8MoQVhijrJsjfdWKmqZJRgezKmjvOJloGsVDtXfFvvYER6HBM01RuKxeIwqDlkE8GqjfqZ_mbbKrMndLf0WmvXrWS8rKPUbpmwjeLf4wjFA
+
+##Introduction
+Neural network is an information-processing machine and can be viewed as analogous to human nervous system. Just like human nervous system, which is made up of interconnected neurons, a neural network is made up of interconnected information processing units. The information processing units do not work in a linear manner. In fact, neural network draws its strength from parallel processing of information, which allows it to deal with non-linearity. Neural network becomes handy to infer meaning and detect patterns from complex data sets.
+
+Neural network is considered as one of the most useful technique in the world of data analytics. However, it is complex and is often regarded as a black box, i.e. users view the input and output of a neural network but remain clueless about the knowledge generating process. We hope that the article will help readers learn about the internal mechanism of a neural network and get hands-on experience to implement it in R.
+
+##Table of Contents
+The Basics of Neural Network
+Fitting Neural Network in R
+Cross Validation of a Neural Network
+
+##The Basics of Neural Network
+A neural network is a model characterized by an activation function, which is used by interconnected information processing units to transform input into output. A neural network has always been compared to human nervous system. Information in passed through interconnected units analogous to information passage through neurons in humans. The first layer of the neural network receives the raw input, processes it and passes the processed information to the hidden layers. The hidden layer passes the information to the last layer, which produces the output. The advantage of neural network is that it is adaptive in nature. It learns from the information provided, i.e. trains itself from the data, which has a known outcome and optimizes its weights for a better prediction in situations with unknown outcome.
+
+A perceptron, viz. single layer neural network, is the most basic form of a neural network.  A perceptron receives multidimensional input and processes it using a weighted summation and an activation function. It is trained using a labeled data and learning algorithm that optimize the weights in the summation processor. A major limitation of perceptron model is its inability to deal with non-linearity. A multilayered neural network overcomes this limitation and helps solve non-linear problems. The input layer connects with hidden layer, which in turn connects to the output layer. The connections are weighted and weights are optimized using a learning rule.
+
+There are many learning rules that are used with neural network:
+
+a) least mean square;
+b) gradient descent;
+c) newton’s rule;
+d) conjugate gradient etc.
+
+The learning rules can be used in conjunction with backpropgation error method. The learning rule is used to calculate the error at the output unit. This error is backpropagated to all the units such that the error at each unit is proportional to the contribution of that unit towards total error at the output unit.  The errors at each unit are then used to optimize the weight at each connection. Figure 1 displays the structure of a simple neural network model for better understanding.
+
+##Fitting Neural Network in R
+Now we will fit a neural network model in R. In this article, we use a subset of cereal dataset shared by Carnegie Mellon University (CMU). The details of the dataset are on the following link: http://lib.stat.cmu.edu/DASL/Datafiles/Cereals.html. The objective is to predict rating of the cereals variables such as calories, proteins, fat etc. The R script is provided side by side and is commented for better understanding of the user. .  The data is in .csv format and can be downloaded by clicking: cereals.
+
+ Please set working directory in R using setwd( ) function, and keep cereal.csv in the working directory. We use rating as the dependent variable and calories, proteins, fat, sodium and fiber as the independent variables. We divide the data into training and test set. Training set is used to find the relationship between dependent and independent variables while the test set assesses the performance of the model. We use 60% of the dataset as training set. The assignment of the data to training and test set is done using random sampling. We perform random sampling on R using sample ( ) function. We have used set.seed( ) to generate same random sample everytime and   maintain consistency. We will use the index variable while fitting neural network to create training and test data sets. The R script is as follows:
+
+
+
+
+
+
+
+
+
+
+

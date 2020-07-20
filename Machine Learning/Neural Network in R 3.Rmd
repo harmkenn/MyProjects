@@ -1,0 +1,154 @@
+---
+title: "Neural Networks in R 2"
+author: "Ken Harmon"
+date: "`r format(Sys.time(), '%Y %B %d')`"
+output:
+  html_document:  
+    keep_md: true
+    code_folding: hide
+    fig_height: 6
+    fig_width: 12
+    fig_align: 'center'
+editor_options: 
+  chunk_output_type: console
+---
+
+# {.tabset .tabset-fade}
+
+```{r, echo=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
+```
+
+```{r load_libraries, include=FALSE}
+# Use this R-Chunk to load all your libraries!
+pacman::p_load(tidyverse,neuralnet,MASS)
+theme_set(theme_bw())
+```
+
+```{r swd, eval=FALSE, echo=FALSE}
+# this is set to not run during the knit process
+# this sets the working directory to the file location
+setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
+```
+
+https://www.r-bloggers.com/fitting-a-neural-network-in-r-neuralnet-package/
+
+##The dataset
+We are going to use the Boston dataset in the MASS package.
+The Boston dataset is a collection of data about housing values in the suburbs of Boston. Our goal is to predict the median value of owner-occupied homes (medv) using all the other continuous variables available.
+
+```{r}
+set.seed(500)
+library(MASS)
+data <- Boston
+```
+
+First we need to check that no datapoint is missing, otherwise we need to fix the dataset.
+
+```{r}
+apply(data,2,function(x) sum(is.na(x)))
+```
+
+There is no missing data, good. We proceed by randomly splitting the data into a train and a test set, then we fit a linear regression model and test it on the test set. Note that I am using the gml() function instead of the lm() this will become useful later when cross validating the linear model.
+
+```{r}
+index <- sample(1:nrow(data),round(0.75*nrow(data)))
+train <- data[index,]
+test <- data[-index,]
+lm.fit <- glm(medv~., data=train)
+summary(lm.fit)
+pr.lm <- predict(lm.fit,test)
+MSE.lm <- sum((pr.lm - test$medv)^2)/nrow(test)
+```
+
+The sample(x,size) function simply outputs a vector of the specified size of randomly selected samples from the vector x. By default the sampling is without replacement: index is essentially a random vector of indeces.
+Since we are dealing with a regression problem, we are going to use the mean squared error (MSE) as a measure of how much our predictions are far away from the real data.
+
+##Preparing to fit the neural network
+Before fitting a neural network, some preparation need to be done. Neural networks are not that easy to train and tune.
+
+As a first step, we are going to address data preprocessing.
+It is good practice to normalize your data before training a neural network. I cannot emphasize enough how important this step is: depending on your dataset, avoiding normalization may lead to useless results or to a very difficult training process (most of the times the algorithm will not converge before the number of maximum iterations allowed). You can choose different methods to scale the data (z-normalization, min-max scale, etc…). I chose to use the min-max method and scale the data in the interval [0,1]. Usually scaling in the intervals [0,1] or [-1,1] tends to give better results.
+We therefore scale and split the data before moving on:
+
+```{r}
+maxs <- apply(data, 2, max) 
+mins <- apply(data, 2, min)
+
+scaled <- as.data.frame(scale(data, center = mins, scale = maxs - mins))
+
+train_ <- scaled[index,]
+test_ <- scaled[-index,]
+```
+
+##Parameters
+As far as I know there is no fixed rule as to how many layers and neurons to use although there are several more or less accepted rules of thumb. Usually, if at all necessary, one hidden layer is enough for a vast numbers of applications. As far as the number of neurons is concerned, it should be between the input layer size and the output layer size, usually 2/3 of the input size. At least in my brief experience testing again and again is the best solution since there is no guarantee that any of these rules will fit your model best.
+Since this is a toy example, we are going to use 2 hidden layers with this configuration: 13:5:3:1. The input layer has 13 inputs, the two hidden layers have 5 and 3 neurons and the output layer has, of course, a single output since we are doing regression.
+Let’s fit the net:
+
+```{r}
+library(neuralnet)
+n <- names(train_)
+f <- as.formula(paste("medv ~", paste(n[!n %in% "medv"], collapse = " + ")))
+nn <- neuralnet(f,data=train_,hidden=c(5,3),linear.output=T)
+```
+
+###A couple of notes:
+
+For some reason the formula y~. is not accepted in the neuralnet() function. You need to first write the formula and then pass it as an argument in the fitting function.
+The hidden argument accepts a vector with the number of neurons for each hidden layer, while the argument linear.output is used to specify whether we want to do regression linear.output=TRUE or classification linear.output=FALSE
+The neuralnet package provides a nice tool to plot the model:
+
+```{r}
+plot(nn)
+```
+
+The black lines show the connections between each layer and the weights on each connection while the blue lines show the bias term added in each step. The bias can be thought as the intercept of a linear model.
+The net is essentially a black box so we cannot say that much about the fitting, the weights and the model. Suffice to say that the training algorithm has converged and therefore the model is ready to be used.
+
+##Predicting medv using the neural network
+Now we can try to predict the values for the test set and calculate the MSE. Remember that the net will output a normalized prediction, so we need to scale it back in order to make a meaningful comparison (or just a simple prediction).
+
+```{r}
+pr.nn <- compute(nn,test_[,1:13])
+
+pr.nn_ <- pr.nn$net.result*(max(data$medv)-min(data$medv))+min(data$medv)
+test.r <- (test_$medv)*(max(data$medv)-min(data$medv))+min(data$medv)
+
+MSE.nn <- sum((test.r - pr.nn_)^2)/nrow(test_)
+
+print(paste(MSE.lm,MSE.nn))
+```
+
+Apparently the net is doing a better work than the linear model at predicting medv. Once again, be careful because this result depends on the train-test split performed above. Below, after the visual plot, we are going to perform a fast cross validation in order to be more confident about the results.
+A first visual approach to the performance of the network and the linear model on the test set is plotted below
+
+```{r}
+par(mfrow=c(1,2))
+
+plot(test$medv,pr.nn_,col='red',main='Real vs predicted NN',pch=18,cex=0.7)
+abline(0,1,lwd=2)
+legend('bottomright',legend='NN',pch=18,col='red', bty='n')
+
+plot(test$medv,pr.lm,col='blue',main='Real vs predicted lm',pch=18, cex=0.7)
+abline(0,1,lwd=2)
+legend('bottomright',legend='LM',pch=18,col='blue', bty='n', cex=.95)
+```
+
+
+By visually inspecting the plot we can see that the predictions made by the neural network are (in general) more concetrated around the line (a perfect alignment with the line would indicate a MSE of 0 and thus an ideal perfect prediction) than those made by the linear model.
+
+```{r}
+plot.new
+plot(test$medv,pr.nn_,col='red',main='Real vs predicted NN',pch=18,cex=0.7)
+points(test$medv,pr.lm,col='blue',pch=18,cex=0.7)
+abline(0,1,lwd=2)
+legend('bottomright',legend=c('NN','LM'),pch=18,col=c('red','blue'))
+```
+
+
+
+
+
+
+

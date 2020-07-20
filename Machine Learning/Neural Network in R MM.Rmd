@@ -1,0 +1,406 @@
+---
+title: "2020 Madness Model NN"
+author: "Ken Harmon"
+date: "`r format(Sys.time(), '%Y %B %d')`"
+output:
+  html_document:  
+    keep_md: true
+    code_folding: hide
+    fig_height: 6
+    fig_width: 12
+    fig_align: 'center'
+editor_options: 
+  chunk_output_type: console
+---
+
+# {.tabset .tabset-fade}
+
+```{r, echo=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
+```
+
+```{r load_libraries, include=FALSE}
+# Use this R-Chunk to load all your libraries!
+pacman::p_load(tidyverse, caret, e1071, neuralnet)
+theme_set(theme_bw())
+confusionMatrix <- caret::confusionMatrix
+select <- dplyr::select
+```
+
+```{r swd, eval=FALSE, echo=FALSE}
+# this is set to not run during the knit process
+# this sets the working directory to the file location
+setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
+```
+
+## Games 11-19 to Predict 2020
+### Combine Stacked Teams with Stats
+
+https://www.sports-reference.com/cbb/seasons/2019-ratings.html
+
+
+```{r wld}
+# Start With All Games 02-19 stacked with Favored team F over Underdog U
+# Append on Season stats to each team
+AG1120stacked <- read.csv("AG1120stacked.csv")
+teamstats <- read.csv("SRstats1120.csv")
+teamcomb <- left_join(AG1120stacked,teamstats,by=c("Year"="Season","Team"="School"))
+
+#Where are the NAs
+nas <- teamcomb %>% summarise_all(~ sum(is.na(.)))
+# dropping NAs from the glm
+teamcomb <- teamcomb %>% select(-c(27:29,31:32,41,59:73))
+# Now the dataset is ready
+```
+
+## Model
+### Build and test the model
+
+```{r btm}
+pyear <- floor(runif(1, min=2011, max=2019))
+rm <- 0
+rsd <- 1
+
+# Separate Favored and Underdogs 02 to 18 
+AG1120F <- teamcomb %>% filter(Favored == "F" & Year != pyear & Year != 2020)
+AG1120U <- teamcomb %>% filter(Favored == "U" & Year != pyear & Year != 2020)
+
+#Get the difference of the just stats
+AG1120FS <- AG1120F %>% select(7,10,15:65)
+AG1120US <- AG1120U %>% select(7,10,15:65)
+dStats1120 <- AG1120FS - AG1120US
+
+# Set seed and create assignment
+
+assignment <- sample(1:2, size = nrow(dStats1120), prob = c(.9,.1), replace = TRUE)
+
+# Create a train, validation and tests from the original data frame 
+NCAA_train <- dStats1120[assignment == 1, ]    # subset NCAA to training indices only
+NCAA_test <- dStats1120[assignment == 2, ]   # subset NCAA to test indices only
+
+NCAA_model <- lm(Score ~ .,data =NCAA_train)
+
+summary(NCAA_model)
+
+pr.lm <- predict(NCAA_model,NCAA_test)
+MSE.lm <- sum((pr.lm - NCAA_test$Score)^2)/nrow(NCAA_test)
+
+p <- predict(NCAA_model, NCAA_test, type = "response")
+actual <- NCAA_test$Score
+
+ggplot(data.frame(actual,p),aes(x=p,y=actual)) + geom_point() #+ 
+  #abline(c(0,min(actual)),c(0,max(actual)))
+
+actual.P <- actual>0
+p.P <- p>0
+
+confusionMatrix(table(actual.P,p.P))
+```
+
+## Predict pyear
+### Predict and Evaluate pyear Tourney
+
+```{r ppyear}
+# Build the pyear Dataset with Side by side teams and diff stats
+
+######################## Predict Round 1 ############################
+
+# Need to assign F and U to Predictions from round 1
+The64 <- teamcomb %>% filter(Year == pyear & Round == 1) %>% select(1,3:8,10,15:65)
+
+# Separate Favored and Underdogs for Round 1 
+The64F <- The64 %>% filter(Favored == "F")
+The64U <- The64 %>% filter(Favored == "U")
+
+#Get the difference of the just stats
+The64FS <- The64F %>% select(6,8:59)
+The64US <- The64U %>% select(6,8:59)
+The64DS <- The64FS - The64US
+
+#Combine the F and U Leading Columns with dif stats
+LThe64F <- The64F %>% select(1:7)
+LThe64U <- The64U %>% select(5:7)
+New64 <- cbind(LThe64F,LThe64U,The64DS)
+colnames(New64)[9:10]<-c("U.Seed","U.Team")
+
+#Now the prediction for round 1
+p <- predict(NCAA_model, The64DS, type = "response")
+p <- p + rnorm(n=length(p),rm,rsd)
+
+pred1 <- ifelse(p>0,New64$Team,New64$U.Team)
+st1 <- ifelse(p>0,paste(New64$Seed,New64$Team,round(p,0)),paste(New64$U.Seed,New64$U.Team,round(p,0)))
+
+########################## Precict Round 2 ############################
+
+# Need to assign F and U to Predictions from round 1
+The32 <- teamcomb %>% filter(Year == pyear & Round == 1 & Team %in% pred1) %>% select(1,3:8,10,15:65)
+The32$GameN <- rep(33:48, each=2)
+The32 <- The32 %>% arrange(GameN, desc(SRS))
+The32$Favored <- rep(c("F","U"),16)
+
+# Separate Favored and Underdogs for Round 2 
+The32F <- The32 %>% filter(Favored == "F")
+The32U <- The32 %>% filter(Favored == "U")
+
+#Get the difference of the just stats
+The32FS <- The32F %>% select(6,8:59)
+The32US <- The32U %>% select(6,8:59)
+The32DS <- The32FS - The32US
+
+#Combine the F and U Leading Columns with dif stats
+LThe32F <- The32F %>% select(1:7)
+LThe32U <- The32U %>% select(5:7)
+New32 <- cbind(LThe32F,LThe32U,The32DS)
+colnames(New32)[9:10]<-c("U.Seed","U.Team")
+
+#Now the prediction for round 2
+p <- predict(NCAA_model, The32DS, type = "response")
+p <- p + rnorm(n=length(p),rm,rsd)
+
+pred2 <- ifelse(p>0,New32$Team,New32$U.Team)
+st2 <- ifelse(p>0,paste(New32$Seed,New32$Team,round(p,0)),paste(New32$U.Seed,New32$U.Team,round(p,0)))
+
+########################## Precict Round 3 ############################
+
+# Need to assign F and U to Predictions from round 2
+The16 <- teamcomb %>% filter(Year == pyear & Round == 1 & Team %in% pred2) %>% select(1,3:8,10,15:65)
+The16$GameN <- rep(49:56, each=2)
+The16 <- The16 %>% arrange(GameN, desc(SRS))
+The16$Favored <- rep(c("F","U"),8)
+
+# Separate Favored and Underdogs for Round 3 
+The16F <- The16 %>% filter(Favored == "F")
+The16U <- The16 %>% filter(Favored == "U")
+
+#Get the difference of the just stats
+The16FS <- The16F %>% select(6,8:59)
+The16US <- The16U %>% select(6,8:59)
+The16DS <- The16FS - The16US
+
+#Combine the F and U Leading Columns with dif stats
+LThe16F <- The16F %>% select(1:7)
+LThe16U <- The16U %>% select(5:7)
+New16 <- cbind(LThe16F,LThe16U,The16DS)
+colnames(New16)[9:10]<-c("U.Seed","U.Team")
+
+#Now the prediction for round 3
+p <- predict(NCAA_model, The16DS, type = "response")
+p <- p + rnorm(n=length(p),rm,rsd)
+
+pred3 <- ifelse(p>0,New16$Team,New16$U.Team)
+st3 <- ifelse(p>0,paste(New16$Seed,New16$Team,round(p,0)),paste(New16$U.Seed,New16$U.Team,round(p,0)))
+########################## Precict Round 4 ############################
+
+# Need to assign F and U to Predictions from round 3
+The8 <- teamcomb %>% filter(Year == pyear & Round == 1 & Team %in% pred3) %>% select(1,3:8,10,15:65)
+The8$GameN <- rep(57:60, each=2)
+The8 <- The8 %>% arrange(GameN, desc(SRS))
+The8$Favored <- rep(c("F","U"),4)
+
+# Separate Favored and Underdogs for Round 4 
+The8F <- The8 %>% filter(Favored == "F")
+The8U <- The8 %>% filter(Favored == "U")
+
+#Get the difference of the just stats
+The8FS <- The8F %>% select(6,8:59)
+The8US <- The8U %>% select(6,8:59)
+The8DS <- The8FS - The8US
+
+#Combine the F and U Leading Columns with dif stats
+LThe8F <- The8F %>% select(1:7)
+LThe8U <- The8U %>% select(5:7)
+New8 <- cbind(LThe8F,LThe8U,The8DS)
+colnames(New8)[9:10]<-c("U.Seed","U.Team")
+
+#Now the prediction for round 4
+p <- predict(NCAA_model, The8DS, type = "response")
+p <- p + rnorm(n=length(p),rm,rsd)
+
+pred4 <- ifelse(p>0,New8$Team,New8$U.Team)
+st4 <- ifelse(p>0,paste(New8$Seed,New8$Team,round(p,0)),paste(New8$U.Seed,New8$U.Team,round(p,0)))
+
+########################## Precict Round 5 ############################
+
+# Need to assign F and U to Predictions from round 4
+The4 <- teamcomb %>% filter(Year == pyear & Round == 1 & Team %in% pred4) %>% select(1,3:8,10,15:65)
+The4 <- The4 %>% arrange(desc(Region), SRS)
+The4$GameN <- rep(61:62, each=2)
+The4 <- The4 %>% arrange(GameN, desc(SRS))
+The4$Favored <- rep(c("F","U"),2)
+
+# Separate Favored and Underdogs for Round 5 
+The4F <- The4 %>% filter(Favored == "F")
+The4U <- The4 %>% filter(Favored == "U")
+
+#Get the difference of the just stats
+The4FS <- The4F %>% select(6,8:59)
+The4US <- The4U %>% select(6,8:59)
+The4DS <- The4FS - The4US
+
+#Combine the F and U Leading Columns with dif stats
+LThe4F <- The4F %>% select(1:7)
+LThe4U <- The4U %>% select(5:7)
+New4 <- cbind(LThe4F,LThe4U,The4DS)
+colnames(New4)[9:10]<-c("U.Seed","U.Team")
+
+#Now the prediction for round 5
+p <- predict(NCAA_model, The4DS, type = "response")
+p <- p + rnorm(n=length(p),rm,rsd)
+
+pred5 <- ifelse(p>0,New4$Team,New4$U.Team)
+st5 <- ifelse(p>0,paste(New4$Seed,New4$Team,round(p,0)),paste(New4$U.Seed,New4$U.Team,round(p,0)))
+
+########################## Precict Round 6 ############################
+
+# Need to assign F and U to Predictions from round 5
+The2 <- teamcomb %>% filter(Year == pyear & Round == 1 & Team %in% pred5) %>% select(1,3:8,10,15:65)
+The2$GameN <- rep(63, each=2)
+The2 <- The2 %>% arrange(GameN, desc(SRS))
+The2$Favored <- rep(c("F","U"),1)
+
+# Separate Favored and Underdogs for Round 6 
+The2F <- The2 %>% filter(Favored == "F")
+The2U <- The2 %>% filter(Favored == "U")
+
+#Get the difference of the just stats
+The2FS <- The2F %>% select(6,8:59)
+The2US <- The2U %>% select(6,8:59)
+The2DS <- The2FS - The2US
+
+#Combine the F and U Leading Columns with dif stats
+LThe2F <- The2F %>% select(1:7)
+LThe2U <- The2U %>% select(5:7)
+New2 <- cbind(LThe2F,LThe2U,The2DS)
+colnames(New2)[9:10]<-c("U.Seed","U.Team")
+
+#Now the prediction for round 5
+p <- predict(NCAA_model, The2DS, type = "response")
+p <- p + rnorm(n=length(p),rm,rsd)
+
+pred6 <- ifelse(p>0,New2$Team,New2$U.Team)
+st6 <- ifelse(p>0,paste(New2$Seed,New2$Team,round(p,0)),paste(New2$U.Seed,New2$U.Team,round(p,0)))
+
+```
+
+## Results
+
+```{r r1}
+presults <- c(pred1,pred2,pred3,pred4,pred5,pred6)
+aresults <- teamcomb %>% filter(Year == pyear & Favored == "F" & Round != "PI") %>% select(Winner)
+cresults <- cbind(aresults,presults)
+cresults$match <- aresults == presults
+cresults
+sum(cresults$match)
+score <- c(rep(10,32),rep(20,16),rep(40,8),rep(80,4),rep(160,2),rep(320,1))
+blank2 <- rep("",16)
+st2 <- c(blank2,st2)
+blank3 <- rep("",24)
+st3 <- c(blank3,st3)
+blank4 <- rep("",28)
+st4 <- c(blank4,st4)
+blank5 <- rep("",30)
+st5 <- c(blank5,st5)
+blank6 <- rep("",31)
+st6 <- c(blank6, st6)
+cbind(st1,st2,st3,st4,st5,st6)
+sum(cresults$match*score)
+track <- c(track,sum(cresults$match*score))
+summary(track)
+
+```
+
+
+First we need to check that no datapoint is missing, otherwise we need to fix the dataset.
+
+```{r}
+apply(dStats1120,2,function(x) sum(is.na(x)))
+```
+
+
+
+##Preparing to fit the neural network
+Before fitting a neural network, some preparation need to be done. Neural networks are not that easy to train and tune.
+
+As a first step, we are going to address data preprocessing.
+It is good practice to normalize your data before training a neural network. I cannot emphasize enough how important this step is: depending on your dataset, avoiding normalization may lead to useless results or to a very difficult training process (most of the times the algorithm will not converge before the number of maximum iterations allowed). You can choose different methods to scale the data (z-normalization, min-max scale, etc…). I chose to use the min-max method and scale the data in the interval [0,1]. Usually scaling in the intervals [0,1] or [-1,1] tends to give better results.
+We therefore scale and split the data before moving on:
+
+```{r}
+maxs <- apply(dStats1120, 2, max) 
+mins <- apply(dStats1120, 2, min)
+
+scaled <- as.data.frame(scale(dStats1120, center = mins, scale = maxs - mins))
+
+index <- sample(1:nrow(dStats1120),round(0.70*nrow(dStats1120)))
+
+train_ <- scaled[index,]
+test_ <- scaled[-index,]
+```
+
+##Parameters
+As far as I know there is no fixed rule as to how many layers and neurons to use although there are several more or less accepted rules of thumb. Usually, if at all necessary, one hidden layer is enough for a vast numbers of applications. As far as the number of neurons is concerned, it should be between the input layer size and the output layer size, usually 2/3 of the input size. At least in my brief experience testing again and again is the best solution since there is no guarantee that any of these rules will fit your model best.
+Since this is a toy example, we are going to use 2 hidden layers with this configuration: 13:5:3:1. The input layer has 13 inputs, the two hidden layers have 5 and 3 neurons and the output layer has, of course, a single output since we are doing regression.
+Let’s fit the net:
+
+```{r}
+library(neuralnet)
+n <- names(train_)
+f <- as.formula(paste("Score ~", paste(n[!n %in% "Score"], collapse = " + ")))
+#f <- as.formula(paste("Score ~ Seed + W + L + Pts + Opp + MOV + SOS + OSRS + DSRS + SRS + ORtg + DRtg + NRtg + W.L. + + W.2 + L.2 + W.3 + L.3 + W.4 + L.4 + Tm. + Opp. + MP + FG + FGA + FG. + X3P + X3PA + X3P. + FT + FTA + FT. + ORB + TRB + AST + STL + BLK + TOV + PF + Pace + ORtg.1 + FTr + X3PAr + TS. + TRB. + AST. + STL. + BLK. + eFG. + TOV. + ORB. + FT.FGA"))
+nn <- neuralnet(f,data=train_,hidden=c(12,6),linear.output=T)
+```
+
+###A couple of notes:
+
+For some reason the formula y~. is not accepted in the neuralnet() function. You need to first write the formula and then pass it as an argument in the fitting function.
+The hidden argument accepts a vector with the number of neurons for each hidden layer, while the argument linear.output is used to specify whether we want to do regression linear.output=TRUE or classification linear.output=FALSE
+The neuralnet package provides a nice tool to plot the model:
+
+```{r}
+plot(nn)
+```
+
+The black lines show the connections between each layer and the weights on each connection while the blue lines show the bias term added in each step. The bias can be thought as the intercept of a linear model.
+The net is essentially a black box so we cannot say that much about the fitting, the weights and the model. Suffice to say that the training algorithm has converged and therefore the model is ready to be used.
+
+##Predicting medv using the neural network
+Now we can try to predict the values for the test set and calculate the MSE. Remember that the net will output a normalized prediction, so we need to scale it back in order to make a meaningful comparison (or just a simple prediction).
+
+```{r}
+pr.nn <- compute(nn,test_[,c(1,3:53)])
+
+pr.nn_ <- pr.nn$net.result*(max(dStats1120$Score)-min(dStats1120$Score))+min(dStats1120$Score)
+test.r <- (test_$Score)*(max(dStats1120$Score)-min(dStats1120$Score))+min(dStats1120$Score)
+
+MSE.nn <- sum((test.r - pr.nn_)^2)/nrow(test_)
+
+print(paste(MSE.lm,MSE.nn))
+```
+
+Apparently the net is doing a better work than the linear model at predicting medv. Once again, be careful because this result depends on the train-test split performed above. Below, after the visual plot, we are going to perform a fast cross validation in order to be more confident about the results.
+A first visual approach to the performance of the network and the linear model on the test set is plotted below
+
+```{r}
+plot.new
+par(mfrow=c(1,2))
+
+plot(test_$Score,pr.nn_,col='red',main='Real vs predicted NN',pch=18,cex=0.7)
+abline(0,1,lwd=2)
+legend('bottomright',legend='NN',pch=18,col='red', bty='n')
+
+plot(test_$Score,pr.lm,col='blue',main='Real vs predicted lm',pch=18, cex=0.7)
+abline(0,1,lwd=2)
+legend('bottomright',legend='LM',pch=18,col='blue', bty='n', cex=.95)
+```
+
+
+By visually inspecting the plot we can see that the predictions made by the neural network are (in general) more concetrated around the line (a perfect alignment with the line would indicate a MSE of 0 and thus an ideal perfect prediction) than those made by the linear model.
+
+```{r}
+plot.new
+plot(test_$Score,pr.nn_,col='red',main='Real vs predicted NN',pch=18,cex=0.7)
+points(test_$Score,pr.lm,col='blue',pch=18,cex=0.7)
+abline(0,1,lwd=2)
+legend('bottomright',legend=c('NN','LM'),pch=18,col=c('red','blue'))
+```
+

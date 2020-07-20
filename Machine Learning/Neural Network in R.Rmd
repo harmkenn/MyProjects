@@ -1,5 +1,5 @@
 ---
-title: "MAchine Learning in R"
+title: "Neural Networks in R"
 author: "Ken Harmon"
 date: "`r format(Sys.time(), '%Y %B %d')`"
 output:

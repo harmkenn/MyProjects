@@ -1,0 +1,148 @@
+---
+title: "Neural Networks in R 2"
+author: "Ken Harmon"
+date: "`r format(Sys.time(), '%Y %B %d')`"
+output:
+  html_document:  
+    keep_md: true
+    code_folding: hide
+    fig_height: 6
+    fig_width: 12
+    fig_align: 'center'
+editor_options: 
+  chunk_output_type: console
+---
+
+# {.tabset .tabset-fade}
+
+```{r, echo=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
+```
+
+```{r load_libraries, include=FALSE}
+# Use this R-Chunk to load all your libraries!
+pacman::p_load(tidyverse,neuralnet,ISLR,caTools)
+theme_set(theme_bw())
+```
+
+```{r swd, eval=FALSE, echo=FALSE}
+# this is set to not run during the knit process
+# this sets the working directory to the file location
+setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
+```
+
+https://www.kdnuggets.com/2016/08/begineers-guide-neural-networks-r.html
+
+##Neural Networks
+ 
+Neural Networks are a machine learning framework that attempts to mimic the learning pattern of natural biological neural networks. Biological neural networks have interconnected neurons with dendrites that receive inputs, then based on these inputs they produce an output signal through an axon to another neuron. We will try to mimic this process through the use of Artificial Neural Networks (ANN), which we will just refer to as neural networks from now on. The process of creating a neural network begins with the most basic form, a single Node.
+
+##The Node
+ 
+Let's start our discussion by talking about the Node! A Node has one or more inputs, a bias, an activation function, and a single output. The Node receives inputs, multiplies them by some weight, and then passes them into an activation function to produce an output. There are many possible activation functions to choose from, such as the logistic function, a trigonometric function, a step function etc. We also make sure to add a bias to the Node, this avoids issues where all inputs could be equal to zero (meaning no multiplicative weight would have an effect). Check out the diagram below for a visualization of a Node:
+
+Node
+Once we have the output we can compare it to a known label and adjust the weights accordingly (the weights usually start off with random initialization values). We keep repeating this process until we have reached a maximum number of allowed iterations, or an acceptable error rate.
+
+To create a neural network, we simply begin to add layers of Nodes together, creating a multi-layer Node model of a neural network. You'll have an input layer which directly takes in your feature inputs and an output layer which will create the resulting outputs. Any layers in between are known as hidden layers because they don't directly "see" the feature inputs or outputs. For a visualization of this check out the diagram below (source: Wikipedia).
+
+Neural network
+Let's move on to actually creating a neural network in R!
+
+Data
+ 
+We'll use ISLR's built in College Data Set which has several features of a college and a categorical column indicating whether or not the School is Public or Private.
+
+```{r}
+print(head(College,2))
+```
+
+##Data Preprocessing
+ 
+It is important to normalize data before training a neural network on it. The neural network may have difficulty converging before the maximum number of iterations allowed if the data is not normalized. There are a lot of different methods for normalization of data. We will use the built-in scale() function in R to easily accomplish this task.
+
+Usually it is better to scale the data from 0 to 1, or -1 to 1. We can specify the center and scale as additional arguments in the scale() function. For example:
+
+```{r}
+# Create Vector of Column Max and Min Values
+maxs <- apply(College[,2:18], 2, max)
+mins <- apply(College[,2:18], 2, min)
+
+# Use scale() and convert the resulting matrix to a data frame
+scaled.data <- as.data.frame(scale(College[,2:18],center = mins, scale = maxs - mins))
+
+# Check out results
+print(head(scaled.data,2))
+```
+
+##Train and Test Split
+ 
+Let us now split our data into a training set and a test set. We will run our neural network on the training set and then see how well it performed on the test set.
+
+We will use the caTools to randomly split the data into a training set and test set.
+
+```{r}
+# Convert Private column from Yes/No to 1/0
+Private = as.numeric(College$Private)-1
+data = cbind(Private,scaled.data)
+
+library(caTools)
+set.seed(101)
+
+# Create Split (any column is fine)
+split = sample.split(data$Private, SplitRatio = 0.70)
+
+# Split based off of split Boolean Vector
+train = subset(data, split == TRUE)
+test = subset(data, split == FALSE)
+```
+
+Neural Network Function
+ 
+Before we actually call the neuralnetwork() function we need to create a formula to insert into the machine learning model. The neuralnetwork() function won't accept the typical decimal R format for a formula involving all features (e.g. y ~.). However, we can use a simple script to create the expanded formula and save us some typing:
+
+```{r}
+feats <- names(scaled.data)
+
+# Concatenate strings
+f <- paste(feats,collapse=' + ')
+f <- paste('Private ~',f)
+
+# Convert to formula
+f <- as.formula(f)
+
+nn <- neuralnet(f,train,hidden=c(10,10,10),linear.output=FALSE)
+```
+
+##Predictions and Evaluations
+ 
+Now let's see how well we performed! We use the compute() function with the test data (jsut the features) to create predicted values. This returns a list from which we can call net.result off of.
+
+```{r}
+# Compute Predictions off Test Set
+predicted.nn.values <- compute(nn,test[2:18])
+
+# Check out net.result
+print(head(predicted.nn.values$net.result))
+```
+ 
+Notice we still have results between 0 and 1 that are more like probabilities of belonging to each class. We'll use sapply() to round these off to either 0 or 1 class so we can evaluate them against the test labels.
+
+```{r}
+predicted.nn.values$net.result <- sapply(predicted.nn.values$net.result,round,digits=0)
+```
+
+Now let's create a simple confusion matrix:
+
+```{r}
+table(test$Private,predicted.nn.values$net.result)
+```
+
+Visualizing the Neural Net
+ 
+We can visualize the Neural Network by using the plot(nn) command. The black lines represent the weighted vectors between the neurons. The blue line represents the bias added. Unfortunately, even though the model is clearly a very powerful predictor, it is not easy to directly interpret the weights. This means that we usually have to treat Neural Network models more like black boxes.
+
+```{r}
+plot(nn)
+```
+

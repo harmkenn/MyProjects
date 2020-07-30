@@ -76,6 +76,14 @@ NPS %>% ggplot() + geom_point(aes(height,weight))
 
 ```{r}
 
+x <- NPS$height
+x <- ifelse(x>300,x/2.54,x)
+NPS$height <- x
+
+NPS %>% ggplot() + geom_point(aes(height,weight))
+
+#NPS %>% filter(height <=159) %>% select("Year","Player","height")
+
 ```
 
 

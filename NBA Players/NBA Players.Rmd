@@ -21,7 +21,7 @@ knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
 
 ```{r load_libraries, include=FALSE}
 # Use this R-Chunk to load all your libraries!
-pacman::p_load(tidyverse, nycflights13)
+pacman::p_load(tidyverse, nycflights13, plotly)
 theme_set(theme_bw())
 ```
 
@@ -72,7 +72,7 @@ NPS %>% ggplot() + geom_point(aes(height,weight))
 
 ```
 
-#fix the weird heights
+##fix the weird heights
 
 ```{r}
 
@@ -82,22 +82,129 @@ NPS$height <- x
 
 NPS %>% ggplot() + geom_point(aes(height,weight))
 
-#NPS %>% filter(height <=159) %>% select("Year","Player","height")
+#NPS %>% filter(height <=230 & weight >= 150) %>% select("Year","Player","height")
 
 ```
 
+```{r}
+#Now the 2019 Jazz in Blue
+
+Jazz2019 <- NPS %>% filter(Tm == "UTA" & Year == 2019)
+
+NPS %>% ggplot(aes(height,weight)) + geom_point() + 
+  geom_point(data = Jazz2019,color="red")
+```
+
+```{r}
+ggplot(data = mpg) + 
+  geom_point(mapping = aes(x = displ, y = hwy, color = class))
+
+mpg %>% ggplot() + geom_point(aes(displ,hwy,color = class))
+
+NPS %>% ggplot() + geom_point(aes(height,weight,color = Pos))
+```
+
+```{r}
+ggplot(data = mpg) + 
+  geom_point(mapping = aes(x = displ, y = hwy)) + 
+  facet_wrap(~ class, nrow = 2)
+
+NPS %>% ggplot() + geom_point(aes(height,weight,color = Pos)) +
+  facet_wrap(~Pos, nrow = 5)
+
+ggplot(NPS) + geom_bar(aes(Pos))
+
+NPS$Pos2 <- fct_collapse(NPS$Pos,
+  "C" = c("C", "C-F","C-PF","C-SF"),
+  "PF" = c("F","F-C","PF","PF-C","PF-SF"),
+  "SF" = c("F-G","SF","SF-PF","SF-PG","SF-SG"),
+  "PG" = c("G","PG","PG-SF","PG-SG"),  
+  "SG" = c("G-F","SG","SG-PF","SG-PG","SG-SF"))
+
+ggplot(NPS) + geom_bar(aes(Pos2))
+
+NPS %>% ggplot() + geom_point(aes(height,weight,color = Pos2)) +
+  facet_wrap(~Pos2)
+```
+
+```{r}
+NPS %>% ggplot(aes(height,weight)) + geom_point() +
+  geom_smooth()
+```
+
+```{r}
+ggplot(data = mpg) + 
+  geom_smooth(mapping = aes(x = displ, y = hwy, linetype = drv))
+
+NPS %>% ggplot(aes(height,weight)) + geom_point(aes(color=Pos2))  + 
+  geom_smooth() + facet_wrap(~Pos2)
+```
 
 
+```{r}
+ggplot(data = diamonds) + 
+  stat_summary(
+    mapping = aes(x = cut, y = depth),
+    fun.min = min,
+    fun.max = max,
+    fun = median
+  )
 
+NPS %>% ggplot() + 
+  stat_summary(aes(Pos2,height),
+           fun.min = min, fun.max = max, fun = median)
+```
 
+```{r}
+ggplot(data = diamonds) + 
+  geom_bar(mapping = aes(x = cut, fill = clarity))
 
+NPS %>% ggplot() + geom_bar(aes(Pos2, fill = Pos))
+```
 
+```{r}
+ggplot(data = mpg, mapping = aes(x = class, y = hwy)) + 
+  geom_boxplot() +
+  coord_flip()
 
+NPS %>% ggplot() + geom_boxplot(aes(Pos2,height ,fill = Pos2)) +
+  coord_flip()
+```
 
+```{r}
+NPS %>% ggplot() + geom_histogram(aes(PTS))
 
+count <- length(NPS$PTS)
+bins <- ceiling(1+3.322*log10(count))
 
+NPS %>% filter(PTS >= 1000) %>% ggplot() + geom_histogram(aes(PTS),bins = bins)
 
+library(plotly)
 
+plot_ly(x = NPS$PTS, type = "histogram", nbinsx = 50,
+                marker = list(color = "skyblue2", 
+                              line = list(color = "darkgray", 
+                                          width = 2)))
+
+```
+
+```{r}
+NPS %>% filter(PTS >= 2600) %>% select("Year","Player","PTS") %>% 
+  arrange(desc(PTS))
+```
+
+```{r}
+
+plot_ly(x = (NPS$VORP), type = "histogram", nbinsx = 50,
+                marker = list(color = "skyblue2", 
+                              line = list(color = "darkgray", 
+                                          width = 2)))
+```
+
+```{r}
+NPS %>% filter(VORP >= 10) %>% select("Year","Player","VORP") %>% 
+  arrange(desc(VORP))
+```
 
 
 

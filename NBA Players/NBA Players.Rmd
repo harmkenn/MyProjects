@@ -1,0 +1,100 @@
+---
+title: "NBA Player Stats 1950-2019"
+author: "Ken Harmon"
+date: "`r format(Sys.time(), '%Y %B %d')`"
+output:
+  html_document:  
+    keep_md: true
+    code_folding: hide
+    fig_height: 6
+    fig_width: 12
+    fig_align: 'center'
+editor_options: 
+  chunk_output_type: console
+---
+
+# {.tabset .tabset-fade}
+
+```{r, echo=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
+```
+
+```{r load_libraries, include=FALSE}
+# Use this R-Chunk to load all your libraries!
+pacman::p_load(tidyverse, nycflights13)
+theme_set(theme_bw())
+```
+
+```{r swd, eval=FALSE, echo=FALSE}
+# this is set to not run during the knit process
+# this sets the working directory to the file location
+setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
+```
+
+```{r}
+#NBA_Player_Stats <- as_tibble(NBA_Player_Season_Stats_1950_2019)
+#save(NBA_Player_Stats, file = "NBAPlayerStats1950-2019.rda")
+load(file = "NBAPlayerStats1950-2019.rda")
+```
+
+https://r4ds.had.co.nz/tibbles.html
+
+```{r}
+nycflights13::flights %>% print(n = 10, width = Inf)
+
+NBA_Player_Stats %>% print(n = 10, width = Inf)
+
+```
+
+Extract a column
+
+[[ can extract by name or position; $ only extracts by name but is a little less typing.
+
+```{r}
+NPS <- NBA_Player_Stats
+
+NPS[[6]] #Height Column
+NPS[["height"]]
+NPS$height
+NPS %>% .$height
+
+```
+
+https://r4ds.had.co.nz/data-visualisation.html
+
+```{r}
+ggplot(data = mpg) + 
+  geom_point(mapping = aes(x = displ, y = hwy))
+
+mpg %>% ggplot() + geom_point(aes(displ,hwy))
+
+NPS %>% ggplot() + geom_point(aes(height,weight))
+
+```
+
+#fix the weird heights
+
+```{r}
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

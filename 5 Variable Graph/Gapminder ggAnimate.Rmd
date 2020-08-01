@@ -1,0 +1,113 @@
+---
+title: "Gapminder ggAnimate"
+author: "Ken Harmon"
+date: "`r format(Sys.time(), '%Y %B %d')`"
+output:
+  html_document:  
+    keep_md: true
+    code_folding: hide
+    fig_height: 6
+    fig_width: 12
+    fig_align: 'center'
+editor_options: 
+  chunk_output_type: console
+---
+
+# {.tabset .tabset-fade}
+
+```{r, echo=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
+```
+
+```{r load_libraries, include=FALSE}
+# Use this R-Chunk to load all your libraries!
+pacman::p_load(tidyverse,gganimate,viridis,wbstats,plotly)
+theme_set(theme_bw())
+```
+
+```{r swd, eval=FALSE, echo=FALSE}
+# this is set to not run during the knit process
+# this sets the working directory to the file location
+setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
+```
+
+https://towardsdatascience.com/create-hans-roslings-famous-animated-bubble-chart-in-a-single-piped-r-command-9c50a485259
+
+The wbstats package is an awesome utility that allows you to plug directly into the World Bank database using its API and download data directly to your R session. You can visit the World Bank Open Data site here and browse for the indicators you want. Once you find one, you just need to make a note of its indicator ID code. For example, if you search for “GDP per Capita (current US$)”, you should be taken to this page — then click on the “Details” icon and you will see the ID. In this case it is NY.GDP.PCAP.CD.
+Using these indicator ID codes you can use the wbstats package to instantly grab the data for the three indicators you need using our first command:
+
+https://data.worldbank.org/
+
+```{r}
+wbdata <- wbstats::wb_data(indicator = c("SP.DYN.LE00.IN", "NY.GDP.PCAP.CD", 
+                          "SP.POP.TOTL"),country = "countries_only", 
+            start_date = 1960, end_date = 2020)
+```
+
+The country = "countries_only" argument is important — the World Bank data also includes regional and worldwide averages, which you don’t want for this analysis.
+
+This is almost all we need in terms of data. But for our color coding we need to assign our countries to World Bank regions. wbstats has a handy function called wbcountries() where you can select the iso3c country code and its region and join to the previous table to assign countries to regions, as follows:
+
+```{r}
+wbdata <- wbdata %>%
+  left_join(wbstats::wb_countries() %>% select(iso3c, region))
+```
+
+Our final data prep step is to spread the three indictors across the row for each country and year, as right now they are all in long form down the indicatorID column. We will use the newly-minted pivot_wider() function in tidyr for this (make sure you have the latest version!). So keeping date, country and region fixed, we want to widen according to the indicator column, filling with values from the value column:
+
+```{r}
+TWD <- wbdata %>% 
+  select("date","country","region",
+          "Life Expectancy" = "SP.DYN.LE00.IN",
+          "GDP per Cap" ="NY.GDP.PCAP.CD",
+          "Total Pop" = "SP.POP.TOTL")
+```
+
+Creating a static chart for a single year
+Since animation is simple movement between static charts, the majority of our graphic work will be to create the static styled chart for a single year using ggplot2.
+
+```{r}
+TWD %>% ggplot(aes(log(`GDP per Cap`),`Life Expectancy`,
+                   size = `Total Pop`,color = region)) + 
+  geom_point(alpha =.5) + 
+  scale_size(range = c(.1, 16), guide = FALSE) +
+  scale_x_continuous(limits = c(2.5, 12.5)) +
+  scale_y_continuous(limits = c(30, 90)) + 
+  labs(x = "Log GDP per capita", y = "Life expectancy at birth")
+```
+
+Animating the chart
+And now for the last and easiest part of the work. Now that you have the static animation set up, you just need to use the package gganimate to animate it. All gganimate needs to know is what the transition variable is (in this case it is the date column), and a few details on timing and style of transition. You can achieve this by adding this simple animation command to your code above:
+
+```{r}
+TWD %>% ggplot(aes(log(`GDP per Cap`),`Life Expectancy`,
+                   size = `Total Pop`,color = region)) + 
+  geom_point(alpha =.5) + 
+  scale_size(range = c(.1, 16), guide = FALSE) +
+  scale_x_continuous(limits = c(2.5, 12.5)) +
+  scale_y_continuous(limits = c(30, 90)) + 
+  labs(x = "Log GDP per capita", y = "Life expectancy at birth") +
+transition_states(date, transition_length = 1, state_length = 1) +
+  ease_aes('cubic-in-out')
+```
+
+Plotly version
+
+```{r}
+gpc <- log(TWD$`GDP per Cap`)
+le <- TWD$`Life Expectancy`
+TWD %>%
+  plot_ly(x = ~log(TWD$`GDP per Cap`), y = ~TWD$`Life Expectancy`, 
+    size = ~`Total Pop`, color = ~region, frame = ~date, 
+    text = ~country, 
+    hoverinfo = "text",type = 'scatter',mode = 'markers') %>%
+  layout(xaxis = list(title = "Log(GDP)"), yaxis = list(title = "Life Expectancy"))
+```
+
+
+
+
+
+
+
+

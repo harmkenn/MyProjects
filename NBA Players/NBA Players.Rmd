@@ -21,7 +21,7 @@ knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
 
 ```{r load_libraries, include=FALSE}
 # Use this R-Chunk to load all your libraries!
-pacman::p_load(tidyverse, nycflights13, plotly)
+pacman::p_load(tidyverse, plotly)
 theme_set(theme_bw())
 ```
 
@@ -206,6 +206,42 @@ NPS %>% filter(VORP >= 10) %>% select("Year","Player","VORP") %>%
   arrange(desc(VORP))
 ```
 
+## Predicting VORP
+
+```{r}
+# Get rid of Blank Columns
+NPS <-NPS %>% select_if(~sum(!is.na(.)) > 0)
+
+# VORP started in 1974
+VP <- NPS %>% filter(Year >= 1974)
+
+# Get A Train and Test Set
+assignment <- sample(1:2, size = nrow(VP), prob = c(.7,.3), 
+                     replace = TRUE)
+VP_train <- VP[assignment == 1, ] 
+VP_test <- VP[assignment == 2, ]   
+```
+
+```{r}
+#Pick the Columns for predictor variables
+sapply(VP, function(x) sum(is.na(x)))
+
+# Now create the model from the train
+summary(lm(VORP ~ . ,
+           data =VP_train[c(3,6,7,9,13:15,17:23,26:36,40:52,54:55)]))
+
+VORP_model <- lm(VORP ~ . ,
+           data =VP_train[c(3,6,7,9,13:15,17:23,26:36,40:52,54:55)]) 
+
+# Now make predictions off the test
+predicted <- predict(VORP_model, VP_test, type = "response")
+# Compare prediction to actual
+actual <- VP_test$VORP
+
+ggplot(data.frame(actual,predicted),aes(x=actual,y=predicted)) + geom_point()
+
+cor(actual,predicted, method = c("pearson"), use = "complete.obs")
+```
 
 
 

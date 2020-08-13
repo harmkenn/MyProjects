@@ -1,0 +1,64 @@
+---
+title: "Baysian Statistics"
+author: "Ken Harmon"
+date: "`r format(Sys.time(), '%Y %B %d')`"
+output:
+  html_document:  
+    keep_md: true
+    code_folding: hide
+    fig_height: 6
+    fig_width: 12
+    fig_align: 'center'
+editor_options: 
+  chunk_output_type: console
+---
+
+# {.tabset .tabset-fade}
+
+https://www.coursera.org/learn/bayesian/lecture/NPp2d/effect-of-sample-size-on-the-posterior
+
+```{r, echo=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
+```
+
+```{r load_libraries, include=FALSE}
+# Use this R-Chunk to load all your libraries!
+pacman::p_load(tidyverse, DT)
+theme_set(theme_bw())
+```
+
+```{r swd, eval=FALSE, echo=FALSE}
+# this is set to not run during the knit process
+# this sets the working directory to the file location
+setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
+```
+
+## Inference
+
+```{r}
+#Binomial CDF
+
+all <- dbinom(0:4, 20, .5)
+bcdf <- sum(all)
+```
+
+```{r}
+p <- seq(.1,.9,.1)
+prior <- c(rep(.6,4),.52,rep(.6,4))
+likelihood <- dbinom(4,20,p)
+num <- prior * likelihood
+den <- sum(num)
+post <- num/den
+sum(post)
+
+datatable(rbind(p,prior,likelihood,num,post))
+```
+
+
+
+
+
+
+
+
+

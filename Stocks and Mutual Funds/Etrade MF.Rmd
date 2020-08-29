@@ -35,9 +35,9 @@ setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
 
 ###ETRADE All
 ```{r fun}
-days <- Sys.Date() - 0:365
-begin <- days[366]
-end <- days[2]
+days <- Sys.Date() - 0:240
+begin <- days[241]
+end <- days[1]
 etrade_all <- read.csv("etrade_all.csv")
 
 EMF <- load_prices(etrade_all$Symbol,from = begin, to = end)
@@ -161,6 +161,13 @@ for (r in 2:nrow(MFValue)){
     }
   }
 }
+
+
+
+
+
+
+
 
 ```
 

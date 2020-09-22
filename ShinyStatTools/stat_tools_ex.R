@@ -11,6 +11,7 @@ library(qqplotr)
 library(cowplot)
 library(grid)
 library(gridExtra)
+library(ggExtra)
 theme_set(theme_bw())
 
 chisq.test <- stats::chisq.test
@@ -78,7 +79,7 @@ ui <- dashboardPage(
           ), #Ecolumn
           column(width = 5,
            box(title = "Histogram", width = NULL,
-               plotOutput("hist")
+               plotlyOutput("hist")
            ), #Ebox
            box(title = "Percentile", width = NULL,
                splitLayout(
@@ -431,19 +432,20 @@ server <- function(input, output, session) {
           ggplot() + 
           geom_histogram(aes(x=hist.df[,1]),color="darkblue", fill="lightblue",binwidth=binwidth)+
           labs(x="A") + xlim(c(min(hist.x)-binwidth,max(hist.x)+binwidth))
+        dd1 <- ggplotly(dd1)
       } #Eif
       if(!is.null(tryCatch(ggplot(hist.df), error = function(e){}))){
         dd2 <- hist.df %>%
-          ggplot(aes(x="", y = hist.df[,1])) +
-          geom_boxplot(color="darkblue", fill="lightblue", outlier.colour="red", outlier.shape=8, outlier.size=4) + 
-          geom_jitter(width = .1) +
+          ggplot() +
+          geom_histogram(aes(y=hist.x),color="darkblue", fill="lightblue",binwidth=binwidth)+
+          geom_boxplot(aes(x ="", y = hist.x),color="darkblue", fill="lightgreen", outlier.colour="red", outlier.shape=8, outlier.size=4) + 
+          geom_jitter(aes(x = "", y = hist.x), width = .1) +
           coord_flip() +
           theme_classic() +
           labs(x="", y="A" ) + ylim(c(min(hist.x)-binwidth,max(hist.x)+binwidth))
+        dd3 <- ggplotly(dd2)
       } #Eif
-      output$hist <- renderPlot({
-        plot_grid(dd1, dd2, ncol = 1, rel_heights = c(2, 1),align = 'v', axis = 'lr') 
-      }) #Eoutput$hist
+      output$hist <- renderPlotly(dd3) #Eoutput$hist
       
       output$qqplot <- renderPlot({
         hist.df %>% ggplot(mapping = aes(sample = hist.x)) +

@@ -32,3 +32,16 @@ select <- dplyr::select
 # this sets the working directory to the file location
 setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
 ```
+
+```{r}
+data3 <- c(8,1,2,5,4,6,9,8,3,5,4,1)
+
+
+```
+
+
+
+
+
+
+

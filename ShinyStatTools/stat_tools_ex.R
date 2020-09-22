@@ -12,6 +12,7 @@ library(cowplot)
 library(grid)
 library(gridExtra)
 library(ggExtra)
+library(plotly)
 theme_set(theme_bw())
 
 chisq.test <- stats::chisq.test
@@ -439,10 +440,9 @@ server <- function(input, output, session) {
           ggplot() +
           geom_histogram(aes(y=hist.x),color="darkblue", fill="lightblue",binwidth=binwidth)+
           geom_boxplot(aes(x ="", y = hist.x),color="darkblue", fill="lightgreen", outlier.colour="red", outlier.shape=8, outlier.size=4) + 
-          geom_jitter(aes(x = "", y = hist.x), width = .1) +
+          geom_jitter(aes(x = "", y = hist.x), color= "orange", width = .1) +
           coord_flip() +
-          theme_classic() +
-          labs(x="", y="A" ) + ylim(c(min(hist.x)-binwidth,max(hist.x)+binwidth))
+          theme_classic() + ylim(c(min(hist.x)-binwidth,max(hist.x)+binwidth))
         dd3 <- ggplotly(dd2)
       } #Eif
       output$hist <- renderPlotly(dd3) #Eoutput$hist

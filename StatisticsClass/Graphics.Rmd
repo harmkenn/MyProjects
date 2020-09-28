@@ -104,7 +104,7 @@ ggplot(pon, aes(x = Age, fill = factor(Political.Affiliation))) + geom_dotplot(b
 ### Histogram
 
 ```{r}
-hist(pon$Age)
+hist(pon$Age, breaks = seq(0,100,3))
 
 ggplot(pon, aes(x = Age)) + geom_histogram(binwidth = 5, color = "blue")
 

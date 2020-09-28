@@ -22,7 +22,7 @@ knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
 
 ```{r load_libraries, include=FALSE}
 # Use this R-Chunk to load all your libraries!
-pacman::p_load(tidyverse)
+pacman::p_load(tidyverse,ggpubr)
 theme_set(theme_bw())
 ```
 
@@ -43,6 +43,17 @@ length(sort(tests)[tests < 86])/length(tests)
 ```
 
 
+### Transforming Data
+
+```{r}
+original <- ggplot(data.frame(tests), aes(x = tests)) + geom_dotplot(binwidth = .5)
+times2 <- ggplot(data.frame(tests), aes(x = 2 * tests)) + geom_dotplot(binwidth = 1)
+plus10 <- ggplot(data.frame(tests), aes(x = tests + 10)) + geom_dotplot(binwidth = .5)
+
+ggarrange(original, times2, plus10, 
+          labels = c("A", "B", "C", "D"),
+          ncol = 2, nrow = 2)
+```
 
 
 

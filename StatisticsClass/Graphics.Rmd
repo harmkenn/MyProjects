@@ -174,11 +174,11 @@ sd(cowboys)
 ### Percentile
 
 ```{r}
-quantile(cowboys, c(.25,.5,.75))
+quantile(pon$Age, c(.4))
 
-quantile(cowboys)
+quantile(pon$Age)
 
-percentile <- length(sort(cowboys)[cowboys < 324])/length(cowboys)
+percentile <- length(sort(pon$Age)[pon$Age < 19])/length(pon$Age)
 ```
 
 

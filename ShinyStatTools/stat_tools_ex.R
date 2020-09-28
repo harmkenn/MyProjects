@@ -439,7 +439,7 @@ server <- function(input, output, session) {
         dd2 <- hist.df %>%
           ggplot() +
           geom_histogram(aes(y=hist.x),color="darkblue", fill="lightblue",binwidth=binwidth)+
-          geom_boxplot(aes(x ="", y = hist.x),color="darkblue", fill="lightgreen", outlier.colour="red", outlier.shape=8, outlier.size=4) + 
+          geom_boxplot(aes(x = "", y = hist.x),color="darkblue", fill="lightgreen", outlier.colour="red", outlier.shape=8, outlier.size=4) + 
           geom_jitter(aes(x = "", y = hist.x), color= "orange", width = .1) +
           coord_flip() +
           theme_classic() + ylim(c(min(hist.x)-binwidth,max(hist.x)+binwidth))

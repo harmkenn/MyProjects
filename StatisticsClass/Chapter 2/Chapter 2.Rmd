@@ -49,8 +49,9 @@ length(sort(tests)[tests < 86])/length(tests)
 original <- ggplot(data.frame(tests), aes(x = tests)) + geom_dotplot(binwidth = .5)
 times2 <- ggplot(data.frame(tests), aes(x = 2 * tests)) + geom_dotplot(binwidth = 1)
 plus10 <- ggplot(data.frame(tests), aes(x = tests + 10)) + geom_dotplot(binwidth = .5)
+x3plus222 <- ggplot(data.frame(tests), aes(x = 3 * tests + 222)) + geom_dotplot(binwidth = 1.5)
 
-ggarrange(original, times2, plus10, 
+ggarrange(original, times2, plus10, x3plus222,
           labels = c("A", "B", "C", "D"),
           ncol = 2, nrow = 2)
 ```

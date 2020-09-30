@@ -520,7 +520,7 @@ server <- function(input, output, session) {
       if(input$Left == TRUE){tp <- pnorm(lz)}else{tp <- 0}
       if(input$Center == TRUE){tp <- tp + pnorm(rz) - pnorm(lz)}else{tp <- tp}
       if(input$Right == TRUE){tp <- tp + 1 - pnorm(rz)}else{tp <- tp}
-      paste("Total Prabability: ",tp)
+      paste("Total Probability: ",tp)
     })
   }) #EobserveEvent
   observeEvent(c(input$p2z,input$nshade), {

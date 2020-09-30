@@ -251,8 +251,7 @@ text(seq(-2.5,2.5), .115, label=paste(c(2.35,13.5,34,34,13.5,2.35), "%ish", sep=
     labs(x = "Z") + geom_segment(aes(x = lz, y = 0, xend = lz, yend = dnorm(lz)),color="red") + 
     geom_segment(aes(x = rz, y = 0, xend = rz, yend = dnorm(rz)),color="red") + 
     geom_area(data=subset(s.df,x > lz & x < rz),aes(y=y), fill ="blue", alpha = .5) 
-  
-  
+
 normp
 ```
 

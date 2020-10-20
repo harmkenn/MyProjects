@@ -1,130 +1,130 @@
 GameN,Date,Year,Round,Region,Favored,Seed,Team,Conf,Score,AdjEM,Overtime,Winner,Result,Score.D
 -1,12-Mar-02,2002,PI,EN,F,16,Siena,MAAC,81,-1.21,,Siena,F,4
 -1,12-Mar-02,2002,PI,EN,U,16,Alcorn St.,SWAC,77,-8.71,,Siena,F,4
-1,15-Mar-02,2002,1,EN,F,1,Maryland,ACC,85,29.25,,Maryland,F,15
-1,15-Mar-02,2002,1,EN,U,16,Siena,MAAC,70,-1.21,,Maryland,F,15
-2,15-Mar-02,2002,1,EN,F,8,Wisconsin,B10,80,13.22,,Wisconsin,F,10
-2,15-Mar-02,2002,1,EN,U,9,St. John's,BE,70,9.06,,Wisconsin,F,10
-3,14-Mar-02,2002,1,EN,F,5,Marquette,CUSA,69,21.47,,Tulsa,U,-2
-3,14-Mar-02,2002,1,EN,U,12,Tulsa,WAC,71,15.59,,Tulsa,U,-2
-4,14-Mar-02,2002,1,EN,F,4,Kentucky,SEC,83,22.21,,Kentucky,F,15
-4,14-Mar-02,2002,1,EN,U,13,Valparaiso,MCon,68,13.63,,Kentucky,F,15
-5,15-Mar-02,2002,1,EN,F,6,Texas Tech,B12,68,17.24,,Southern Illinois,U,-8
-5,15-Mar-02,2002,1,EN,U,11,Southern Illinois,MVC,76,13.45,,Southern Illinois,U,-8
-6,15-Mar-02,2002,1,EN,F,3,Georgia,SEC,85,18.44,,Georgia,F,17
-6,15-Mar-02,2002,1,EN,U,14,Murray St.,OVC,68,1.35,,Georgia,F,17
-7,15-Mar-02,2002,1,EN,F,7,North Carolina St.,ACC,69,19.15,,North Carolina St.,F,11
-7,15-Mar-02,2002,1,EN,U,10,Michigan St.,B10,58,16.86,,North Carolina St.,F,11
-8,15-Mar-02,2002,1,EN,F,2,Connecticut,BE,78,19.36,,Connecticut,F,11
-8,15-Mar-02,2002,1,EN,U,15,Hampton,MEAC,67,3.99,,Connecticut,F,11
-9,15-Mar-02,2002,1,WN,F,1,Cincinnati,CUSA,90,30.19,,Cincinnati,F,38
-9,15-Mar-02,2002,1,WN,U,16,Boston University,AE,52,-2.74,,Cincinnati,F,38
-10,15-Mar-02,2002,1,WN,F,9,Mississippi,SEC,58,16.68,,UCLA,U,-22
-10,15-Mar-02,2002,1,WN,U,8,UCLA,P10,80,16.34,,UCLA,U,-22
-11,14-Mar-02,2002,1,WN,F,12,Missouri,B12,93,17.49,,Missouri,F,13
-11,14-Mar-02,2002,1,WN,U,5,Miami FL,BE,80,15.77,,Missouri,F,13
-12,14-Mar-02,2002,1,WN,F,4,Ohio St.,B10,69,19.76,,Ohio St.,F,5
-12,14-Mar-02,2002,1,WN,U,13,Davidson,SC,64,3.7,,Ohio St.,F,5
-13,14-Mar-02,2002,1,WN,F,6,Gonzaga,WCC,66,18.51,,Wyoming,U,-7
-13,14-Mar-02,2002,1,WN,U,11,Wyoming,MWC,73,11.01,,Wyoming,U,-7
-14,14-Mar-02,2002,1,WN,F,3,Arizona,P10,86,20.54,,Arizona,F,5
-14,14-Mar-02,2002,1,WN,U,14,UC Santa Barbara,BW,81,8.87,,Arizona,F,5
-15,15-Mar-02,2002,1,WN,F,7,Xavier,A10,70,18.6,,Xavier,F,12
-15,15-Mar-02,2002,1,WN,U,10,Hawaii,WAC,58,13.15,,Xavier,F,12
-16,15-Mar-02,2002,1,WN,F,2,Oklahoma,B12,71,26.04,,Oklahoma,F,8
-16,15-Mar-02,2002,1,WN,U,15,Illinois Chicago,Horz,63,3.85,,Oklahoma,F,8
-17,14-Mar-02,2002,1,ES,F,1,Duke,ACC,84,34.19,,Duke,F,47
-17,14-Mar-02,2002,1,ES,U,16,Winthrop,BSth,37,-5.31,,Duke,F,47
-18,14-Mar-02,2002,1,ES,F,8,Notre Dame,BE,82,19.27,,Notre Dame,F,19
-18,14-Mar-02,2002,1,ES,U,9,Charlotte,CUSA,63,15.73,,Notre Dame,F,19
-19,14-Mar-02,2002,1,ES,F,5,Indiana,B10,75,24.8,,Indiana,F,19
-19,14-Mar-02,2002,1,ES,U,12,Utah,MWC,56,14.08,,Indiana,F,19
-20,14-Mar-02,2002,1,ES,F,4,USC,P10,89,20.67,1 OT,UNC Wilmington,U,-4
-20,14-Mar-02,2002,1,ES,U,13,UNC Wilmington,CAA,93,11.32,1 OT,UNC Wilmington,U,-4
-21,15-Mar-02,2002,1,ES,F,6,California,P10,82,16.03,,California,F,7
-21,15-Mar-02,2002,1,ES,U,11,Penn,Ivy,75,12.23,,California,F,7
-22,15-Mar-02,2002,1,ES,F,3,Pittsburgh,BE,71,19.94,,Pittsburgh,F,17
-22,15-Mar-02,2002,1,ES,U,14,Central Connecticut,NEC,54,0.93,,Pittsburgh,F,17
-23,14-Mar-02,2002,1,ES,F,10,Kent St.,MAC,69,20.39,,Kent St.,F,8
-23,14-Mar-02,2002,1,ES,U,7,Oklahoma St.,B12,61,15.8,,Kent St.,F,8
-24,14-Mar-02,2002,1,ES,F,2,Alabama,SEC,86,18.73,,Alabama,F,8
-24,14-Mar-02,2002,1,ES,U,15,Florida Atlantic,ASun,78,-2.5,,Alabama,F,8
-25,14-Mar-02,2002,1,WS,F,1,Kansas,B12,70,28.99,,Kansas,F,11
-25,14-Mar-02,2002,1,WS,U,16,Holy Cross,Pat,59,-0.24,,Kansas,F,11
-26,14-Mar-02,2002,1,WS,F,8,Stanford,P10,84,20.32,,Stanford,F,16
-26,14-Mar-02,2002,1,WS,U,9,Western Kentucky,SB,68,14.51,,Stanford,F,16
-27,15-Mar-02,2002,1,WS,F,6,Texas,B12,70,17.69,,Texas,F,13
-27,15-Mar-02,2002,1,WS,U,11,Boston College,BE,57,9.97,,Texas,F,13
-28,15-Mar-02,2002,1,WS,F,5,Florida,SEC,82,24.72,2 OT,Creighton,U,-1
-28,15-Mar-02,2002,1,WS,U,12,Creighton,MVC,83,11.82,2 OT,Creighton,U,-1
-29,14-Mar-02,2002,1,WS,F,7,Wake Forest,ACC,83,17.35,,Wake Forest,F,9
-29,14-Mar-02,2002,1,WS,U,10,Pepperdine,WCC,74,11.72,,Wake Forest,F,9
-30,15-Mar-02,2002,1,WS,F,4,Illinois,B10,93,23.21,,Illinois,F,29
-30,15-Mar-02,2002,1,WS,U,13,San Diego St.,MWC,64,9.29,,Illinois,F,29
-31,14-Mar-02,2002,1,WS,F,2,Oregon,P10,81,22.97,,Oregon,F,19
-31,14-Mar-02,2002,1,WS,U,15,Montana,BSky,62,-4.51,,Oregon,F,19
-32,15-Mar-02,2002,1,WS,F,3,Mississippi St.,SEC,70,18.25,,Mississippi St.,F,12
-32,15-Mar-02,2002,1,WS,U,14,McNeese St.,Slnd,58,5.39,,Mississippi St.,F,12
-33,17-Mar-02,2002,2,EN,F,1,Maryland,ACC,87,29.25,,Maryland,F,30
-33,17-Mar-02,2002,2,EN,U,8,Wisconsin,B10,57,13.22,,Maryland,F,30
-34,16-Mar-02,2002,2,EN,F,4,Kentucky,SEC,87,22.21,,Kentucky,F,5
-34,16-Mar-02,2002,2,EN,U,12,Tulsa,WAC,82,15.59,,Kentucky,F,5
-35,17-Mar-02,2002,2,EN,F,3,Georgia,SEC,75,18.44,,Southern Illinois,U,-2
-35,17-Mar-02,2002,2,EN,U,11,Southern Illinois,MVC,77,13.45,,Southern Illinois,U,-2
-36,17-Mar-02,2002,2,EN,F,2,Connecticut,BE,77,19.36,,Connecticut,F,3
-36,17-Mar-02,2002,2,EN,U,7,North Carolina St.,ACC,74,19.15,,Connecticut,F,3
-37,17-Mar-02,2002,2,WN,F,1,Cincinnati,CUSA,101,30.19,2 OT,UCLA,U,-4
-37,17-Mar-02,2002,2,WN,U,8,UCLA,P10,105,16.34,2 OT,UCLA,U,-4
-38,16-Mar-02,2002,2,WN,F,4,Ohio St.,B10,67,19.76,,Missouri,U,-16
-38,16-Mar-02,2002,2,WN,U,12,Missouri,B12,83,17.49,,Missouri,U,-16
-39,16-Mar-02,2002,2,WN,F,3,Arizona,P10,68,20.54,,Arizona,F,8
-39,16-Mar-02,2002,2,WN,U,11,Wyoming,MWC,60,11.01,,Arizona,F,8
-40,17-Mar-02,2002,2,WN,F,2,Oklahoma,B12,78,26.04,,Oklahoma,F,13
-40,17-Mar-02,2002,2,WN,U,7,Xavier,A10,65,18.6,,Oklahoma,F,13
-41,16-Mar-02,2002,2,ES,F,1,Duke,ACC,84,34.19,,Duke,F,7
-41,16-Mar-02,2002,2,ES,U,8,Notre Dame,BE,77,19.27,,Duke,F,7
-42,16-Mar-02,2002,2,ES,F,5,Indiana,B10,76,24.8,,Indiana,F,9
-42,16-Mar-02,2002,2,ES,U,13,UNC Wilmington,CAA,67,11.32,,Indiana,F,9
-43,17-Mar-02,2002,2,ES,F,3,Pittsburgh,BE,63,19.94,,Pittsburgh,F,13
-43,17-Mar-02,2002,2,ES,U,6,California,P10,50,16.03,,Pittsburgh,F,13
-44,16-Mar-02,2002,2,ES,F,10,Kent St.,MAC,71,20.39,,Kent St.,F,13
-44,16-Mar-02,2002,2,ES,U,2,Alabama,SEC,58,18.73,,Kent St.,F,13
-45,16-Mar-02,2002,2,WS,F,1,Kansas,B12,86,28.99,,Kansas,F,23
-45,16-Mar-02,2002,2,WS,U,8,Stanford,P10,63,20.32,,Kansas,F,23
-46,17-Mar-02,2002,2,WS,F,4,Illinois,B10,72,23.21,,Illinois,F,12
-46,17-Mar-02,2002,2,WS,U,12,Creighton,MVC,60,11.82,,Illinois,F,12
-47,17-Mar-02,2002,2,WS,F,3,Mississippi St.,SEC,64,18.25,,Texas,U,-4
-47,17-Mar-02,2002,2,WS,U,6,Texas,B12,68,17.69,,Texas,U,-4
-48,16-Mar-02,2002,2,WS,F,2,Oregon,P10,92,22.97,,Oregon,F,5
-48,16-Mar-02,2002,2,WS,U,7,Wake Forest,ACC,87,17.35,,Oregon,F,5
-49,22-Mar-02,2002,3,EN,F,1,Maryland,ACC,78,29.25,,Maryland,F,10
-49,22-Mar-02,2002,3,EN,U,4,Kentucky,SEC,68,22.21,,Maryland,F,10
-50,22-Mar-02,2002,3,EN,F,2,Connecticut,BE,71,19.36,,Connecticut,F,12
-50,22-Mar-02,2002,3,EN,U,11,Southern Illinois,MVC,59,13.45,,Connecticut,F,12
-51,21-Mar-02,2002,3,WN,F,2,Oklahoma,B12,88,26.04,,Oklahoma,F,21
-51,21-Mar-02,2002,3,WN,U,3,Arizona,P10,67,20.54,,Oklahoma,F,21
-52,21-Mar-02,2002,3,WN,F,12,Missouri,B12,82,17.49,,Missouri,F,9
-52,21-Mar-02,2002,3,WN,U,8,UCLA,P10,73,16.34,,Missouri,F,9
-53,21-Mar-02,2002,3,ES,F,1,Duke,ACC,73,34.19,,Indiana,U,-1
-53,21-Mar-02,2002,3,ES,U,5,Indiana,B10,74,24.8,,Indiana,U,-1
-54,21-Mar-02,2002,3,ES,F,10,Kent St.,MAC,78,20.39,,Kent St.,F,5
-54,21-Mar-02,2002,3,ES,U,3,Pittsburgh,BE,73,19.94,,Kent St.,F,5
-55,22-Mar-02,2002,3,WS,F,1,Kansas,B12,73,28.99,,Kansas,F,4
-55,22-Mar-02,2002,3,WS,U,4,Illinois,B10,69,23.21,,Kansas,F,4
-56,22-Mar-02,2002,3,WS,F,2,Oregon,P10,72,22.97,,Oregon,F,2
-56,22-Mar-02,2002,3,WS,U,6,Texas,B12,70,17.69,,Oregon,F,2
-57,24-Mar-02,2002,4,EN,F,1,Maryland,ACC,90,29.25,,Maryland,F,8
-57,24-Mar-02,2002,4,EN,U,2,Connecticut,BE,82,19.36,,Maryland,F,8
-58,23-Mar-02,2002,4,WN,F,2,Oklahoma,B12,81,26.04,,Oklahoma,F,6
-58,23-Mar-02,2002,4,WN,U,12,Missouri,B12,75,17.49,,Oklahoma,F,6
-59,23-Mar-02,2002,4,ES,F,5,Indiana,B10,81,24.8,,Indiana,F,12
-59,23-Mar-02,2002,4,ES,U,10,Kent St.,MAC,69,20.39,,Indiana,F,12
-60,24-Mar-02,2002,4,WS,F,1,Kansas,B12,104,28.99,,Kansas,F,18
-60,24-Mar-02,2002,4,WS,U,2,Oregon,P10,86,22.97,,Kansas,F,18
-61,30-Mar-02,2002,5,E4,F,1,Maryland,ACC,97,29.25,,Maryland,F,9
-61,30-Mar-02,2002,5,E4,U,1,Kansas,B12,88,28.99,,Maryland,F,9
-62,30-Mar-02,2002,5,W4,F,2,Oklahoma,B12,64,26.04,,Indiana,U,-9
-62,30-Mar-02,2002,5,W4,U,5,Indiana,B10,73,24.8,,Indiana,U,-9
+1,14-Mar-02,2002,1,WN,F,1,Duke,ACC,84,34.19,,Duke,F,47
+1,14-Mar-02,2002,1,WN,U,16,Winthrop,BSth,37,-5.31,,Duke,F,47
+2,14-Mar-02,2002,1,WN,F,8,Notre Dame,BE,82,19.27,,Notre Dame,F,19
+2,14-Mar-02,2002,1,WN,U,9,Charlotte,CUSA,63,15.73,,Notre Dame,F,19
+3,14-Mar-02,2002,1,WN,F,5,Indiana,B10,75,24.8,,Indiana,F,19
+3,14-Mar-02,2002,1,WN,U,12,Utah,MWC,56,14.08,,Indiana,F,19
+4,14-Mar-02,2002,1,WN,F,4,USC,P10,89,20.67,1 OT,UNC Wilmington,U,-4
+4,14-Mar-02,2002,1,WN,U,13,UNC Wilmington,CAA,93,11.32,1 OT,UNC Wilmington,U,-4
+5,15-Mar-02,2002,1,WN,F,6,California,P10,82,16.03,,California,F,7
+5,15-Mar-02,2002,1,WN,U,11,Penn,Ivy,75,12.23,,California,F,7
+6,15-Mar-02,2002,1,WN,F,3,Pittsburgh,BE,71,19.94,,Pittsburgh,F,17
+6,15-Mar-02,2002,1,WN,U,14,Central Connecticut,NEC,54,0.93,,Pittsburgh,F,17
+7,14-Mar-02,2002,1,WN,F,10,Kent St.,MAC,69,20.39,,Kent St.,F,8
+7,14-Mar-02,2002,1,WN,U,7,Oklahoma St.,B12,61,15.8,,Kent St.,F,8
+8,14-Mar-02,2002,1,WN,F,2,Alabama,SEC,86,18.73,,Alabama,F,8
+8,14-Mar-02,2002,1,WN,U,15,Florida Atlantic,ASun,78,-2.5,,Alabama,F,8
+9,15-Mar-02,2002,1,WS,F,1,Cincinnati,CUSA,90,30.19,,Cincinnati,F,38
+9,15-Mar-02,2002,1,WS,U,16,Boston University,AE,52,-2.74,,Cincinnati,F,38
+10,15-Mar-02,2002,1,WS,F,9,Mississippi,SEC,58,16.68,,UCLA,U,-22
+10,15-Mar-02,2002,1,WS,U,8,UCLA,P10,80,16.34,,UCLA,U,-22
+11,14-Mar-02,2002,1,WS,F,12,Missouri,B12,93,17.49,,Missouri,F,13
+11,14-Mar-02,2002,1,WS,U,5,Miami FL,BE,80,15.77,,Missouri,F,13
+12,14-Mar-02,2002,1,WS,F,4,Ohio St.,B10,69,19.76,,Ohio St.,F,5
+12,14-Mar-02,2002,1,WS,U,13,Davidson,SC,64,3.7,,Ohio St.,F,5
+13,14-Mar-02,2002,1,WS,F,6,Gonzaga,WCC,66,18.51,,Wyoming,U,-7
+13,14-Mar-02,2002,1,WS,U,11,Wyoming,MWC,73,11.01,,Wyoming,U,-7
+14,14-Mar-02,2002,1,WS,F,3,Arizona,P10,86,20.54,,Arizona,F,5
+14,14-Mar-02,2002,1,WS,U,14,UC Santa Barbara,BW,81,8.87,,Arizona,F,5
+15,15-Mar-02,2002,1,WS,F,7,Xavier,A10,70,18.6,,Xavier,F,12
+15,15-Mar-02,2002,1,WS,U,10,Hawaii,WAC,58,13.15,,Xavier,F,12
+16,15-Mar-02,2002,1,WS,F,2,Oklahoma,B12,71,26.04,,Oklahoma,F,8
+16,15-Mar-02,2002,1,WS,U,15,Illinois Chicago,Horz,63,3.85,,Oklahoma,F,8
+17,15-Mar-02,2002,1,EN,F,1,Maryland,ACC,85,29.25,,Maryland,F,15
+17,15-Mar-02,2002,1,EN,U,16,Siena,MAAC,70,-1.21,,Maryland,F,15
+18,15-Mar-02,2002,1,EN,F,8,Wisconsin,B10,80,13.22,,Wisconsin,F,10
+18,15-Mar-02,2002,1,EN,U,9,St. John's,BE,70,9.06,,Wisconsin,F,10
+19,14-Mar-02,2002,1,EN,F,5,Marquette,CUSA,69,21.47,,Tulsa,U,-2
+19,14-Mar-02,2002,1,EN,U,12,Tulsa,WAC,71,15.59,,Tulsa,U,-2
+20,14-Mar-02,2002,1,EN,F,4,Kentucky,SEC,83,22.21,,Kentucky,F,15
+20,14-Mar-02,2002,1,EN,U,13,Valparaiso,MCon,68,13.63,,Kentucky,F,15
+21,15-Mar-02,2002,1,EN,F,6,Texas Tech,B12,68,17.24,,Southern Illinois,U,-8
+21,15-Mar-02,2002,1,EN,U,11,Southern Illinois,MVC,76,13.45,,Southern Illinois,U,-8
+22,15-Mar-02,2002,1,EN,F,3,Georgia,SEC,85,18.44,,Georgia,F,17
+22,15-Mar-02,2002,1,EN,U,14,Murray St.,OVC,68,1.35,,Georgia,F,17
+23,15-Mar-02,2002,1,EN,F,7,North Carolina St.,ACC,69,19.15,,North Carolina St.,F,11
+23,15-Mar-02,2002,1,EN,U,10,Michigan St.,B10,58,16.86,,North Carolina St.,F,11
+24,15-Mar-02,2002,1,EN,F,2,Connecticut,BE,78,19.36,,Connecticut,F,11
+24,15-Mar-02,2002,1,EN,U,15,Hampton,MEAC,67,3.99,,Connecticut,F,11
+25,14-Mar-02,2002,1,ES,F,1,Kansas,B12,70,28.99,,Kansas,F,11
+25,14-Mar-02,2002,1,ES,U,16,Holy Cross,Pat,59,-0.24,,Kansas,F,11
+26,14-Mar-02,2002,1,ES,F,8,Stanford,P10,84,20.32,,Stanford,F,16
+26,14-Mar-02,2002,1,ES,U,9,Western Kentucky,SB,68,14.51,,Stanford,F,16
+27,15-Mar-02,2002,1,ES,F,5,Florida,SEC,82,24.72,2 OT,Creighton,U,-1
+27,15-Mar-02,2002,1,ES,U,12,Creighton,MVC,83,11.82,2 OT,Creighton,U,-1
+28,15-Mar-02,2002,1,ES,F,4,Illinois,B10,93,23.21,,Illinois,F,29
+28,15-Mar-02,2002,1,ES,U,13,San Diego St.,MWC,64,9.29,,Illinois,F,29
+29,15-Mar-02,2002,1,ES,F,6,Texas,B12,70,17.69,,Texas,F,13
+29,15-Mar-02,2002,1,ES,U,11,Boston College,BE,57,9.97,,Texas,F,13
+30,15-Mar-02,2002,1,ES,F,3,Mississippi St.,SEC,70,18.25,,Mississippi St.,F,12
+30,15-Mar-02,2002,1,ES,U,14,McNeese St.,Slnd,58,5.39,,Mississippi St.,F,12
+31,14-Mar-02,2002,1,ES,F,7,Wake Forest,ACC,83,17.35,,Wake Forest,F,9
+31,14-Mar-02,2002,1,ES,U,10,Pepperdine,WCC,74,11.72,,Wake Forest,F,9
+32,14-Mar-02,2002,1,ES,F,2,Oregon,P10,81,22.97,,Oregon,F,19
+32,14-Mar-02,2002,1,ES,U,15,Montana,BSky,62,-4.51,,Oregon,F,19
+33,16-Mar-02,2002,2,WN,F,1,Duke,ACC,84,34.19,,Duke,F,7
+33,16-Mar-02,2002,2,WN,U,8,Notre Dame,BE,77,19.27,,Duke,F,7
+34,16-Mar-02,2002,2,WN,F,5,Indiana,B10,76,24.8,,Indiana,F,9
+34,16-Mar-02,2002,2,WN,U,13,UNC Wilmington,CAA,67,11.32,,Indiana,F,9
+35,17-Mar-02,2002,2,WN,F,3,Pittsburgh,BE,63,19.94,,Pittsburgh,F,13
+35,17-Mar-02,2002,2,WN,U,6,California,P10,50,16.03,,Pittsburgh,F,13
+36,16-Mar-02,2002,2,WN,F,10,Kent St.,MAC,71,20.39,,Kent St.,F,13
+36,16-Mar-02,2002,2,WN,U,2,Alabama,SEC,58,18.73,,Kent St.,F,13
+37,17-Mar-02,2002,2,WS,F,1,Cincinnati,CUSA,101,30.19,2 OT,UCLA,U,-4
+37,17-Mar-02,2002,2,WS,U,8,UCLA,P10,105,16.34,2 OT,UCLA,U,-4
+38,16-Mar-02,2002,2,WS,F,4,Ohio St.,B10,67,19.76,,Missouri,U,-16
+38,16-Mar-02,2002,2,WS,U,12,Missouri,B12,83,17.49,,Missouri,U,-16
+39,16-Mar-02,2002,2,WS,F,3,Arizona,P10,68,20.54,,Arizona,F,8
+39,16-Mar-02,2002,2,WS,U,11,Wyoming,MWC,60,11.01,,Arizona,F,8
+40,17-Mar-02,2002,2,WS,F,2,Oklahoma,B12,78,26.04,,Oklahoma,F,13
+40,17-Mar-02,2002,2,WS,U,7,Xavier,A10,65,18.6,,Oklahoma,F,13
+41,17-Mar-02,2002,2,EN,F,1,Maryland,ACC,87,29.25,,Maryland,F,30
+41,17-Mar-02,2002,2,EN,U,8,Wisconsin,B10,57,13.22,,Maryland,F,30
+42,16-Mar-02,2002,2,EN,F,4,Kentucky,SEC,87,22.21,,Kentucky,F,5
+42,16-Mar-02,2002,2,EN,U,12,Tulsa,WAC,82,15.59,,Kentucky,F,5
+43,17-Mar-02,2002,2,EN,F,3,Georgia,SEC,75,18.44,,Southern Illinois,U,-2
+43,17-Mar-02,2002,2,EN,U,11,Southern Illinois,MVC,77,13.45,,Southern Illinois,U,-2
+44,17-Mar-02,2002,2,EN,F,2,Connecticut,BE,77,19.36,,Connecticut,F,3
+44,17-Mar-02,2002,2,EN,U,7,North Carolina St.,ACC,74,19.15,,Connecticut,F,3
+45,16-Mar-02,2002,2,ES,F,1,Kansas,B12,86,28.99,,Kansas,F,23
+45,16-Mar-02,2002,2,ES,U,8,Stanford,P10,63,20.32,,Kansas,F,23
+46,17-Mar-02,2002,2,ES,F,4,Illinois,B10,72,23.21,,Illinois,F,12
+46,17-Mar-02,2002,2,ES,U,12,Creighton,MVC,60,11.82,,Illinois,F,12
+47,17-Mar-02,2002,2,ES,F,3,Mississippi St.,SEC,64,18.25,,Texas,U,-4
+47,17-Mar-02,2002,2,ES,U,6,Texas,B12,68,17.69,,Texas,U,-4
+48,16-Mar-02,2002,2,ES,F,2,Oregon,P10,92,22.97,,Oregon,F,5
+48,16-Mar-02,2002,2,ES,U,7,Wake Forest,ACC,87,17.35,,Oregon,F,5
+49,21-Mar-02,2002,3,WN,F,1,Duke,ACC,73,34.19,,Indiana,U,-1
+49,21-Mar-02,2002,3,WN,U,5,Indiana,B10,74,24.8,,Indiana,U,-1
+50,21-Mar-02,2002,3,WN,F,10,Kent St.,MAC,78,20.39,,Kent St.,F,5
+50,21-Mar-02,2002,3,WN,U,3,Pittsburgh,BE,73,19.94,,Kent St.,F,5
+51,21-Mar-02,2002,3,WS,F,12,Missouri,B12,82,17.49,,Missouri,F,9
+51,21-Mar-02,2002,3,WS,U,8,UCLA,P10,73,16.34,,Missouri,F,9
+52,21-Mar-02,2002,3,WS,F,2,Oklahoma,B12,88,26.04,,Oklahoma,F,21
+52,21-Mar-02,2002,3,WS,U,3,Arizona,P10,67,20.54,,Oklahoma,F,21
+53,22-Mar-02,2002,3,EN,F,1,Maryland,ACC,78,29.25,,Maryland,F,10
+53,22-Mar-02,2002,3,EN,U,4,Kentucky,SEC,68,22.21,,Maryland,F,10
+54,22-Mar-02,2002,3,EN,F,2,Connecticut,BE,71,19.36,,Connecticut,F,12
+54,22-Mar-02,2002,3,EN,U,11,Southern Illinois,MVC,59,13.45,,Connecticut,F,12
+55,22-Mar-02,2002,3,ES,F,1,Kansas,B12,73,28.99,,Kansas,F,4
+55,22-Mar-02,2002,3,ES,U,4,Illinois,B10,69,23.21,,Kansas,F,4
+56,22-Mar-02,2002,3,ES,F,2,Oregon,P10,72,22.97,,Oregon,F,2
+56,22-Mar-02,2002,3,ES,U,6,Texas,B12,70,17.69,,Oregon,F,2
+57,23-Mar-02,2002,4,WN,F,5,Indiana,B10,81,24.8,,Indiana,F,12
+57,23-Mar-02,2002,4,WN,U,10,Kent St.,MAC,69,20.39,,Indiana,F,12
+58,23-Mar-02,2002,4,WS,F,2,Oklahoma,B12,81,26.04,,Oklahoma,F,6
+58,23-Mar-02,2002,4,WS,U,12,Missouri,B12,75,17.49,,Oklahoma,F,6
+59,24-Mar-02,2002,4,EN,F,1,Maryland,ACC,90,29.25,,Maryland,F,8
+59,24-Mar-02,2002,4,EN,U,2,Connecticut,BE,82,19.36,,Maryland,F,8
+60,24-Mar-02,2002,4,ES,F,1,Kansas,B12,104,28.99,,Kansas,F,18
+60,24-Mar-02,2002,4,ES,U,2,Oregon,P10,86,22.97,,Kansas,F,18
+61,30-Mar-02,2002,5,W4,F,2,Oklahoma,B12,64,26.04,,Indiana,U,-9
+61,30-Mar-02,2002,5,W4,U,5,Indiana,B10,73,24.8,,Indiana,U,-9
+62,30-Mar-02,2002,5,E4,F,1,Maryland,ACC,97,29.25,,Maryland,F,9
+62,30-Mar-02,2002,5,E4,U,1,Kansas,B12,88,28.99,,Maryland,F,9
 63,1-Apr-02,2002,6,Championship,F,1,Maryland,ACC,64,29.25,,Maryland,F,12
 63,1-Apr-02,2002,6,Championship,U,5,Indiana,B10,52,24.8,,Maryland,F,12
 -1,18-Mar-03,2003,PI,ES,F,16,Texas Southern,SWAC,84,-10.45,1 OT,UNC Asheville,U,-8

@@ -1,7 +1,7 @@
 ---
 title: "Madness Model Ken Pom 02-19"
 author: "Ken Harmon"
-date: "`r format(Sys.time(), '%Y %B %d')`"
+date: "2020 October 27"
 output:
   html_document:  
     keep_md: true
@@ -15,23 +15,11 @@ editor_options:
 
 # {.tabset .tabset-fade}
 
-```{r, echo=FALSE}
-knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
-```
 
-```{r load_libraries, include=FALSE}
-# Use this R-Chunk to load all your libraries!
-pacman::p_load(tidyverse, caret)
-theme_set(theme_bw())
-confusionMatrix <- caret::confusionMatrix
-select <- dplyr::select
-```
 
-```{r swd, eval=FALSE, echo=FALSE}
-# this is set to not run during the knit process
-# this sets the working directory to the file location
-setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
-```
+
+
+
 
 ## Games 02-19 
 ### Combine Stacked Teams with Stats
@@ -39,7 +27,8 @@ setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
 https://kenpom.com/index.php?y=2018&s=TeamName
 
 
-```{r wld}
+
+```r
 # Start With All Games 02-19 stacked with Favored team F over Underdog U
 # Append on Season stats to each team
 AG0219stacked <- read.csv("AG0219stacked.csv")
@@ -55,7 +44,8 @@ nas <- teamcomb %>% summarise_all(~ sum(is.na(.)))
 ## Model
 ### Build and test the model
 
-```{r btm}
+
+```r
 pyear <- floor(runif(1, min=2002, max=2019))
 rm <- 0
 rsd <- 1
@@ -83,19 +73,62 @@ p <- predict(NCAA_model, NCAA_test, type = "response")
 actual <- NCAA_test$Score
 
 ggplot(data.frame(actual,p),aes(x=p,y=actual)) + geom_point() #+ 
+```
+
+![](Madness-Model-Ken-Pom-02-19_files/figure-html/btm-1.png)<!-- -->
+
+```r
   #abline(c(0,min(actual)),c(0,max(actual)))
 
 actual.P <- actual>0
 p.P <- p>0
 
 confusionMatrix(table(actual.P,p.P))
+```
+
+```
+## Confusion Matrix and Statistics
+## 
+##         p.P
+## actual.P FALSE TRUE
+##    FALSE    13   11
+##    TRUE      4   98
+##                                           
+##                Accuracy : 0.881           
+##                  95% CI : (0.8113, 0.9318)
+##     No Information Rate : 0.8651          
+##     P-Value [Acc > NIR] : 0.3581          
+##                                           
+##                   Kappa : 0.5655          
+##                                           
+##  Mcnemar's Test P-Value : 0.1213          
+##                                           
+##             Sensitivity : 0.7647          
+##             Specificity : 0.8991          
+##          Pos Pred Value : 0.5417          
+##          Neg Pred Value : 0.9608          
+##              Prevalence : 0.1349          
+##          Detection Rate : 0.1032          
+##    Detection Prevalence : 0.1905          
+##       Balanced Accuracy : 0.8319          
+##                                           
+##        'Positive' Class : FALSE           
+## 
+```
+
+```r
 pyear
+```
+
+```
+## [1] 2004
 ```
 
 ## Predict pyear
 ### Predict and Evaluate pyear Tourney
 
-```{r ppyear}
+
+```r
 # Build the pyear Dataset with Side by side teams and diff stats
 
 ######################## Predict Round 1 ############################
@@ -274,12 +307,12 @@ p <- p + rnorm(n=length(p),rm,rsd)
 
 pred6 <- ifelse(p>0,New2$Team,New2$U.Team)
 st6 <- ifelse(p>0,paste(New2$Seed,New2$Team,round(p,0)),paste(New2$U.Seed,New2$U.Team,round(p,0)))
-
 ```
 
 ## Results
 
-```{r r1}
+
+```r
 if (exists("track")==FALSE) {track <- 1300}
 if (exists("years")==FALSE) {years <- 2010}
 presults <- c(pred1,pred2,pred3,pred4,pred5,pred6)
@@ -287,7 +320,84 @@ aresults <- teamcomb %>% filter(Year == pyear & Favored == "F" & Round != "PI") 
 cresults <- cbind(aresults,presults)
 cresults$match <- aresults == presults
 cresults
+```
+
+```
+##                Winner           presults Winner
+## 1            Kentucky           Kentucky   TRUE
+## 2                 UAB                UAB   TRUE
+## 3      Boston College     Boston College   TRUE
+## 4             Pacific         Providence  FALSE
+## 5              Nevada             Nevada   TRUE
+## 6              Kansas             Kansas   TRUE
+## 7             Gonzaga            Gonzaga   TRUE
+## 8        Georgia Tech       Georgia Tech   TRUE
+## 9      Saint Joseph's     Saint Joseph's   TRUE
+## 10         Texas Tech         Texas Tech   TRUE
+## 11          Manhattan            Florida  FALSE
+## 12        Wake Forest        Wake Forest   TRUE
+## 13          Wisconsin          Wisconsin   TRUE
+## 14         Pittsburgh         Pittsburgh   TRUE
+## 15            Memphis     South Carolina  FALSE
+## 16       Oklahoma St.       Oklahoma St.   TRUE
+## 17               Duke               Duke   TRUE
+## 18         Seton Hall         Seton Hall   TRUE
+## 19           Illinois           Illinois   TRUE
+## 20         Cincinnati         Cincinnati   TRUE
+## 21     North Carolina     North Carolina   TRUE
+## 22              Texas              Texas   TRUE
+## 23             Xavier             Xavier   TRUE
+## 24    Mississippi St.    Mississippi St.   TRUE
+## 25           Stanford           Stanford   TRUE
+## 26            Alabama            Alabama   TRUE
+## 27           Syracuse                BYU  FALSE
+## 28           Maryland           Maryland   TRUE
+## 29         Vanderbilt         Vanderbilt   TRUE
+## 30 North Carolina St. North Carolina St.   TRUE
+## 31             DePaul             Dayton  FALSE
+## 32        Connecticut        Connecticut   TRUE
+## 33                UAB           Kentucky  FALSE
+## 34             Kansas     Boston College  FALSE
+## 35       Georgia Tech             Nevada  FALSE
+## 36             Nevada       Georgia Tech  FALSE
+## 37     Saint Joseph's     Saint Joseph's   TRUE
+## 38        Wake Forest        Wake Forest   TRUE
+## 39         Pittsburgh         Pittsburgh   TRUE
+## 40       Oklahoma St.       Oklahoma St.   TRUE
+## 41               Duke               Duke   TRUE
+## 42           Illinois           Illinois   TRUE
+## 43              Texas     North Carolina  FALSE
+## 44             Xavier             Xavier   TRUE
+## 45            Alabama           Stanford  FALSE
+## 46           Syracuse           Maryland  FALSE
+## 47         Vanderbilt North Carolina St.  FALSE
+## 48        Connecticut        Connecticut   TRUE
+## 49     Saint Joseph's           Kentucky  FALSE
+## 50       Oklahoma St.       Georgia Tech  FALSE
+## 51        Connecticut     Saint Joseph's  FALSE
+## 52            Alabama         Pittsburgh  FALSE
+## 53               Duke               Duke   TRUE
+## 54             Xavier             Xavier   TRUE
+## 55       Georgia Tech           Stanford  FALSE
+## 56             Kansas        Connecticut  FALSE
+## 57       Georgia Tech       Georgia Tech   TRUE
+## 58       Oklahoma St.         Pittsburgh  FALSE
+## 59               Duke               Duke   TRUE
+## 60        Connecticut        Connecticut   TRUE
+## 61       Georgia Tech       Georgia Tech   TRUE
+## 62        Connecticut               Duke  FALSE
+## 63        Connecticut               Duke  FALSE
+```
+
+```r
 sum(cresults$match)
+```
+
+```
+## [1] 41
+```
+
+```r
 score <- c(rep(10,32),rep(20,16),rep(40,8),rep(80,4),rep(160,2),rep(320,1))
 blank2 <- rep("",16)
 st2 <- c(blank2,st2)
@@ -301,9 +411,35 @@ blank6 <- rep("",31)
 st6 <- c(blank6, st6)
 #cbind(st1,st2,st3,st4,st5,st6)
 sum(cresults$match*score)
+```
+
+```
+## [1] 910
+```
+
+```r
 track <- c(track,sum(cresults$match*score))
 summary(track)
+```
+
+```
+##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+##     910    1008    1105    1105    1202    1300
+```
+
+```r
 pyear
+```
+
+```
+## [1] 2004
+```
+
+```r
 years <- c(years,pyear)
 sum(cresults$match)
+```
+
+```
+## [1] 41
 ```

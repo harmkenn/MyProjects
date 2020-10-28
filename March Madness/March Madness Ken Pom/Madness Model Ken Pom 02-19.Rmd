@@ -280,7 +280,7 @@ st6 <- ifelse(p>0,paste(New2$Seed,New2$Team,round(p,0)),paste(New2$U.Seed,New2$U
 ## Results
 
 ```{r r1}
-if (exists("track")==FALSE) {track <- 1300}
+if (exists("track")==FALSE) {track <- 1300} 
 if (exists("years")==FALSE) {years <- 2010}
 presults <- c(pred1,pred2,pred3,pred4,pred5,pred6)
 aresults <- teamcomb %>% filter(Year == pyear & Favored == "F" & Round != "PI") %>% select(Winner)

@@ -56,7 +56,7 @@ nas <- teamcomb %>% summarise_all(~ sum(is.na(.)))
 ### Build and test the model
 
 ```{r btm}
-pyear <- floor(runif(1, min=2002, max=2019))
+pyear <- floor(runif(1, min=2003, max=2019))
 rm <- 0
 rsd <- 1
 

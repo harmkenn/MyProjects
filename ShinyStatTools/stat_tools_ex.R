@@ -356,7 +356,8 @@ ui <- dashboardPage(
             rHandsontableOutput("disc.data"),
             splitLayout(
               actionButton("disc.reset","Clear"),
-              actionButton("disc.run","Run")
+              actionButton("disc.run","Run"),
+              plotlyOutput("DPHist")
             ), #EsplitLayout
             tableOutput("disc.results")
           ), #Ebox
@@ -1159,8 +1160,8 @@ server <- function(input, output, session) {
   observeEvent(input$disc.run,{
     set <- hot_to_r(input$disc.data)
     set <- set[1:(length(set)-1)]
-    x <- set[1,]
-    px <- set[2,]
+    x <- as.numeric(set[1,])
+    px <- as.numeric(set[2,])
     m <- sum(x*px)
     pre <- (x-m)^2*px
     var <- sum(pre)
@@ -1170,6 +1171,14 @@ server <- function(input, output, session) {
                        format="f",digits = 6,drop0trailing = TRUE),ncol=3,nrow=1)
     colnames(dp) <- c("Mean","Variance","SD")
     output$disc.results <- renderTable({dp})
+    
+    Prob <- px
+    df <- data.frame(x=x, Prob=Prob)
+    dph <- df %>% ggplot() + geom_histogram(aes(x=x, y=..density..,weight=Prob),
+                                     bins = length(x), color = "black")
+    gdph <- ggplotly(dph)
+
+    output$DPHist <- renderPlotly(gdph) #Eoutput$DPHist
   })
   observeEvent(input$bi.run,{
     bip <- input$bip

@@ -256,3 +256,13 @@ text(seq(-2.5,2.5), .115, label=paste(c(2.35,13.5,34,34,13.5,2.35), "%ish", sep=
 normp
 ```
 
+### Probability Distribution
+
+```{r}
+pacman::p_load(tidyverse)
+x <- c(0,1,2,3,4,5,6,7,8,9,10)
+Prob <- c(.001,.006,.007,.008,.012,.020,.038,.099,.319,.437,.053)
+df <- data.frame(x=x, Prob=Prob)
+df %>% ggplot() + geom_histogram(aes(x=x, y=..density..,weight=Prob),bins = length(x), color = "black")
+```
+

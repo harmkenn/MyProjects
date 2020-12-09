@@ -41,7 +41,7 @@ binwidth <- 1
 # >>>>>>>>>>>>>>>Start of UI
 
 ui <- dashboardPage(
-  dashboardHeader(title = "Shiny Stat Tools v1.0",titleWidth = "450px",
+  dashboardHeader(title = "Shiny Stat Tools v1.2",titleWidth = "450px",
                   tags$li(class = "dropdown",tags$a("by Ken Harmon")),
                   dropdownMenuOutput(outputId = "notifications")),
   
@@ -1160,6 +1160,7 @@ server <- function(input, output, session) {
   observeEvent(input$disc.run,{
     set <- hot_to_r(input$disc.data)
     set <- set[1:(length(set)-1)]
+    set <- set[,colSums(is.na(set)) == 0] #keep column with no NA
     x <- as.numeric(set[1,])
     px <- as.numeric(set[2,])
     m <- sum(x*px)

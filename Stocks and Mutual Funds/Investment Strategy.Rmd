@@ -35,10 +35,10 @@ setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
 track <- NA
 for (x in 1:100) {
   run <- data.frame("Nasdaq"=as.numeric(10000),"Daily"=0,"Action"=NA,"Trade"=0,
-                    "Invested"=50000,"Spare"=50000,"Profit"=0,"Left Alone"=0)
+                    "Invested"=50000,"Spare"=50000,"Profit"=0,"Left"=0,"Diff"=0)
   row <- run
   for (y in 1:200) {
-    daily <- qnorm(runif(1,0,1))
+    daily <- qnorm(runif(1,0,1),12/365,1)
     row[1,"Daily"] <- daily
     row[1,"Nasdaq"] <- run[y,"Nasdaq"] + run[y,"Nasdaq"] * daily/100
     if (daily > 2) {action <- "Sell"} else if (daily < -2) {action <- "Buy"} else {action <- ""}
@@ -48,11 +48,12 @@ for (x in 1:100) {
     row[1,"Invested"] <- run[y,"Invested"] + run[y,"Invested"] * daily/100 - trade
     row[1,"Spare"] <- run[y,"Spare"] + trade
     row[1,"Profit"] <- row[1,"Invested"] + row[1,"Spare"] - 100000
-    row[1,"Left.Alone"] <- 5 * row[1,"Nasdaq"] - 50000
+    row[1,"Left"] <- 5 * row[1,"Nasdaq"] - 50000
+    row[1,"Diff"] <- as.integer(row[1,"Profit"]-row[1,"Left"],2)
     run <- rbind(run, row)
   }
-  diff <- run[nrow(run),"Profit"]-run[nrow(run),"Left.Alone"]
-  track <- c(track,diff)
+  
+  track <- c(track,run[nrow(run),"Diff"])
 }
 
 summary(track)

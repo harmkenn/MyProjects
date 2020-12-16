@@ -288,3 +288,30 @@ df %>% ggplot() + geom_histogram(aes(x=x, y=..density..,weight=Prob),
 EV <- sum(x*Prob)
 ```
 
+### Housing 9
+
+```{r}
+x <- c(1,2,3,4,5,6,7,8,9,10)
+Poo <- c(.003,.002,.023,.104,.210,.224,.197,.149,.053,.035)
+Pro <- c(.008,.027,.287,.363,.164,.093,.039,.013,.003,.003)
+df <- data.frame(x=x, Poo = Poo, Pro = Pro)
+colors <- c("Sepal Width" = "blue", "Petal Length" = "red", "Petal Width" = "orange")
+
+df %>% ggplot(aes(x=x)) + geom_histogram(aes(x=x, y=..density..,weight=Poo),
+                    bins = length(x), color = "blue", fill = "red", 
+                    alpha = .5) +
+                  geom_histogram(aes(x=x, y=..density..,weight=Pro),
+                    bins = length(x), color = "red", fill = "blue", 
+                    alpha =.5) + scale_fill_manual(name="group",values=c("red","blue"),labels=c("a","b")) +
+                  geom_label(label="Owners",x=8,y=.2,color = "blue",fill="red") +
+                  geom_label(label="Renters",x=2,y=.2,color = "red",fill=halfblue)
+
+mean <- sum(x*Poo)
+mean <- sum(x*Pro)
+
+mean <- sum(x*Poo)
+sd <- sqrt(sum( (x-mean)^2*Poo))
+
+mean <- sum(x*Pro)
+sd <- sqrt(sum( (x-mean)^2*Pro))
+```

@@ -41,7 +41,7 @@ binwidth <- 1
 # >>>>>>>>>>>>>>>Start of UI
 
 ui <- dashboardPage(
-  dashboardHeader(title = "Shiny Stat Tools v1.2",titleWidth = "450px",
+  dashboardHeader(title = "Shiny Stat Tools v1.3",titleWidth = "450px",
                   tags$li(class = "dropdown",tags$a("by Ken Harmon")),
                   dropdownMenuOutput(outputId = "notifications")),
   
@@ -347,7 +347,6 @@ ui <- dashboardPage(
       ), #EtabItem LR
       
       ######################## End Linear Rergression UI #####################
-
       ########################## Discrete Probability UI #######################
       
       tabItem("disc",
@@ -357,6 +356,7 @@ ui <- dashboardPage(
                            rHandsontableOutput("disc.data"),
                            splitLayout(
                              actionButton("disc.reset","Clear"),
+                             actionButton("disc.add","Add Column"),
                              actionButton("disc.run","Run"),
                              plotlyOutput("DPHist")
                            ), #EsplitLayout
@@ -397,57 +397,8 @@ ui <- dashboardPage(
       ), #EtabItem LR
       
       ######################## End Discrete Probability UI #####################
-
-    ########################## Discrete Probability UI #######################
-    
-    tabItem("disc",
-      fluidRow(
-        column(width = 6,
-          box(title = "Discrete Probability",width = NULL,status = "primary",
-            rHandsontableOutput("disc.data"),
-            splitLayout(
-              actionButton("disc.reset","Clear"),
-              actionButton("disc.run","Run"),
-              plotlyOutput("DPHist")
-            ), #EsplitLayout
-            tableOutput("disc.results")
-          ), #Ebox
-          box(title = "Binomial", width = NULL, status = "primary",
-            splitLayout(
-              numericInput("bip","P(Hit)",.5),
-              numericInput("bih", "Hits",0),
-              numericInput("bit", "Tries",5)
-            ),
-            actionButton("bi.run","Run"),
-            tableOutput("biout"),
-            plotOutput("biplot")
-          ) #Ebox
-        ), #Ecolumn
-        column(width = 6,
-          box(title = "Geometric", width = NULL, status = "primary",
-            splitLayout(
-              numericInput("gep","P(Hit)",.5),
-              numericInput("get", "Tries",5)
-            ),
-            actionButton("ge.run","Run"),
-            tableOutput("geout"),
-            plotOutput("geplot")
-          ), #Ebox
-          box(title = "Poisson", width = NULL, status = "primary",
-            splitLayout(
-              numericInput("poil","E(Hit)",2),
-              numericInput("poih", "Hits",5)
-            ),
-            actionButton("poi.run","Run"),
-            tableOutput("poiout"),
-            plotOutput("poiplot")
-          ), #Ebox
-        ), #Ecolumn
-      ) #EfluidRow
-    ), #EtabItem LR
-    
-    ######################## End Discrete Probability UI #####################
-
+      
+      
       
       tabItem("datasets", "All the pre-built datasets will go here") #EtabItem Datasets
     ) #End tabItems
@@ -1200,18 +1151,20 @@ server <- function(input, output, session) {
     output$disc.data <- renderRHandsontable({rhandsontable(disc.in$values)})
   }) #EobserveEvent
   
-  observeEvent(input$disc.data,{
-    disc.data <- hot_to_r(input$disc.data)
-    if(sum(is.na(disc.data[1,])) == 0){
-      data.disc <- cbind(disc.data,as.numeric(c(NA,NA)))
-      lc <- ncol(data.disc)
-      colnames(data.disc)[lc]<-paste("X",lc,sep = "")
-      output$disc.data <- renderRHandsontable({rhandsontable(data.disc)})
-    } #Eif 
+  observeEvent(input$disc.data,{	
+    disc.data <- hot_to_r(input$disc.data)	
   }) #EobserveEvent
+  
+  observeEvent(input$disc.add,{
+    disc.data <- hot_to_r(input$disc.data)
+    data.disc <- cbind(disc.data,as.numeric(c(NA,NA)))
+    lc <- ncol(data.disc)
+    colnames(data.disc)[lc]<-paste("X",lc,sep = "")
+    output$disc.data <- renderRHandsontable({rhandsontable(data.disc)})
+  }) #End observeEvent disc.add
+  
   observeEvent(input$disc.run,{
     set <- hot_to_r(input$disc.data)
-    set <- set[1:(length(set)-1)]
     set <- set[,colSums(is.na(set)) == 0] #keep column with no NA
     x <- as.numeric(set[1,])
     px <- as.numeric(set[2,])
@@ -1230,9 +1183,11 @@ server <- function(input, output, session) {
     dph <- df %>% ggplot() + geom_histogram(aes(x=x, y=..density..,weight=Prob),
                                             bins = length(x), color = "blue", fill = "brown")
     gdph <- ggplotly(dph)
-
+    
     output$DPHist <- renderPlotly(gdph) #Eoutput$DPHist
   })
+  
+  
   observeEvent(input$bi.run,{
     bip <- input$bip
     bih <- input$bih

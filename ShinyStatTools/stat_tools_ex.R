@@ -15,6 +15,7 @@ library(ggExtra)
 library(plotly)
 theme_set(theme_bw())
 
+
 chisq.test <- stats::chisq.test
 
 data.descr <- data.frame(matrix(numeric(), nrow=500, ncol=1))
@@ -347,6 +348,7 @@ ui <- dashboardPage(
       ), #EtabItem LR
       
       ######################## End Linear Rergression UI #####################
+<<<<<<< HEAD
       ########################## Discrete Probability UI #######################
       
       tabItem("disc",
@@ -396,6 +398,57 @@ ui <- dashboardPage(
       ), #EtabItem LR
       
       ######################## End Discrete Probability UI #####################
+=======
+    ########################## Discrete Probability UI #######################
+    
+    tabItem("disc",
+      fluidRow(
+        column(width = 6,
+          box(title = "Discrete Probability",width = NULL,status = "primary",
+            rHandsontableOutput("disc.data"),
+            splitLayout(
+              actionButton("disc.reset","Clear"),
+              actionButton("disc.run","Run"),
+              plotlyOutput("DPHist")
+            ), #EsplitLayout
+            tableOutput("disc.results")
+          ), #Ebox
+          box(title = "Binomial", width = NULL, status = "primary",
+            splitLayout(
+              numericInput("bip","P(Hit)",.5),
+              numericInput("bih", "Hits",0),
+              numericInput("bit", "Tries",5)
+            ),
+            actionButton("bi.run","Run"),
+            tableOutput("biout"),
+            plotOutput("biplot")
+          ) #Ebox
+        ), #Ecolumn
+        column(width = 6,
+          box(title = "Geometric", width = NULL, status = "primary",
+            splitLayout(
+              numericInput("gep","P(Hit)",.5),
+              numericInput("get", "Tries",5)
+            ),
+            actionButton("ge.run","Run"),
+            tableOutput("geout"),
+            plotOutput("geplot")
+          ), #Ebox
+          box(title = "Poisson", width = NULL, status = "primary",
+            splitLayout(
+              numericInput("poil","E(Hit)",2),
+              numericInput("poih", "Hits",5)
+            ),
+            actionButton("poi.run","Run"),
+            tableOutput("poiout"),
+            plotOutput("poiplot")
+          ), #Ebox
+        ), #Ecolumn
+      ) #EfluidRow
+    ), #EtabItem LR
+    
+    ######################## End Discrete Probability UI #####################
+>>>>>>> f1ae91cc5734e87e548d6655bf825188b1146a45
       
       tabItem("datasets", "All the pre-built datasets will go here") #EtabItem Datasets
     ) #End tabItems
@@ -1176,9 +1229,15 @@ server <- function(input, output, session) {
     Prob <- px
     df <- data.frame(x=x, Prob=Prob)
     dph <- df %>% ggplot() + geom_histogram(aes(x=x, y=..density..,weight=Prob),
+<<<<<<< HEAD
                                             bins = length(x), color = "black")
     gdph <- ggplotly(dph)
     
+=======
+                                     bins = length(x), color = "black")
+    gdph <- ggplotly(dph)
+
+>>>>>>> f1ae91cc5734e87e548d6655bf825188b1146a45
     output$DPHist <- renderPlotly(gdph) #Eoutput$DPHist
   })
   observeEvent(input$bi.run,{

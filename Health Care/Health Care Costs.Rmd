@@ -52,8 +52,7 @@ hdpp <- left_join(gm_ctry_codes,hdpp, by = "country")
 hdpp_geo <- world %>%
   select("UN") %>%
   left_join(hdpp, by = c("UN"="iso_num")) %>%
-  filter(!is.na(country)) %>%
-  mutate_at(4:19, funs(round(., 2)))
+  filter(!is.na(country))
 ```
 
 ```{r}

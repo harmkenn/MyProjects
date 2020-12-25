@@ -343,6 +343,7 @@ shot_ll <- function(lat1d,lng1d,lat2d,lng2d){
   shotr <- atan2(sin(lng2r-lng1r)*cos(lat2r),cos(lat1r)*sin(lat2r)-sin(lat1r)*cos(lat2r)*cos(lng2r-lng1r))
   #Bearing of the shot in degrees
   shotd <- shotr*180/pi
+  shotm <- shotr*6400/pi
   
   #Bearing of the impact in radians
   impr <- atan2(cos(U1)*sin(lamda),-1*sin(U1)*cos(U2)+cos(U1)*sin(U2)*cos(lamda))

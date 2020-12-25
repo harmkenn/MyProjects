@@ -41,24 +41,24 @@ binwidth <- 1
 # >>>>>>>>>>>>>>>Start of UI
 
 ui <- dashboardPage(
-  dashboardHeader(title = "Shiny Stat Tools v1.0",titleWidth = "450px",
+  dashboardHeader(title = "Shiny Stat Tools v1.2",titleWidth = "450px",
                   tags$li(class = "dropdown",tags$a("by Ken Harmon")),
                   dropdownMenuOutput(outputId = "notifications")),
   
   # >>>>>>>>>>>>>>>Side Bar  
   
   dashboardSidebar(width = 150,
-    sidebarMenu(
-      menuItem("Descriptive Stats", tabName = "ds"),
-      menuItem("Normal", tabName = "normal"),
-      menuItem("All t-Tests", tabName = "tTest"),
-      menuItem("ANOVA", tabName = "anova"),
-      menuItem("Proportions", tabName = "props"),
-      menuItem("Chi-Square", tabName = "Chi"),
-      menuItem("Linear Regression", tabName = "LR"),
-      menuItem("Discrete", tabName = "disc"),
-      menuItem("Data Sets", tabName = "datasets")
-    ) #End sidebarMenu
+                   sidebarMenu(
+                     menuItem("Descriptive Stats", tabName = "ds"),
+                     menuItem("Normal", tabName = "normal"),
+                     menuItem("All t-Tests", tabName = "tTest"),
+                     menuItem("ANOVA", tabName = "anova"),
+                     menuItem("Proportions", tabName = "props"),
+                     menuItem("Chi-Square", tabName = "Chi"),
+                     menuItem("Linear Regression", tabName = "LR"),
+                     menuItem("Discrete", tabName = "disc"),
+                     menuItem("Data Sets", tabName = "datasets")
+                   ) #End sidebarMenu
   ), #End dashboardSidebar
   
   # <<<<<<<<<<<<<End Sidebar
@@ -71,330 +71,331 @@ ui <- dashboardPage(
       # >>>>>>>>>>>>>> Descriptive Tab UI
       
       tabItem("ds",
-        fluidRow(
-          column(width = 2,
-           box(title = "Data Input", width = NULL, status = "primary",
-               actionButton("clear","Clear"),actionButton("plot","Plot"),
-               rHandsontableOutput("dt")
-           ) #Ebox
-          ), #Ecolumn
-          column(width = 5,
-           box(title = "Histogram", width = NULL,
-               plotlyOutput("hist")
-           ), #Ebox
-           box(title = "Percentile", width = NULL,
-               splitLayout(
-                 numericInput("ptile","Percentile:",50,width="50%"),
-                 actionButton("goptile","Get"),
-                 textOutput("pptile")
-               ) #EsplitLayout
-           ) #Ebox
-          ), #Ecolumn
-          column(width = 5,
-           box(title = "Summary Statistics", width = NULL, solidHeader = TRUE,
-               tableOutput("dss")
-           ), #Ebox
-           box(title = "qqplot", width = NULL, background = "blue",
-               plotOutput("qqplot"),
-               valueBoxOutput("qqalert")
-           ) #Ebox
-          ) #Ecolumn
-        ) #EfluidRow
+              fluidRow(
+                column(width = 2,
+                       box(title = "Data Input", width = NULL, status = "primary",
+                           actionButton("clear","Clear"),actionButton("plot","Plot"),
+                           rHandsontableOutput("dt")
+                       ) #Ebox
+                ), #Ecolumn
+                column(width = 5,
+                       box(title = "Histogram", width = NULL,
+                           plotlyOutput("hist")
+                       ), #Ebox
+                       box(title = "Percentile", width = NULL,
+                           splitLayout(
+                             numericInput("ptile","Percentile:",50,width="50%"),
+                             actionButton("goptile","Get"),
+                             textOutput("pptile")
+                           ) #EsplitLayout
+                       ) #Ebox
+                ), #Ecolumn
+                column(width = 5,
+                       box(title = "Summary Statistics", width = NULL, solidHeader = TRUE,
+                           tableOutput("dss")
+                       ), #Ebox
+                       box(title = "qqplot", width = NULL, background = "blue",
+                           plotOutput("qqplot"),
+                           valueBoxOutput("qqalert")
+                       ) #Ebox
+                ) #Ecolumn
+              ) #EfluidRow
       ), #EtabItem ds
       
       # <<<<<<<<<<<<< Descriptive Tab UI
       # >>>>>>>>>>>>> Normal Tab UI
       
       tabItem("normal",
-        fluidRow(
-          column(width = 3,
-                 box(title = "Selections", width = NULL, solidHeader = TRUE,
-                     radioButtons("nway","",c("z to Prob","Prob to z")),
-                     numericInput("nmu","Mean:",0),
-                     numericInput("nsd", "Standard Dev:",1),
-                     actionButton("nReset","Reset")
-                 ), #Ebox
-                 conditionalPanel(condition = "input.nway == 'z to Prob'",
-                    helpText("Shade:"),
-                    checkboxInput("Left","Left"),
-                    checkboxInput("Center","Center"),
-                    checkboxInput("Right","Right"),
-                    helpText("z-Score Cut-offs"),
-                    checkboxInput("nsym","Symmetric"),
-                 ), #EconditionalPanel
-                 conditionalPanel(condition = "input.nway == 'Prob to z'",
-                                  radioButtons("nshade","Shade", choices = c("Left","Center","Right"))
-                 ), #EconditionalPanel
-          ), #Ecolumn left
-          column(width = 9,
-             conditionalPanel(condition = "input.nway == 'z to Prob'",
-                splitLayout(
-                  numericInput("lz","Left z-Score",-1,width="25%",step = .1),
-                  actionButton("z2p","Find Probability"),
-                  numericInput("rz","Right z-Score",1,width="25%", step = .1)
-                ), #EsplitLayout
-                plotOutput("npp"),
-                textOutput("npptext")
-             ), #EconditionalPanel
-             conditionalPanel(condition = "input.nway == 'Prob to z'",
-                splitLayout(
-                  numericInput("prob","Percent",40,width="25%"),
-                  actionButton("p2z","Find Probability")
-                ), #EsplitLayout
-                plotOutput("npz"),
-                textOutput("npztext")
-             ) #EconditionalPanel
-          ) #Ecolumn Main
-        ) #EfluidRow Normal Tab
+              fluidRow(
+                column(width = 3,
+                       box(title = "Selections", width = NULL, solidHeader = TRUE,
+                           radioButtons("nway","",c("z to Prob","Prob to z")),
+                           numericInput("nmu","Mean:",0),
+                           numericInput("nsd", "Standard Dev:",1),
+                           actionButton("nReset","Reset")
+                       ), #Ebox
+                       conditionalPanel(condition = "input.nway == 'z to Prob'",
+                                        helpText("Shade:"),
+                                        checkboxInput("Left","Left"),
+                                        checkboxInput("Center","Center"),
+                                        checkboxInput("Right","Right"),
+                                        helpText("z-Score Cut-offs"),
+                                        checkboxInput("nsym","Symmetric"),
+                       ), #EconditionalPanel
+                       conditionalPanel(condition = "input.nway == 'Prob to z'",
+                                        radioButtons("nshade","Shade", choices = c("Left","Center","Right"))
+                       ), #EconditionalPanel
+                ), #Ecolumn left
+                column(width = 9,
+                       conditionalPanel(condition = "input.nway == 'z to Prob'",
+                                        splitLayout(
+                                          numericInput("lz","Left z-Score",-1,width="25%",step = .1),
+                                          actionButton("z2p","Find Probability"),
+                                          numericInput("rz","Right z-Score",1,width="25%", step = .1)
+                                        ), #EsplitLayout
+                                        plotOutput("npp"),
+                                        textOutput("npptext")
+                       ), #EconditionalPanel
+                       conditionalPanel(condition = "input.nway == 'Prob to z'",
+                                        splitLayout(
+                                          numericInput("prob","Percent",40,width="25%"),
+                                          actionButton("p2z","Find Probability")
+                                        ), #EsplitLayout
+                                        plotOutput("npz"),
+                                        textOutput("npztext")
+                       ) #EconditionalPanel
+                ) #Ecolumn Main
+              ) #EfluidRow Normal Tab
       ), #EtabItem Normal
       
       # <<<<<<<<<<<<<<<<< Normal TAB UI
       # >>>>>>>>>>>>>>>>> tTest TAB UI
       
       tabItem("tTest",
-        fluidRow(
-          column(width = 3,
-         box(title = "Data Input",width = NULL,status = "primary",
-             checkboxInput("Statistics","Statistics"),
-             conditionalPanel(condition = "input.Statistics == 0",
-                  radioButtons("tchoice","Input:",c("Single Data","Paired Data","2 Sample t-Test")),
-                  actionButton("cleart", "Clear"),
-                  actionButton("plott", "Plot"),
-                  rHandsontableOutput("dtt")
-             ), #End of conditionalPanel
-             conditionalPanel(condition = "input.Statistics == 1",
-                radioButtons("tchoice","Input:",c("Single Data","2 Sample t-Test")),
-             ), #End of conditionalPanel
-             conditionalPanel(condition = "input.Statistics == 1 && input.tchoice == 'Single Data'",
-                numericInput("tmean","Mean:",0),
-                numericInput("tsd","Standard Deviation:",1),
-                numericInput("tn","Count:",1)
-             ), #End of conditionalPanel
-             conditionalPanel(condition = "input.Statistics == 1 && input.tchoice == '2 Sample t-Test'",
-                  numericInput("tmean","Mean A:",0),
-                  numericInput("tsd","Standard Deviation A:",1),
-                  numericInput("tn","Count A:",1),
-                  numericInput("tmean.b","Mean B:",0),
-                  numericInput("tsd.b","Standard Deviation B:",1),
-                  numericInput("tn.b","Count B:",1)
-               ), #End of conditionalPanel
-           ), #Ebox
-          ), #Ecolumn
-          conditionalPanel(condition = "input.Statistics == 0",
-           column(width = 4,
-              box(title = "Summary Statistics", width = NULL, background = "blue",
-                  tableOutput("ttst"),
-                  plotOutput("ttqq"),
-                  splitLayout(
-                    valueBoxOutput("qqalertt", width = NULL),
-                    valueBoxOutput("qqalertt.b", width = NULL)
-                  ), #EsplitLayout
-              ), #Ebox
-           ), #Ecolumn
-          ), #End of Conditional
-          column(width = 5,
-           box(title = "Hypothesis Test", width = NULL,
-               splitLayout(
-                 numericInput("th0","Null:",0,width=NULL),
-                 numericInput("tAlpha","Alpha:",.05,width=NULL),
-                 radioButtons("ttail","",c("Left Tail"="less","Two Tail"="two.sided","Right Tail"="greater"),inline = FALSE,width = "50%"),
-                 actionButton("ttest","Test")
-               ), #EsplitLayout
-               conditionalPanel(condition = "input.tchoice == '2 Sample t-Test'",checkboxInput("eqvar","Equal Variances",TRUE)),
-               plotOutput("ttgraph")
-           ), #Ebox
-          ) #Ecolumn
-        ) #EfluidRow
+              fluidRow(
+                column(width = 3,
+                       box(title = "Data Input",width = NULL,status = "primary",
+                           checkboxInput("Statistics","Statistics"),
+                           conditionalPanel(condition = "input.Statistics == 0",
+                                            radioButtons("tchoice","Input:",c("Single Data","Paired Data","2 Sample t-Test")),
+                                            actionButton("cleart", "Clear"),
+                                            actionButton("plott", "Plot"),
+                                            rHandsontableOutput("dtt")
+                           ), #End of conditionalPanel
+                           conditionalPanel(condition = "input.Statistics == 1",
+                                            radioButtons("tchoice","Input:",c("Single Data","2 Sample t-Test")),
+                           ), #End of conditionalPanel
+                           conditionalPanel(condition = "input.Statistics == 1 && input.tchoice == 'Single Data'",
+                                            numericInput("tmean","Mean:",0),
+                                            numericInput("tsd","Standard Deviation:",1),
+                                            numericInput("tn","Count:",1)
+                           ), #End of conditionalPanel
+                           conditionalPanel(condition = "input.Statistics == 1 && input.tchoice == '2 Sample t-Test'",
+                                            numericInput("tmean","Mean A:",0),
+                                            numericInput("tsd","Standard Deviation A:",1),
+                                            numericInput("tn","Count A:",1),
+                                            numericInput("tmean.b","Mean B:",0),
+                                            numericInput("tsd.b","Standard Deviation B:",1),
+                                            numericInput("tn.b","Count B:",1)
+                           ), #End of conditionalPanel
+                       ), #Ebox
+                ), #Ecolumn
+                conditionalPanel(condition = "input.Statistics == 0",
+                                 column(width = 4,
+                                        box(title = "Summary Statistics", width = NULL, background = "blue",
+                                            tableOutput("ttst"),
+                                            plotOutput("ttqq"),
+                                            splitLayout(
+                                              valueBoxOutput("qqalertt", width = NULL),
+                                              valueBoxOutput("qqalertt.b", width = NULL)
+                                            ), #EsplitLayout
+                                        ), #Ebox
+                                 ), #Ecolumn
+                ), #End of Conditional
+                column(width = 5,
+                       box(title = "Hypothesis Test", width = NULL,
+                           splitLayout(
+                             numericInput("th0","Null:",0,width=NULL),
+                             numericInput("tAlpha","Alpha:",.05,width=NULL),
+                             radioButtons("ttail","",c("Left Tail"="less","Two Tail"="two.sided","Right Tail"="greater"),inline = FALSE,width = "50%"),
+                             actionButton("ttest","Test")
+                           ), #EsplitLayout
+                           conditionalPanel(condition = "input.tchoice == '2 Sample t-Test'",checkboxInput("eqvar","Equal Variances",TRUE)),
+                           plotOutput("ttgraph")
+                       ), #Ebox
+                ) #Ecolumn
+              ) #EfluidRow
       ), #EtabItem tTest
       
       ######################## End t-test TAB UI #######################
       ######################## ANOVA Tab UI #############################
       
       tabItem("anova",
-        fluidRow(
-          column(width = 4, 
-             box(title = "Data Input", width = 12, 
-               checkboxInput("anovastat","Statistics"),
-               actionButton("anovatc", "Clear"),
-               actionButton("anovaplot", "Plot"),
-               rHandsontableOutput("anovat")
-             ), #Ebox
-          ), #Ecolumn left
-          conditionalPanel(condition = "input.anovastat == 0",
-           column(width = 3, 
-            box(title = "graphs",width = 12, background = "blue", 
-              plotOutput("anovabox"),
-              plotOutput("anovaqq")
-            ), #Ebox
-           ), #Ecolumn middle
-          ), #EconditionalPanel
-          column(width = 5, 
-           box(title = "Results", width = 12, 
-             tableOutput("anovaut"),
-             tableOutput("anovalt"),
-             numericInput("F.alpha","Alpha:",.05),
-             plotOutput("F.plot")
-           ), #Ebox
-          ), #Ecolumn right
-        ) #EfluidRow
+              fluidRow(
+                column(width = 4, 
+                       box(title = "Data Input", width = 12, 
+                           checkboxInput("anovastat","Statistics"),
+                           actionButton("anovatc", "Clear"),
+                           actionButton("anovaplot", "Plot"),
+                           rHandsontableOutput("anovat")
+                       ), #Ebox
+                ), #Ecolumn left
+                conditionalPanel(condition = "input.anovastat == 0",
+                                 column(width = 3, 
+                                        box(title = "graphs",width = 12, background = "blue", 
+                                            plotOutput("anovabox"),
+                                            plotOutput("anovaqq")
+                                        ), #Ebox
+                                 ), #Ecolumn middle
+                ), #EconditionalPanel
+                column(width = 5, 
+                       box(title = "Results", width = 12, 
+                           tableOutput("anovaut"),
+                           tableOutput("anovalt"),
+                           numericInput("F.alpha","Alpha:",.05),
+                           plotOutput("F.plot")
+                       ), #Ebox
+                ), #Ecolumn right
+              ) #EfluidRow
       ), #EtabItem ANOVA
       
       ######################## End ANOVA Tab UI #########################
       ######################## Proportions UI ##############################
       
       tabItem("props",
-        fluidRow(
-          column(width = 4, offset = 0, style='padding:0px;',
-             box(title = "Data Input", width = 12, 
-               radioButtons("props","",choices = c("1 Proportion", "2 Proportions")),
-                 splitLayout(
-                   numericInput("x1","Set 1 x:",0),
-                   numericInput("n1","Set 1 n:",1)
-                  ), #Esplit
-               conditionalPanel(condition = "input.props == '2 Proportions'",
-                  splitLayout(
-                   numericInput("x2","Set 2 x:",0),
-                   numericInput("n2","Set 2 n:",1)
-                  ), #Esplit
-               ), #EconditionalPanel
-             ), #Ebox
-          ), #Ecolumn left
-          column(width = 3, offset = 0, style='padding:0px;',
-            box(title = "Graphs",width = 12, background = "blue", 
-              plotOutput("pplot")
-            ) #Ebox
-          ), #Ecolumn Middle  
-          column(width = 5, offset = 0, style='padding:0px;',
-            box(title = "Results",width = 12,  
-              splitLayout(
-                conditionalPanel(condition = "input.props == '1 Proportion'",numericInput("ph0","Null:",.5,width=NULL)),
-                 numericInput("pAlpha","Alpha:",.05,width=NULL),
-                 radioButtons("ptail","",c("Left Tail"="less","Two Tail"="two.sided","Right Tail"="greater"),inline = FALSE,width = "50%"),
-                 actionButton("ptest","Test")
-               ), #EsplitLayout
-              plotOutput("ptgraph")
-            ) #Ebox
-          ), #Ecolumn Right 
-        ) #EfluidRow
+              fluidRow(
+                column(width = 4, offset = 0, style='padding:0px;',
+                       box(title = "Data Input", width = 12, 
+                           radioButtons("props","",choices = c("1 Proportion", "2 Proportions")),
+                           splitLayout(
+                             numericInput("x1","Set 1 x:",0),
+                             numericInput("n1","Set 1 n:",1)
+                           ), #Esplit
+                           conditionalPanel(condition = "input.props == '2 Proportions'",
+                                            splitLayout(
+                                              numericInput("x2","Set 2 x:",0),
+                                              numericInput("n2","Set 2 n:",1)
+                                            ), #Esplit
+                           ), #EconditionalPanel
+                       ), #Ebox
+                ), #Ecolumn left
+                column(width = 3, offset = 0, style='padding:0px;',
+                       box(title = "Graphs",width = 12, background = "blue", 
+                           plotOutput("pplot")
+                       ) #Ebox
+                ), #Ecolumn Middle  
+                column(width = 5, offset = 0, style='padding:0px;',
+                       box(title = "Results",width = 12,  
+                           splitLayout(
+                             conditionalPanel(condition = "input.props == '1 Proportion'",numericInput("ph0","Null:",.5,width=NULL)),
+                             numericInput("pAlpha","Alpha:",.05,width=NULL),
+                             radioButtons("ptail","",c("Left Tail"="less","Two Tail"="two.sided","Right Tail"="greater"),inline = FALSE,width = "50%"),
+                             actionButton("ptest","Test")
+                           ), #EsplitLayout
+                           plotOutput("ptgraph")
+                       ) #Ebox
+                ), #Ecolumn Right 
+              ) #EfluidRow
       ), #EtabItem props
       
       ######################## End Proportions UI #############################
       ######################## Chi Square UI ##################################
       
       tabItem("Chi",
-        fluidRow(
-          column(width = 6, offset = 0, style='padding:0px;',
-             box(title = "Data Input", width = 12, 
-              splitLayout(
-                radioButtons("chic","",c("Independence","Goodness of Fit")),
-                numericInput("chi.alpha","Alpha:",.05, width = 100)
-              ), #EsplitLayout
-              actionButton("Chi.r", "Reset"),
-              actionButton("Chitest", "Test"),
-              rHandsontableOutput("Chi"),
-              tags$hr(style="border-color: blue;"),
-              textOutput("Chiexptitle"),
-              tableOutput("Chiexp"),
-              tags$hr(style="border-color: blue;"),
-              textOutput("ChiSquares"),
-              tableOutput("chicell"),
-             ), #Ebox
-          ), #Ecolumn left
-          column(width = 6, offset = 0, style='padding:0px;',
-           box(title = "Results", width = 12, 
-             tableOutput("Chiresult"),
-             tags$hr(style="border-color: blue;"),
-             plotOutput("Chi.plot")
-           ), #Ebox
-          ), #Ecolumn right
-        ) #EfluidRow
+              fluidRow(
+                column(width = 6, offset = 0, style='padding:0px;',
+                       box(title = "Data Input", width = 12, 
+                           splitLayout(
+                             radioButtons("chic","",c("Independence","Goodness of Fit")),
+                             numericInput("chi.alpha","Alpha:",.05, width = 100)
+                           ), #EsplitLayout
+                           actionButton("Chi.r", "Reset"),
+                           actionButton("Chitest", "Test"),
+                           rHandsontableOutput("Chi"),
+                           tags$hr(style="border-color: blue;"),
+                           textOutput("Chiexptitle"),
+                           tableOutput("Chiexp"),
+                           tags$hr(style="border-color: blue;"),
+                           textOutput("ChiSquares"),
+                           tableOutput("chicell"),
+                       ), #Ebox
+                ), #Ecolumn left
+                column(width = 6, offset = 0, style='padding:0px;',
+                       box(title = "Results", width = 12, 
+                           tableOutput("Chiresult"),
+                           tags$hr(style="border-color: blue;"),
+                           plotOutput("Chi.plot")
+                       ), #Ebox
+                ), #Ecolumn right
+              ) #EfluidRow
       ), #EtabItem Chi
       
       ######################## End Chi Square UI #############################
       ######################## Linear Regression UI #############################
       
-    tabItem("LR",
-      fluidRow(
-        column(width = 3,
-          box(title = "Data Input",width = NULL,status = "primary",
-            actionButton("lr.reset", "Reset"),
-            actionButton("lr.test", "Test"),
-            rHandsontableOutput("lr.data")
-          ), #Ebox
-        ), #Ecolumn
-        column(width = 4,
-          box(title = "Graphs", width = NULL, background = "blue",
-            plotOutput("lr.big3"),
-            valueBoxOutput("lr.qqplot",width = 6)
-          ), #Ebox
-        ), #Ecolumn
-        column(width = 5,
-          box(title = "Test Results", width = NULL,
-            tableOutput("lr.stats"),
-            tableOutput("lr.rstats"),
-            tableOutput("lr.test"),
-            numericInput("lr.alpha","Alpha:",.05),
-            textOutput("ci.slope"),
-            splitLayout(
-              numericInput("lr.x","x:",26),
-              tableOutput("lr.point")
-            ), #EsplitLayout
-            textOutput("ci.meany"),
-            textOutput("pi.y")
-          ), #Ebox
-        ) #Ecolumn
-      ) #EfluidRow
-    ), #EtabItem LR
+      tabItem("LR",
+              fluidRow(
+                column(width = 3,
+                       box(title = "Data Input",width = NULL,status = "primary",
+                           actionButton("lr.reset", "Reset"),
+                           actionButton("lr.test", "Test"),
+                           rHandsontableOutput("lr.data")
+                       ), #Ebox
+                ), #Ecolumn
+                column(width = 4,
+                       box(title = "Graphs", width = NULL, background = "blue",
+                           plotOutput("lr.big3"),
+                           valueBoxOutput("lr.qqplot",width = 6)
+                       ), #Ebox
+                ), #Ecolumn
+                column(width = 5,
+                       box(title = "Test Results", width = NULL,
+                           tableOutput("lr.stats"),
+                           tableOutput("lr.rstats"),
+                           tableOutput("lr.test"),
+                           numericInput("lr.alpha","Alpha:",.05),
+                           textOutput("ci.slope"),
+                           splitLayout(
+                             numericInput("lr.x","x:",26),
+                             tableOutput("lr.point")
+                           ), #EsplitLayout
+                           textOutput("ci.meany"),
+                           textOutput("pi.y")
+                       ), #Ebox
+                ) #Ecolumn
+              ) #EfluidRow
+      ), #EtabItem LR
       
       ######################## End Linear Rergression UI #####################
-    ########################## Discrete Probability UI #######################
-    
-    tabItem("disc",
-      fluidRow(
-        column(width = 6,
-          box(title = "Discrete Probability",width = NULL,status = "primary",
-            rHandsontableOutput("disc.data"),
-            splitLayout(
-              actionButton("disc.reset","Clear"),
-              actionButton("disc.run","Run")
-            ), #EsplitLayout
-            tableOutput("disc.results")
-          ), #Ebox
-          box(title = "Binomial", width = NULL, status = "primary",
-            splitLayout(
-              numericInput("bip","P(Hit)",.5),
-              numericInput("bih", "Hits",0),
-              numericInput("bit", "Tries",5)
-            ),
-            actionButton("bi.run","Run"),
-            tableOutput("biout"),
-            plotOutput("biplot")
-          ) #Ebox
-        ), #Ecolumn
-        column(width = 6,
-          box(title = "Geometric", width = NULL, status = "primary",
-            splitLayout(
-              numericInput("gep","P(Hit)",.5),
-              numericInput("get", "Tries",5)
-            ),
-            actionButton("ge.run","Run"),
-            tableOutput("geout"),
-            plotOutput("geplot")
-          ), #Ebox
-          box(title = "Poisson", width = NULL, status = "primary",
-            splitLayout(
-              numericInput("poil","E(Hit)",2),
-              numericInput("poih", "Hits",5)
-            ),
-            actionButton("poi.run","Run"),
-            tableOutput("poiout"),
-            plotOutput("poiplot")
-          ), #Ebox
-        ), #Ecolumn
-      ) #EfluidRow
-    ), #EtabItem LR
-    
-    ######################## End Discrete Probability UI #####################
+      ########################## Discrete Probability UI #######################
+      
+      tabItem("disc",
+              fluidRow(
+                column(width = 6,
+                       box(title = "Discrete Probability",width = NULL,status = "primary",
+                           rHandsontableOutput("disc.data"),
+                           splitLayout(
+                             actionButton("disc.reset","Clear"),
+                             actionButton("disc.run","Run"),
+                             plotlyOutput("DPHist")
+                           ), #EsplitLayout
+                           tableOutput("disc.results")
+                       ), #Ebox
+                       box(title = "Binomial", width = NULL, status = "primary",
+                           splitLayout(
+                             numericInput("bip","P(Hit)",.5),
+                             numericInput("bih", "Hits",0),
+                             numericInput("bit", "Tries",5)
+                           ),
+                           actionButton("bi.run","Run"),
+                           tableOutput("biout"),
+                           plotOutput("biplot")
+                       ) #Ebox
+                ), #Ecolumn
+                column(width = 6,
+                       box(title = "Geometric", width = NULL, status = "primary",
+                           splitLayout(
+                             numericInput("gep","P(Hit)",.5),
+                             numericInput("get", "Tries",5)
+                           ),
+                           actionButton("ge.run","Run"),
+                           tableOutput("geout"),
+                           plotOutput("geplot")
+                       ), #Ebox
+                       box(title = "Poisson", width = NULL, status = "primary",
+                           splitLayout(
+                             numericInput("poil","E(Hit)",2),
+                             numericInput("poih", "Hits",5)
+                           ),
+                           actionButton("poi.run","Run"),
+                           tableOutput("poiout"),
+                           plotOutput("poiplot")
+                       ), #Ebox
+                ), #Ecolumn
+              ) #EfluidRow
+      ), #EtabItem LR
+      
+      ######################## End Discrete Probability UI #####################
       
       tabItem("datasets", "All the pre-built datasets will go here") #EtabItem Datasets
     ) #End tabItems
@@ -856,57 +857,57 @@ server <- function(input, output, session) {
       
     } #Eif  
     
-      all.mean <- sum(a.mean*a.count)/sum(a.count)
-      a.dmb <- a.count*(a.mean-all.mean)^2
-      ave.a.mean <- mean(a.mean)
-      a.vw <- (a.count-1)*a.var
-      
-      anova.r <- rbind(a.count,a.mean,a.sd,a.var,a.dmb,a.vw)
-      colnames(anova.r)<-LETTERS[1:length(a.count)]
-      rownames(anova.r)<-c("count","mean","SD","Variance","Between","Within")
-      
-      anova.ut <- formatC(anova.r,format="f",digits = 6,drop0trailing = TRUE)
-      
-      output$anovaut <- renderTable({anova.ut},rownames = TRUE,colnames=TRUE)
-
-      sum.between <- sum(a.dmb)
-      sum.within <- sum(a.vw)
-      sum.total <- sum(a.dmb) + sum(a.vw)
-      df.between <- length(a.count) - 1
-      df.within <- sum(a.count)-length(a.count)
-      df.total <- sum(a.count) - 1 
-      ms.between <- sum.between / df.between
-      ms.within <- sum.within / df.within
-      ms.total <- sum.total / df.total
-      F.stat <- ms.between / ms.within
-      F.pvalue <- pf(F.stat, df.between, df.within, lower.tail = FALSE)
-      alpha <- input$F.alpha
-      F.cv <- qf(1-alpha,df.between, df.within)
-      
-      Result.1 <- c(sum.between,df.between,ms.between,F.stat,F.pvalue)
-      Result.2 <- c(sum.within,df.within,ms.within,0,0)
-      Result.3 <- c(sum.total,df.total,ms.total,F.cv,alpha)
-      
-      anova.lt <- rbind(Result.1,Result.2,Result.3)
-      colnames(anova.lt) <- c("Sum of Squares","df","Mean Square","F Stat","P-Value")
-      rownames(anova.lt) <- c("Between (TR)","Within (E)","Total")
-      anova.lt <- formatC(anova.lt,format="f",digits = 6,drop0trailing = TRUE)
-      anova.lt[2,4] <- "F.CV"
-      anova.lt[2,5] <- "alpha"
-      output$anovalt <- renderTable({anova.lt},rownames = TRUE,colnames=TRUE)
-      
-      x <- seq(from = 0, to = max(F.stat,F.cv)+2, by = .01)
-      s.df <- data.frame(x,y=df(x,df.between,df.within))
-      fp <- s.df %>% ggplot(aes(x,y))+geom_line()+
-          geom_area(data=subset(s.df,x>=F.cv),aes(y=y), fill ="red", alpha = .5) +
-          geom_area(data=subset(s.df,x>=F.stat),aes(y=y), fill ="blue", alpha = .5) +
-          theme(axis.title.y = element_blank(),axis.text.y = element_blank(),axis.ticks.y = element_blank()) +
-          labs(x = "F") 
-      output$F.plot <- renderPlot({fp})
+    all.mean <- sum(a.mean*a.count)/sum(a.count)
+    a.dmb <- a.count*(a.mean-all.mean)^2
+    ave.a.mean <- mean(a.mean)
+    a.vw <- (a.count-1)*a.var
+    
+    anova.r <- rbind(a.count,a.mean,a.sd,a.var,a.dmb,a.vw)
+    colnames(anova.r)<-LETTERS[1:length(a.count)]
+    rownames(anova.r)<-c("count","mean","SD","Variance","Between","Within")
+    
+    anova.ut <- formatC(anova.r,format="f",digits = 6,drop0trailing = TRUE)
+    
+    output$anovaut <- renderTable({anova.ut},rownames = TRUE,colnames=TRUE)
+    
+    sum.between <- sum(a.dmb)
+    sum.within <- sum(a.vw)
+    sum.total <- sum(a.dmb) + sum(a.vw)
+    df.between <- length(a.count) - 1
+    df.within <- sum(a.count)-length(a.count)
+    df.total <- sum(a.count) - 1 
+    ms.between <- sum.between / df.between
+    ms.within <- sum.within / df.within
+    ms.total <- sum.total / df.total
+    F.stat <- ms.between / ms.within
+    F.pvalue <- pf(F.stat, df.between, df.within, lower.tail = FALSE)
+    alpha <- input$F.alpha
+    F.cv <- qf(1-alpha,df.between, df.within)
+    
+    Result.1 <- c(sum.between,df.between,ms.between,F.stat,F.pvalue)
+    Result.2 <- c(sum.within,df.within,ms.within,0,0)
+    Result.3 <- c(sum.total,df.total,ms.total,F.cv,alpha)
+    
+    anova.lt <- rbind(Result.1,Result.2,Result.3)
+    colnames(anova.lt) <- c("Sum of Squares","df","Mean Square","F Stat","P-Value")
+    rownames(anova.lt) <- c("Between (TR)","Within (E)","Total")
+    anova.lt <- formatC(anova.lt,format="f",digits = 6,drop0trailing = TRUE)
+    anova.lt[2,4] <- "F.CV"
+    anova.lt[2,5] <- "alpha"
+    output$anovalt <- renderTable({anova.lt},rownames = TRUE,colnames=TRUE)
+    
+    x <- seq(from = 0, to = max(F.stat,F.cv)+2, by = .01)
+    s.df <- data.frame(x,y=df(x,df.between,df.within))
+    fp <- s.df %>% ggplot(aes(x,y))+geom_line()+
+      geom_area(data=subset(s.df,x>=F.cv),aes(y=y), fill ="red", alpha = .5) +
+      geom_area(data=subset(s.df,x>=F.stat),aes(y=y), fill ="blue", alpha = .5) +
+      theme(axis.title.y = element_blank(),axis.text.y = element_blank(),axis.ticks.y = element_blank()) +
+      labs(x = "F") 
+    output$F.plot <- renderPlot({fp})
   }) #EobserveEvent
   
-    ############################# End ANOVA Server #########################
-    ############################# Proportions Server #######################
+  ############################# End ANOVA Server #########################
+  ############################# Proportions Server #######################
   
   observeEvent(c(input$ptest, input$ptail), {
     if(input$ptest == 0){return()}
@@ -964,21 +965,21 @@ server <- function(input, output, session) {
       pp <- s.df %>% ggplot(aes(x,y))+geom_line()+
         geom_area(data=subset(s.df,x <= -abs(pci.cv)),aes(y=y), fill ="red", alpha = .5) +
         geom_area(data=subset(s.df,x <= pt.ts),aes(y=y), fill ="blue", alpha = .5) 
-        pt.pv <- pnorm(pt.ts)
+      pt.pv <- pnorm(pt.ts)
     }else if(ptail == "greater"){
       pp <- s.df %>% ggplot(aes(x,y))+geom_line()+
         geom_area(data=subset(s.df,x >= abs(pci.cv)),aes(y=y), fill ="red", alpha = .5) +
         geom_area(data=subset(s.df,x >= pt.ts),aes(y=y), fill ="blue", alpha = .5)
-        pt.pv <- 1-pnorm(pt.ts)
+      pt.pv <- 1-pnorm(pt.ts)
     }else if(ptail == "two.sided"){
       pp <- s.df %>% ggplot(aes(x,y))+geom_line()+
         geom_area(data=subset(s.df,x <= -abs(pci.cv)),aes(y=y), fill ="red", alpha = .5) +
         geom_area(data=subset(s.df,x >= abs(pci.cv)),aes(y=y), fill ="red", alpha = .5) +
         geom_area(data=subset(s.df,x <= -abs(pt.ts)),aes(y=y), fill ="blue", alpha = .5) +
         geom_area(data=subset(s.df,x >= abs(pt.ts)),aes(y=y), fill ="blue", alpha = .5)
-        pt.pv <- 2*pnorm(-abs(pt.ts))
+      pt.pv <- 2*pnorm(-abs(pt.ts))
     } #Eif
-
+    
     ptt <- matrix(formatC(c(pt.ts,pt.pv,pci.cv,pt.se,pci.se,pci.me),
                           format="f",digits = 6,drop0trailing = TRUE),ncol=6,nrow=1)
     colnames(ptt) <- c("z-score","P-Value","CV","Test SE","CI SE","ME")
@@ -986,13 +987,13 @@ server <- function(input, output, session) {
     pp <- pp + scale_x_continuous(sec.axis = sec_axis(~.*pt.se+ph0, name = "P")) +
       theme(axis.title.y = element_blank(),axis.text.y = element_blank(),axis.ticks.y = element_blank()) +
       labs(x = "Z")
-
+    
     CI.p <- paste(cl*100,"% confidence interval is (",low,",",high,")")
     output$ptgraph <- renderPlot({grid.arrange(tableGrob(ptt),pp,textGrob(CI.p),ncol=1)})
   }) #EobserveEvent
   
-    ########################## End Proportions Server ######################
-    ########################## Chi Server ##################################
+  ########################## End Proportions Server ######################
+  ########################## Chi Server ##################################
   
   observeEvent(c(input$Chi.r,input$chic),{
     if(input$chic == "Independence"){
@@ -1023,17 +1024,17 @@ server <- function(input, output, session) {
       output$chicell <- renderTable({ressq},rownames = TRUE,colnames=TRUE, digits = 5)
       chi.cv <- qchisq(1-input$chi.alpha,chi.test$parameter)
       chit <- matrix(formatC(c(chi.test$statistic,chi.test$parameter,chi.cv,chi.test$p.value),
-                     format="f",digits = 6,drop0trailing = TRUE),ncol=4,nrow=1)
+                             format="f",digits = 6,drop0trailing = TRUE),ncol=4,nrow=1)
       colnames(chit) <- c("Chi-score","df","Chi-CV","P-Value")
       output$Chiresult <- renderTable({chit})
       
       x <- seq(from = 0, to = max(chi.test$statistic,chi.cv)+5, by = .01)
       s.df <- data.frame(x,y=dchisq(x,chi.test$parameter))
       chip <- s.df %>% ggplot(aes(x,y))+geom_line()+
-          geom_area(data=subset(s.df,x>=chi.cv),aes(y=y), fill ="red", alpha = .5) +
-          geom_area(data=subset(s.df,x>=chi.test$statistic),aes(y=y), fill ="blue", alpha = .5) +
-          theme(axis.title.y = element_blank(),axis.text.y = element_blank(),axis.ticks.y = element_blank()) +
-          labs(x = "Chi") 
+        geom_area(data=subset(s.df,x>=chi.cv),aes(y=y), fill ="red", alpha = .5) +
+        geom_area(data=subset(s.df,x>=chi.test$statistic),aes(y=y), fill ="blue", alpha = .5) +
+        theme(axis.title.y = element_blank(),axis.text.y = element_blank(),axis.ticks.y = element_blank()) +
+        labs(x = "Chi") 
       output$Chi.plot <- renderPlot({chip})
       
     }else if(input$chic == "Goodness of Fit"){
@@ -1053,24 +1054,24 @@ server <- function(input, output, session) {
       output$chicell <- renderTable({})
       chi.cv <- qchisq(1-input$chi.alpha,chi.test$parameter)
       chit <- matrix(formatC(c(chi.test$statistic,chi.test$parameter,chi.cv,chi.test$p.value),
-                     format="f",digits = 6,drop0trailing = TRUE),ncol=4,nrow=1)
+                             format="f",digits = 6,drop0trailing = TRUE),ncol=4,nrow=1)
       colnames(chit) <- c("Chi-score","df","Chi-CV","P-Value")
       output$Chiresult <- renderTable({chit})
       
       x <- seq(from = 0, to = max(chi.test$statistic,chi.cv)+5, by = .01)
       s.df <- data.frame(x,y=dchisq(x,chi.test$parameter))
       chip <- s.df %>% ggplot(aes(x,y))+geom_line()+
-          geom_area(data=subset(s.df,x>=chi.cv),aes(y=y), fill ="red", alpha = .5) +
-          geom_area(data=subset(s.df,x>=chi.test$statistic),aes(y=y), fill ="blue", alpha = .5) +
-          theme(axis.title.y = element_blank(),axis.text.y = element_blank(),axis.ticks.y = element_blank()) +
-          labs(x = "Chi") 
+        geom_area(data=subset(s.df,x>=chi.cv),aes(y=y), fill ="red", alpha = .5) +
+        geom_area(data=subset(s.df,x>=chi.test$statistic),aes(y=y), fill ="blue", alpha = .5) +
+        theme(axis.title.y = element_blank(),axis.text.y = element_blank(),axis.ticks.y = element_blank()) +
+        labs(x = "Chi") 
       output$Chi.plot <- renderPlot({chip})
     } #Eif
   })
-
   
-    ########################## End Chi Server ##############################
-    ########################## Linear Regression Server ####################
+  
+  ########################## End Chi Server ##############################
+  ########################## Linear Regression Server ####################
   
   output$lr.data <- renderRHandsontable({rhandsontable(lr.in$values)})
   
@@ -1085,26 +1086,26 @@ server <- function(input, output, session) {
       geom_point(shape=18, color="blue")+
       geom_smooth(method=lm,formula = y ~ x, se=FALSE, color="darkred") +
       stat_poly_eq(aes(label = paste(..eq.label.., ..rr.label.., sep = "~~~")), 
-        label.x.npc = "right", label.y.npc = 0.15,
-        formula = y ~ x, parse = TRUE, size = 3) +
-        labs(title = "Scatterplot")
-
+                   label.x.npc = "right", label.y.npc = 0.15,
+                   formula = y ~ x, parse = TRUE, size = 3) +
+      labs(title = "Scatterplot")
+    
     fit <- lm(y~x, data=lr.data)
     res <- qplot(fitted(fit), resid(fit))+geom_hline(yintercept=0) +
-        labs(title = "Residual Plot")
+      labs(title = "Residual Plot")
     
     qqres <- lr.data %>% ggplot(mapping = aes(sample = resid(fit))) +
-          stat_qq_band() +
-          stat_qq_line() +
-          stat_qq_point() +
-          labs(title= "Residual QQ Plot",x = "Theoretical Quantiles", y = "Sample Quantiles")
+      stat_qq_band() +
+      stat_qq_line() +
+      stat_qq_point() +
+      labs(title= "Residual QQ Plot",x = "Theoretical Quantiles", y = "Sample Quantiles")
     output$lr.big3 <- renderPlot({grid.arrange(lr.plot,res,qqres,ncol = 1)})
     good <- shapiro.test(resid(fit))
     output$lr.qqplot <-renderValueBox({valueBox(tags$p(round(good$p.value,3), style = "font-size: 50%;"), subtitle = "p-value",width = 5,color = if (good$p.value < .05) {"red"} else {"green"})})
     
     lr.stats <- matrix(formatC(c(mean(lr.data$x),sd(lr.data$x),mean(lr.data$y),sd(lr.data$y)),
-                       format="f",digits = 6,drop0trailing = TRUE),ncol=4,nrow=1)
-      colnames(lr.stats) <- c("Mean x","SD x","Mean y","SD y")
+                               format="f",digits = 6,drop0trailing = TRUE),ncol=4,nrow=1)
+    colnames(lr.stats) <- c("Mean x","SD x","Mean y","SD y")
     output$lr.stats <- renderTable({lr.stats})
     xxx <- summary(fit)
     slope <- xxx$coefficients[2,1]
@@ -1113,8 +1114,8 @@ server <- function(input, output, session) {
     r2 <- r^2
     see <- xxx$sigma
     lr.rstats <- matrix(formatC(c(r,r2,see),
-                       format="f",digits = 6,drop0trailing = TRUE),ncol=3,nrow=1)
-      colnames(lr.rstats) <- c("r","R sq","St Err est")
+                                format="f",digits = 6,drop0trailing = TRUE),ncol=3,nrow=1)
+    colnames(lr.rstats) <- c("r","R sq","St Err est")
     output$lr.rstats <- renderTable({lr.rstats})
     xxxt <- xxx$coefficients
     rownames(xxxt) <- c("y-Int","Slope")
@@ -1138,8 +1139,8 @@ server <- function(input, output, session) {
     piy.u <- round(lr.y - qt(alpha/2,df)*seyhat,6)
     output$pi.y <- renderText({paste(cl*100,"% prediction interval for y: (",piy.l,",",piy.u,")")})
   }) #EobserveEvent
-    ########################## End Linear Regression Server ################
-    ########################## Discrete Probability Server #################
+  ########################## End Linear Regression Server ################
+  ########################## Discrete Probability Server #################
   
   output$disc.data <- renderRHandsontable({rhandsontable(disc.in$values)})
   
@@ -1159,17 +1160,26 @@ server <- function(input, output, session) {
   observeEvent(input$disc.run,{
     set <- hot_to_r(input$disc.data)
     set <- set[1:(length(set)-1)]
-    x <- set[1,]
-    px <- set[2,]
+    set <- set[,colSums(is.na(set)) == 0] #keep column with no NA
+    x <- as.numeric(set[1,])
+    px <- as.numeric(set[2,])
     m <- sum(x*px)
     pre <- (x-m)^2*px
     var <- sum(pre)
     sd <- sqrt(var)
     
     dp <- matrix(formatC(c(m,var,sd),
-                       format="f",digits = 6,drop0trailing = TRUE),ncol=3,nrow=1)
+                         format="f",digits = 6,drop0trailing = TRUE),ncol=3,nrow=1)
     colnames(dp) <- c("Mean","Variance","SD")
     output$disc.results <- renderTable({dp})
+    
+    Prob <- px
+    df <- data.frame(x=x, Prob=Prob)
+    dph <- df %>% ggplot() + geom_histogram(aes(x=x, y=..density..,weight=Prob),
+                                            bins = length(x), color = "black")
+    gdph <- ggplotly(dph)
+    
+    output$DPHist <- renderPlotly(gdph) #Eoutput$DPHist
   })
   observeEvent(input$bi.run,{
     bip <- input$bip
@@ -1181,16 +1191,16 @@ server <- function(input, output, session) {
     bimean <- bit*bip
     bisd <- sqrt(bit*bip*(1-bip))
     bt <- matrix(formatC(c(bis,bisl,bisg,bimean,bisd),
-                       format="f",digits = 6,drop0trailing = TRUE),ncol=5,nrow=1)
+                         format="f",digits = 6,drop0trailing = TRUE),ncol=5,nrow=1)
     colnames(bt) <- c(paste("P=",bih),paste("P≤",bih),paste("P≥",bih),"Mean","SD")
     output$biout <- renderTable({bt})
     low <- floor(max(0, bimean - 3*bisd))
     high <- ceiling(min(bit, bimean + 3*bisd))
     biplot <- data.frame(hits = low:high, pmf = dbinom(x = low:high, size = bit, prob = bip)) %>%
-          ggplot(aes(x = factor(hits), y = pmf)) + geom_col(fill="skyblue2") +
-          geom_text(aes(label = round(pmf,3), y = pmf + 0.01),
-          position = position_dodge(0.9), size = 3, vjust = .2, angle = 90) +
-          labs(x = "Successes (x)",y = "probability") 
+      ggplot(aes(x = factor(hits), y = pmf)) + geom_col(fill="skyblue2") +
+      geom_text(aes(label = round(pmf,3), y = pmf + 0.01),
+                position = position_dodge(0.9), size = 3, vjust = .2, angle = 90) +
+      labs(x = "Successes (x)",y = "probability") 
     output$biplot <- renderPlot({biplot})
   }) #EobserveEvent
   observeEvent(input$ge.run,{
@@ -1202,7 +1212,7 @@ server <- function(input, output, session) {
     gemean <- 1/gep
     gesd <- sqrt(gemean*(gemean-1))
     gt <- matrix(formatC(c(ges,gesl,gesg,gemean,gesd),
-                       format="f",digits = 6,drop0trailing = TRUE),ncol=5,nrow=1)
+                         format="f",digits = 6,drop0trailing = TRUE),ncol=5,nrow=1)
     colnames(gt) <- c(paste("P=",get),paste("P≤",get),paste("P≥",get),"Mean","SD")
     output$geout <- renderTable({gt})
     low <- 1
@@ -1223,7 +1233,7 @@ server <- function(input, output, session) {
     poimean <- poil
     poisd <- sqrt(poil)
     pt <- matrix(formatC(c(pois,poisl,poisg,poimean,poisd),
-                       format="f",digits = 6,drop0trailing = TRUE),ncol=5,nrow=1)
+                         format="f",digits = 6,drop0trailing = TRUE),ncol=5,nrow=1)
     colnames(pt) <- c(paste("P=",poih),paste("P≤",poih),paste("P≥",poih),"Mean","SD")
     output$poiout <- renderTable({pt})
     low <- floor(max(0,poimean - 3*poisd))
@@ -1235,7 +1245,7 @@ server <- function(input, output, session) {
       labs(x = "Hits (x)",y = "Probability") 
     output$poiplot <- renderPlot({poiplot})
   }) #EobserveEvent
-    ######################## End Discrete Probability Server #################
+  ######################## End Discrete Probability Server #################
   
 } #end of the server
 

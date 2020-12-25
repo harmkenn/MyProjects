@@ -15,3 +15,4 @@ for (r in seq(0,4,by = .005)){
 
 lgmap <- logall %>% filter(n >= 240) 
 lm <- lgmap %>% ggplot(aes(r,x))+geom_point(size=.005)
+lm

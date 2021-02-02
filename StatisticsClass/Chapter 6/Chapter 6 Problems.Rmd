@@ -150,7 +150,15 @@ mean <- sum(x*Px)
 sd <- sqrt(sum( (x-mean)^2*Px))
 ```
 
+### ferry ride
 
+```{r}
+x <- c(0,5,10,15,20,25)
+Prob <- c(.02,.05,.08,.16,.27,.42)
+df <- data.frame(x=x, Prob=Prob)
+df %>% ggplot() + geom_histogram(aes(x=x, y=..density..,weight=Prob),
+                                 bins = length(x), color = "blue", fill = "orange")
+```
 
 
 

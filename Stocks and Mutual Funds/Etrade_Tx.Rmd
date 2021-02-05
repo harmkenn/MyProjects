@@ -15,7 +15,7 @@ editor_options:
 
 # {.tabset .tabset-fade}
 
-```{r, echo=FALSE}
+```{r, echo=FALSE} 
 knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
 ```
 

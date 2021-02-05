@@ -1,7 +1,7 @@
 ---
 title: "Madness Model Ken Pom 02-19"
 author: "Ken Harmon"
-date: "2020 October 27"
+date: "2021 January 21"
 output:
   html_document:  
     keep_md: true
@@ -46,7 +46,7 @@ nas <- teamcomb %>% summarise_all(~ sum(is.na(.)))
 
 
 ```r
-pyear <- floor(runif(1, min=2002, max=2019))
+pyear <- floor(runif(1, min=2003, max=2019))
 rm <- 0
 rsd <- 1
 
@@ -91,26 +91,26 @@ confusionMatrix(table(actual.P,p.P))
 ## 
 ##         p.P
 ## actual.P FALSE TRUE
-##    FALSE    13   11
-##    TRUE      4   98
+##    FALSE    14   14
+##    TRUE      1   76
 ##                                           
-##                Accuracy : 0.881           
-##                  95% CI : (0.8113, 0.9318)
-##     No Information Rate : 0.8651          
-##     P-Value [Acc > NIR] : 0.3581          
+##                Accuracy : 0.8571          
+##                  95% CI : (0.7753, 0.9178)
+##     No Information Rate : 0.8571          
+##     P-Value [Acc > NIR] : 0.568293        
 ##                                           
-##                   Kappa : 0.5655          
+##                   Kappa : 0.5714          
 ##                                           
-##  Mcnemar's Test P-Value : 0.1213          
+##  Mcnemar's Test P-Value : 0.001946        
 ##                                           
-##             Sensitivity : 0.7647          
-##             Specificity : 0.8991          
-##          Pos Pred Value : 0.5417          
-##          Neg Pred Value : 0.9608          
-##              Prevalence : 0.1349          
-##          Detection Rate : 0.1032          
-##    Detection Prevalence : 0.1905          
-##       Balanced Accuracy : 0.8319          
+##             Sensitivity : 0.9333          
+##             Specificity : 0.8444          
+##          Pos Pred Value : 0.5000          
+##          Neg Pred Value : 0.9870          
+##              Prevalence : 0.1429          
+##          Detection Rate : 0.1333          
+##    Detection Prevalence : 0.2667          
+##       Balanced Accuracy : 0.8889          
 ##                                           
 ##        'Positive' Class : FALSE           
 ## 
@@ -121,7 +121,7 @@ pyear
 ```
 
 ```
-## [1] 2004
+## [1] 2017
 ```
 
 ## Predict pyear
@@ -313,7 +313,7 @@ st6 <- ifelse(p>0,paste(New2$Seed,New2$Team,round(p,0)),paste(New2$U.Seed,New2$U
 
 
 ```r
-if (exists("track")==FALSE) {track <- 1300}
+if (exists("track")==FALSE) {track <- 1300} 
 if (exists("years")==FALSE) {years <- 2010}
 presults <- c(pred1,pred2,pred3,pred4,pred5,pred6)
 aresults <- teamcomb %>% filter(Year == pyear & Favored == "F" & Round != "PI") %>% select(Winner)
@@ -323,70 +323,70 @@ cresults
 ```
 
 ```
-##                Winner           presults Winner
-## 1            Kentucky           Kentucky   TRUE
-## 2                 UAB                UAB   TRUE
-## 3      Boston College     Boston College   TRUE
-## 4             Pacific         Providence  FALSE
-## 5              Nevada             Nevada   TRUE
-## 6              Kansas             Kansas   TRUE
-## 7             Gonzaga            Gonzaga   TRUE
-## 8        Georgia Tech       Georgia Tech   TRUE
-## 9      Saint Joseph's     Saint Joseph's   TRUE
-## 10         Texas Tech         Texas Tech   TRUE
-## 11          Manhattan            Florida  FALSE
-## 12        Wake Forest        Wake Forest   TRUE
-## 13          Wisconsin          Wisconsin   TRUE
-## 14         Pittsburgh         Pittsburgh   TRUE
-## 15            Memphis     South Carolina  FALSE
-## 16       Oklahoma St.       Oklahoma St.   TRUE
-## 17               Duke               Duke   TRUE
-## 18         Seton Hall         Seton Hall   TRUE
-## 19           Illinois           Illinois   TRUE
-## 20         Cincinnati         Cincinnati   TRUE
-## 21     North Carolina     North Carolina   TRUE
-## 22              Texas              Texas   TRUE
-## 23             Xavier             Xavier   TRUE
-## 24    Mississippi St.    Mississippi St.   TRUE
-## 25           Stanford           Stanford   TRUE
-## 26            Alabama            Alabama   TRUE
-## 27           Syracuse                BYU  FALSE
-## 28           Maryland           Maryland   TRUE
-## 29         Vanderbilt         Vanderbilt   TRUE
-## 30 North Carolina St. North Carolina St.   TRUE
-## 31             DePaul             Dayton  FALSE
-## 32        Connecticut        Connecticut   TRUE
-## 33                UAB           Kentucky  FALSE
-## 34             Kansas     Boston College  FALSE
-## 35       Georgia Tech             Nevada  FALSE
-## 36             Nevada       Georgia Tech  FALSE
-## 37     Saint Joseph's     Saint Joseph's   TRUE
-## 38        Wake Forest        Wake Forest   TRUE
-## 39         Pittsburgh         Pittsburgh   TRUE
-## 40       Oklahoma St.       Oklahoma St.   TRUE
-## 41               Duke               Duke   TRUE
-## 42           Illinois           Illinois   TRUE
-## 43              Texas     North Carolina  FALSE
-## 44             Xavier             Xavier   TRUE
-## 45            Alabama           Stanford  FALSE
-## 46           Syracuse           Maryland  FALSE
-## 47         Vanderbilt North Carolina St.  FALSE
-## 48        Connecticut        Connecticut   TRUE
-## 49     Saint Joseph's           Kentucky  FALSE
-## 50       Oklahoma St.       Georgia Tech  FALSE
-## 51        Connecticut     Saint Joseph's  FALSE
-## 52            Alabama         Pittsburgh  FALSE
-## 53               Duke               Duke   TRUE
-## 54             Xavier             Xavier   TRUE
-## 55       Georgia Tech           Stanford  FALSE
-## 56             Kansas        Connecticut  FALSE
-## 57       Georgia Tech       Georgia Tech   TRUE
-## 58       Oklahoma St.         Pittsburgh  FALSE
-## 59               Duke               Duke   TRUE
-## 60        Connecticut        Connecticut   TRUE
-## 61       Georgia Tech       Georgia Tech   TRUE
-## 62        Connecticut               Duke  FALSE
-## 63        Connecticut               Duke  FALSE
+##              Winner         presults Winner
+## 1         Villanova        Villanova   TRUE
+## 2         Wisconsin        Wisconsin   TRUE
+## 3          Virginia         Virginia   TRUE
+## 4           Florida          Florida   TRUE
+## 5               USC              SMU  FALSE
+## 6            Baylor           Baylor   TRUE
+## 7    South Carolina   South Carolina   TRUE
+## 8              Duke             Duke   TRUE
+## 9           Gonzaga          Gonzaga   TRUE
+## 10     Northwestern       Vanderbilt  FALSE
+## 11       Notre Dame       Notre Dame   TRUE
+## 12    West Virginia    West Virginia   TRUE
+## 13           Xavier           Xavier   TRUE
+## 14      Florida St.      Florida St.   TRUE
+## 15     Saint Mary's     Saint Mary's   TRUE
+## 16          Arizona          Arizona   TRUE
+## 17           Kansas           Kansas   TRUE
+## 18     Michigan St.     Michigan St.   TRUE
+## 19         Iowa St.         Iowa St.   TRUE
+## 20           Purdue           Purdue   TRUE
+## 21     Rhode Island        Creighton  FALSE
+## 22           Oregon           Oregon   TRUE
+## 23         Michigan         Michigan   TRUE
+## 24       Louisville       Louisville   TRUE
+## 25   North Carolina   North Carolina   TRUE
+## 26         Arkansas         Arkansas   TRUE
+## 27 Middle Tennessee Middle Tennessee   TRUE
+## 28           Butler           Butler   TRUE
+## 29       Cincinnati       Cincinnati   TRUE
+## 30             UCLA             UCLA   TRUE
+## 31      Wichita St.      Wichita St.   TRUE
+## 32         Kentucky         Kentucky   TRUE
+## 33        Wisconsin        Villanova  FALSE
+## 34          Florida          Florida   TRUE
+## 35           Baylor           Baylor   TRUE
+## 36   South Carolina             Duke  FALSE
+## 37          Gonzaga          Gonzaga   TRUE
+## 38    West Virginia    West Virginia   TRUE
+## 39           Xavier           Xavier   TRUE
+## 40          Arizona          Arizona   TRUE
+## 41           Kansas           Kansas   TRUE
+## 42           Purdue         Iowa St.  FALSE
+## 43           Oregon           Oregon   TRUE
+## 44         Michigan         Michigan   TRUE
+## 45   North Carolina   North Carolina   TRUE
+## 46           Butler Middle Tennessee  FALSE
+## 47             UCLA             UCLA   TRUE
+## 48         Kentucky         Kentucky   TRUE
+## 49   South Carolina        Villanova  FALSE
+## 50          Florida           Baylor  FALSE
+## 51          Gonzaga          Gonzaga   TRUE
+## 52           Xavier          Arizona  FALSE
+## 53           Kansas           Kansas   TRUE
+## 54           Oregon           Oregon   TRUE
+## 55   North Carolina   North Carolina   TRUE
+## 56         Kentucky         Kentucky   TRUE
+## 57   South Carolina        Villanova  FALSE
+## 58          Gonzaga          Gonzaga   TRUE
+## 59           Oregon           Oregon   TRUE
+## 60   North Carolina   North Carolina   TRUE
+## 61          Gonzaga          Gonzaga   TRUE
+## 62   North Carolina   North Carolina   TRUE
+## 63   North Carolina          Gonzaga  FALSE
 ```
 
 ```r
@@ -394,7 +394,7 @@ sum(cresults$match)
 ```
 
 ```
-## [1] 41
+## [1] 51
 ```
 
 ```r
@@ -414,7 +414,7 @@ sum(cresults$match*score)
 ```
 
 ```
-## [1] 910
+## [1] 1290
 ```
 
 ```r
@@ -424,7 +424,7 @@ summary(track)
 
 ```
 ##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
-##     910    1008    1105    1105    1202    1300
+##    1290    1292    1295    1295    1298    1300
 ```
 
 ```r
@@ -432,7 +432,7 @@ pyear
 ```
 
 ```
-## [1] 2004
+## [1] 2017
 ```
 
 ```r
@@ -441,5 +441,5 @@ sum(cresults$match)
 ```
 
 ```
-## [1] 41
+## [1] 51
 ```

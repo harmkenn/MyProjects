@@ -275,7 +275,7 @@ p <- p + rnorm(n=length(p),rm,rsd)
 
 pred6 <- ifelse(p>0,New2$Team,New2$U.Team)
 st6 <- ifelse(p>0,paste(New2$Seed,New2$Team,round(p,0)),paste(New2$U.Seed,New2$U.Team,round(p,0)))
-
+cbind(st1,st2,st3,st4,st5,st6)
 ```
 
 ## Results

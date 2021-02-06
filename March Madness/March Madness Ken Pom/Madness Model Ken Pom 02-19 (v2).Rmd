@@ -1,5 +1,5 @@
 ---
-title: "Madness Model Ken Pom 02-19"
+title: "Madness Model Ken Pom 02-21"
 author: "Ken Harmon"
 date: "`r format(Sys.time(), '%Y %B %d')`"
 output:
@@ -42,8 +42,8 @@ https://kenpom.com/index.php?y=2018&s=TeamName
 ```{r wld}
 # Start With All Games 02-19 stacked with Favored team F over Underdog U
 # Append on Season stats to each team
-AG0219stacked <- read.csv("AG0219stacked.csv")
-teamstats <- read.csv("KenPom02-19.csv")
+AG0219stacked <- read.csv("AG0221stacked.csv")
+teamstats <- read.csv("KenPom02-21.csv")
 teamcomb <- left_join(AG0219stacked,teamstats,by=c("Year"="Year","Team"="Team"))
 
 #Where are the NAs
@@ -52,27 +52,22 @@ nas <- teamcomb %>% summarise_all(~ sum(is.na(.)))
 # Now the dataset is ready
 ```
 
-Create a table of expectations by seed
-```{r}
-
-```
-
-
 ## Model
 ### Build and test the model
 
 ```{r btm}
-pyear <- floor(runif(1, min=2003, max=2019))
+pyear <- 2021 #floor(runif(1, min=2003, max=2019))
 rm <- 0
-rsd <- 1
+rsd <- 3
 
 # Separate Favored and Underdogs 02 to 18 
 AG0219F <- teamcomb %>% filter(Favored == "F" & Year != pyear)
 AG0219U <- teamcomb %>% filter(Favored == "U" & Year != pyear)
 
 #Get the difference of the just stats
-AG0219FS <- AG0219F %>% select(7,10,11,18,20:30)
-AG0219US <- AG0219U %>% select(7,10,11,18,20:30)
+AG0219FS <- AG0219F %>% select(7,10,20:24,26,30)
+AG0219US <- AG0219U %>% select(7,10,20:24,26,30)
+
 dStats0219 <- AG0219FS - AG0219US
 
 # Set seed and create assignment
@@ -114,8 +109,8 @@ The64F <- The64 %>% filter(Favored == "F")
 The64U <- The64 %>% filter(Favored == "U")
 
 #Get the difference of the just stats
-The64FS <- The64F %>% select(7,10,11,18,20:30)
-The64US <- The64U %>% select(7,10,11,18,20:30)
+The64FS <- The64F %>% select(7,10,20:24,26,30)
+The64US <- The64U %>% select(7,10,20:24,26,30)
 The64DS <- The64FS - The64US
 
 #Combine the F and U Leading Columns with dif stats
@@ -144,8 +139,8 @@ The32F <- The32 %>% filter(Favored == "F")
 The32U <- The32 %>% filter(Favored == "U")
 
 #Get the difference of the just stats
-The32FS <- The32F %>% select(7,10,11,18,20:30)
-The32US <- The32U %>% select(7,10,11,18,20:30)
+The32FS <- The32F %>% select(7,10,20:24,26,30)
+The32US <- The32U %>% select(7,10,20:24,26,30)
 The32DS <- The32FS - The32US
 
 #Combine the F and U Leading Columns with dif stats
@@ -174,8 +169,8 @@ The16F <- The16 %>% filter(Favored == "F")
 The16U <- The16 %>% filter(Favored == "U")
 
 #Get the difference of the just stats
-The16FS <- The16F %>% select(7,10,11,18,20:30)
-The16US <- The16U %>% select(7,10,11,18,20:30)
+The16FS <- The16F %>% select(7,10,20:24,26,30)
+The16US <- The16U %>% select(7,10,20:24,26,30)
 The16DS <- The16FS - The16US
 
 #Combine the F and U Leading Columns with dif stats
@@ -203,8 +198,8 @@ The8F <- The8 %>% filter(Favored == "F")
 The8U <- The8 %>% filter(Favored == "U")
 
 #Get the difference of the just stats
-The8FS <- The8F %>% select(7,10,11,18,20:30)
-The8US <- The8U %>% select(7,10,11,18,20:30)
+The8FS <- The8F %>% select(7,10,20:24,26,30)
+The8US <- The8U %>% select(7,10,20:24,26,30)
 The8DS <- The8FS - The8US
 
 #Combine the F and U Leading Columns with dif stats
@@ -234,8 +229,8 @@ The4F <- The4 %>% filter(Favored == "F")
 The4U <- The4 %>% filter(Favored == "U")
 
 #Get the difference of the just stats
-The4FS <- The4F %>% select(7,10,11,18,20:30)
-The4US <- The4U %>% select(7,10,11,18,20:30)
+The4FS <- The4F %>% select(7,10,20:24,26,30)
+The4US <- The4U %>% select(7,10,20:24,26,30)
 The4DS <- The4FS - The4US
 
 #Combine the F and U Leading Columns with dif stats
@@ -264,8 +259,8 @@ The2F <- The2 %>% filter(Favored == "F")
 The2U <- The2 %>% filter(Favored == "U")
 
 #Get the difference of the just stats
-The2FS <- The2F %>% select(7,10,11,18,20:30)
-The2US <- The2U %>% select(7,10,11,18,20:30)
+The2FS <- The2F %>% select(7,10,20:24,26,30)
+The2US <- The2U %>% select(7,10,20:24,26,30)
 The2DS <- The2FS - The2US
 
 #Combine the F and U Leading Columns with dif stats
@@ -280,36 +275,6 @@ p <- p + rnorm(n=length(p),rm,rsd)
 
 pred6 <- ifelse(p>0,New2$Team,New2$U.Team)
 st6 <- ifelse(p>0,paste(New2$Seed,New2$Team,round(p,0)),paste(New2$U.Seed,New2$U.Team,round(p,0)))
-
+cbind(st1,st2,st3,st4,st5,st6)
 ```
 
-## Results
-
-```{r r1}
-if (exists("track")==FALSE) {track <- 1300} 
-if (exists("years")==FALSE) {years <- 2010}
-presults <- c(pred1,pred2,pred3,pred4,pred5,pred6)
-aresults <- teamcomb %>% filter(Year == pyear & Favored == "F" & Round != "PI") %>% select(Winner)
-cresults <- cbind(aresults,presults)
-cresults$match <- aresults == presults
-cresults
-sum(cresults$match)
-score <- c(rep(10,32),rep(20,16),rep(40,8),rep(80,4),rep(160,2),rep(320,1))
-blank2 <- rep("",16)
-st2 <- c(blank2,st2)
-blank3 <- rep("",24)
-st3 <- c(blank3,st3)
-blank4 <- rep("",28)
-st4 <- c(blank4,st4)
-blank5 <- rep("",30)
-st5 <- c(blank5,st5)
-blank6 <- rep("",31)
-st6 <- c(blank6, st6)
-#cbind(st1,st2,st3,st4,st5,st6)
-sum(cresults$match*score)
-track <- c(track,sum(cresults$match*score))
-summary(track)
-pyear
-years <- c(years,pyear)
-sum(cresults$match)
-```

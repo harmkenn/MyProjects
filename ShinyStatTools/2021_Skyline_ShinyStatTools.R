@@ -166,8 +166,8 @@ ui <- dashboardPage(
                                             radioButtons("tchoice","Input:",c("Single Data","2 Sample t-Test")),
                            ), #End of conditionalPanel
                            conditionalPanel(condition = "input.Statistics == 1 && input.tchoice == 'Single Data'",
-                                            numericInput("tmean","Mean:",0),
-                                            numericInput("tsd","Standard Deviation:",1),
+                                            numericInput("tmean","Mean (xbar):",0),
+                                            numericInput("tsd","Standard Deviation (s):",1),
                                             numericInput("tn","Count:",1)
                            ), #End of conditionalPanel
                            conditionalPanel(condition = "input.Statistics == 1 && input.tchoice == '2 Sample t-Test'",

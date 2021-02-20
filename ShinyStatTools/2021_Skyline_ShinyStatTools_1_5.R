@@ -557,7 +557,7 @@ server <- function(input, output, session) {
     rz <- input$rz
     s.df <- data.frame(x,y=dnorm(x))
     normp <- s.df %>% ggplot(aes(x,y))+geom_line()+
-      geom_area(aes(y=y),alpha=0) + scale_x_continuous(sec.axis = sec_axis(~.*sd+mu, name = "A")) +
+      geom_area(aes(y=y),alpha=0) + scale_x_continuous(sec.axis = sec_axis(~.*sd+mu, name = "A",breaks = seq(-4*sd+mu,4*sd+mu,sd)),breaks = seq(-4,4)) +
       theme(axis.title.y = element_blank(),axis.text.y = element_blank(),axis.ticks.y = element_blank()) +
       labs(x = "Z") + geom_segment(aes(x = lz, y = 0, xend = lz, yend = dnorm(lz)),color="red") + 
       geom_segment(aes(x = rz, y = 0, xend = rz, yend = dnorm(rz)),color="red")
@@ -579,7 +579,7 @@ server <- function(input, output, session) {
     prob <- input$prob
     s.df <- data.frame(x,y=dnorm(x))
     npz <- s.df %>% ggplot(aes(x,y))+geom_line()+
-      geom_area(aes(y=y),alpha=0) + scale_x_continuous(sec.axis = sec_axis(~.*sd+mu, name = "A")) +
+      geom_area(aes(y=y),alpha=0) + scale_x_continuous(sec.axis = sec_axis(~.*sd+mu, name = "A",breaks = seq(-4*sd+mu,4*sd+mu,sd)),breaks = seq(-4,4)) +
       theme(axis.title.y = element_blank(),axis.text.y = element_blank(),axis.ticks.y = element_blank()) +
       labs(x = "Z") 
     if(input$nshade == "Left"){
@@ -626,10 +626,11 @@ server <- function(input, output, session) {
     rt <- input$rt
     s.df <- data.frame(x,y=dt(x,tdf))
     tp <- s.df %>% ggplot(aes(x,y))+geom_line()+
-      geom_area(aes(y=y),alpha=0) + scale_x_continuous(sec.axis = sec_axis(~.*sd+mu, name = "A")) +
+      geom_area(aes(y=y),alpha=0) + scale_x_continuous(sec.axis = sec_axis(~.*sd+mu, name = "A",breaks = seq(-5*sd+mu,5*sd+mu,sd)),breaks = seq(-5,5)) +
       theme(axis.title.y = element_blank(),axis.text.y = element_blank(),axis.ticks.y = element_blank()) +
       labs(x = "t") + geom_segment(aes(x = lt, y = 0, xend = lt, yend = dt(lt,tdf)),color="red") + 
-      geom_segment(aes(x = rt, y = 0, xend = rt, yend = dt(rt,tdf)),color="red")
+      geom_segment(aes(x = rt, y = 0, xend = rt, yend = dt(rt,tdf)),color="red") +
+      geom_line(aes(x,dnorm(x)),color = "orange",linetype = "dashed")
     output$tnpp <- renderPlot({
       if(input$tLeft == TRUE){tp <- tp + geom_area(data=subset(s.df,x<lt),aes(y=y), fill ="blue", alpha = .5)}else{tp}
       if(input$tCenter == TRUE){tp <- tp + geom_area(data=subset(s.df,x > lt & x < rt),aes(y=y), fill ="blue", alpha = .5)}else{tp}
@@ -650,9 +651,9 @@ server <- function(input, output, session) {
     prob <- input$prob
     s.df <- data.frame(x,y=dt(x,tdf))
     npt <- s.df %>% ggplot(aes(x,y))+geom_line()+
-      geom_area(aes(y=y),alpha=0) + scale_x_continuous(sec.axis = sec_axis(~.*sd+mu, name = "A")) +
+      geom_area(aes(y=y),alpha=0) + scale_x_continuous(sec.axis = sec_axis(~.*sd+mu, name = "A",breaks = seq(-5*sd+mu,5*sd+mu,sd)),breaks = seq(-5,5)) +
       theme(axis.title.y = element_blank(),axis.text.y = element_blank(),axis.ticks.y = element_blank()) +
-      labs(x = "t") 
+      labs(x = "t") + geom_line(aes(x,dnorm(x)),color = "orange",linetype = "dashed")
     if(input$nshade == "Left"){
       t <- qt(prob/100,tdf)
       npt <- npt + geom_area(data=subset(s.df,x <= t),aes(y=y), fill ="blue", alpha = .5) + 

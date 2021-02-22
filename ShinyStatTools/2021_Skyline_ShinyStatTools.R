@@ -916,7 +916,7 @@ server <- function(input, output, session) {
     if(input$ptest == 0){return()}
     alpha <- input$pAlpha
     ptail <- input$ptail
-    if(ptail != "two.tail"){cl <- 1-2*alpha}else if(ptail == "two.tail"){cl <- 1-alpha}
+    if(ptail != "two.sided"){cl <- 1-2*alpha}else if(ptail == "two.sided"){cl <- 1-alpha}
     pci.cv <- qnorm(mean(c(1,cl)))
     x1 <- input$x1
     n1 <- input$n1

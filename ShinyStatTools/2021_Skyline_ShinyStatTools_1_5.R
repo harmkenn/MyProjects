@@ -41,7 +41,7 @@ binwidth <- 1
 # >>>>>>>>>>>>>>>Start of UI
 
 ui <- dashboardPage(
-  dashboardHeader(title = "Shiny Stat Tools v1.4",titleWidth = "450px",
+  dashboardHeader(title = "Shiny Stat Tools v1.5",titleWidth = "450px",
                   tags$li(class = "dropdown",tags$a("by Ken Harmon")),
                   dropdownMenuOutput(outputId = "notifications")),
   
@@ -51,6 +51,7 @@ ui <- dashboardPage(
                    sidebarMenu(
                      menuItem("Descriptive Stats", tabName = "ds"),
                      menuItem("Normal", tabName = "normal"),
+                     menuItem("Student's t", tabName = "student"),
                      menuItem("All t-Tests", tabName = "tTest"),
                      menuItem("ANOVA", tabName = "anova"),
                      menuItem("Proportions", tabName = "props"),
@@ -149,6 +150,51 @@ ui <- dashboardPage(
       ), #EtabItem Normal
       
       # <<<<<<<<<<<<<<<<< Normal TAB UI
+      # >>>>>>>>>>>>>>>>> Student t TAB UI Start
+      tabItem("student",
+              fluidRow(
+                column(width = 3,
+                       box(title = "Selections", width = NULL, solidHeader = TRUE,
+                           radioButtons("tway","",c("t to Prob","Prob to t")),
+                           numericInput("tmu","Mean:",0),
+                           numericInput("tsd", "Standard Dev:",1),
+                           numericInput("tss", "Sample Size:",2),
+                           actionButton("tReset","Reset")
+                       ), #Ebox
+                       conditionalPanel(condition = "input.tway == 't to Prob'",
+                                        helpText("Shade:"),
+                                        checkboxInput("tLeft","Left"),
+                                        checkboxInput("tCenter","Center"),
+                                        checkboxInput("tRight","Right"),
+                                        helpText("t-Score Cut-offs"),
+                                        checkboxInput("tsym","Symmetric"),
+                       ), #EconditionalPanel
+                       conditionalPanel(condition = "input.tway == 'Prob to t'",
+                                        radioButtons("tshade","Shade", choices = c("Left","Center","Right"))
+                       ), #EconditionalPanel
+                ), #Ecolumn left
+                column(width = 9,
+                       conditionalPanel(condition = "input.tway == 't to Prob'",
+                                        splitLayout(
+                                          numericInput("lt","Left t-Score",-1,width="25%",step = .1),
+                                          actionButton("t2p","Find Probability"),
+                                          numericInput("rt","Right t-Score",1,width="25%", step = .1)
+                                        ), #EsplitLayout
+                                        plotOutput("tnpp"),
+                                        textOutput("tnpptext")
+                       ), #EconditionalPanel
+                       conditionalPanel(condition = "input.tway == 'Prob to t'",
+                                        splitLayout(
+                                          numericInput("tprob","Percent",40,width="25%"),
+                                          actionButton("p2t","Find Probability")
+                                        ), #EsplitLayout
+                                        plotOutput("npt"),
+                                        textOutput("npttext")
+                       ) #EconditionalPanel
+                ) #Ecolumn Main
+              ) #EfluidRow student Tab
+      ), #EtabItem student
+      # <<<<<<<<<<<<<<<<< Student t TAB UI End
       # >>>>>>>>>>>>>>>>> tTest TAB UI
       
       tabItem("tTest",
@@ -168,7 +214,7 @@ ui <- dashboardPage(
                            conditionalPanel(condition = "input.Statistics == 1 && input.tchoice == 'Single Data'",
                                             numericInput("tmean","Mean (xbar):",0),
                                             numericInput("tsd","Standard Deviation (s):",1),
-                                            numericInput("tn","Count:",1)
+                                            numericInput("tn","Count:",2)
                            ), #End of conditionalPanel
                            conditionalPanel(condition = "input.Statistics == 1 && input.tchoice == '2 Sample t-Test'",
                                             numericInput("tmean","Mean A:",0),
@@ -511,7 +557,7 @@ server <- function(input, output, session) {
     rz <- input$rz
     s.df <- data.frame(x,y=dnorm(x))
     normp <- s.df %>% ggplot(aes(x,y))+geom_line()+
-      geom_area(aes(y=y),alpha=0) + scale_x_continuous(sec.axis = sec_axis(~.*sd+mu, name = "A")) +
+      geom_area(aes(y=y),alpha=0) + scale_x_continuous(sec.axis = sec_axis(~.*sd+mu, name = "A",breaks = seq(-4*sd+mu,4*sd+mu,sd)),breaks = seq(-4,4)) +
       theme(axis.title.y = element_blank(),axis.text.y = element_blank(),axis.ticks.y = element_blank()) +
       labs(x = "Z") + geom_segment(aes(x = lz, y = 0, xend = lz, yend = dnorm(lz)),color="red") + 
       geom_segment(aes(x = rz, y = 0, xend = rz, yend = dnorm(rz)),color="red")
@@ -533,7 +579,7 @@ server <- function(input, output, session) {
     prob <- input$prob
     s.df <- data.frame(x,y=dnorm(x))
     npz <- s.df %>% ggplot(aes(x,y))+geom_line()+
-      geom_area(aes(y=y),alpha=0) + scale_x_continuous(sec.axis = sec_axis(~.*sd+mu, name = "A")) +
+      geom_area(aes(y=y),alpha=0) + scale_x_continuous(sec.axis = sec_axis(~.*sd+mu, name = "A",breaks = seq(-4*sd+mu,4*sd+mu,sd)),breaks = seq(-4,4)) +
       theme(axis.title.y = element_blank(),axis.text.y = element_blank(),axis.ticks.y = element_blank()) +
       labs(x = "Z") 
     if(input$nshade == "Left"){
@@ -558,6 +604,77 @@ server <- function(input, output, session) {
   }) #EobserveEvent  
   
   # <<<<<<<<<<<<<< End of Normal Tab Server
+  # >>>>>>>>>>>>>> Start of Student t Tab Server
+  x <- seq(from = -5, to = 5, by = .01)
+  observeEvent(input$rt, {
+    if(input$tsym == TRUE){
+      updateNumericInput(session, "lt", value = -1*input$rt)
+    }
+  }, ignoreInit = TRUE)
+  observeEvent(input$tsym, {
+    if(input$tsym == TRUE){
+      updateNumericInput(session, "lt", value = -1*input$rt)
+      disable("lt")
+    }
+  }, ignoreInit = TRUE)
+  observeEvent(c(input$t2p,input$tsym), {
+    mu <- input$tmu
+    sd <- input$tsd
+    ss <- input$tss
+    tdf <- ss - 1
+    lt <- input$lt
+    rt <- input$rt
+    s.df <- data.frame(x,y=dt(x,tdf))
+    tp <- s.df %>% ggplot(aes(x,y))+geom_line()+
+      geom_area(aes(y=y),alpha=0) + scale_x_continuous(sec.axis = sec_axis(~.*sd+mu, name = "A",breaks = seq(-5*sd+mu,5*sd+mu,sd)),breaks = seq(-5,5)) +
+      theme(axis.title.y = element_blank(),axis.text.y = element_blank(),axis.ticks.y = element_blank()) +
+      labs(x = "t") + geom_segment(aes(x = lt, y = 0, xend = lt, yend = dt(lt,tdf)),color="red") + 
+      geom_segment(aes(x = rt, y = 0, xend = rt, yend = dt(rt,tdf)),color="red") +
+      geom_line(aes(x,dnorm(x)),color = "orange",linetype = "dashed")
+    output$tnpp <- renderPlot({
+      if(input$tLeft == TRUE){tp <- tp + geom_area(data=subset(s.df,x<lt),aes(y=y), fill ="blue", alpha = .5)}else{tp}
+      if(input$tCenter == TRUE){tp <- tp + geom_area(data=subset(s.df,x > lt & x < rt),aes(y=y), fill ="blue", alpha = .5)}else{tp}
+      if(input$tRight == TRUE){tp + geom_area(data=subset(s.df,x > rt),aes(y=y), fill ="blue", alpha = .5)}else{tp}
+    })
+    output$tnpptext <- renderText({
+      if(input$tLeft == TRUE){tp <- pt(lt,tdf)}else{tp <- 0}
+      if(input$tCenter == TRUE){tp <- tp + pt(rt,tdf) - pt(lt,tdf)}else{tp <- tp}
+      if(input$tRight == TRUE){tp <- tp + 1 - pt(rt,tdf)}else{tp <- tp}
+      paste("Total Probability: ",tp)
+    })
+  }) #EobserveEvent
+  observeEvent(c(input$p2t,input$nshade), {
+    mu <- input$tmu
+    sd <- input$tsd
+    ss <- input$tss
+    tdf <- ss - 1
+    prob <- input$prob
+    s.df <- data.frame(x,y=dt(x,tdf))
+    npt <- s.df %>% ggplot(aes(x,y))+geom_line()+
+      geom_area(aes(y=y),alpha=0) + scale_x_continuous(sec.axis = sec_axis(~.*sd+mu, name = "A",breaks = seq(-5*sd+mu,5*sd+mu,sd)),breaks = seq(-5,5)) +
+      theme(axis.title.y = element_blank(),axis.text.y = element_blank(),axis.ticks.y = element_blank()) +
+      labs(x = "t") + geom_line(aes(x,dnorm(x)),color = "orange",linetype = "dashed")
+    if(input$nshade == "Left"){
+      t <- qt(prob/100,tdf)
+      npt <- npt + geom_area(data=subset(s.df,x <= t),aes(y=y), fill ="blue", alpha = .5) + 
+        geom_segment(aes(x = t, y = 0, xend = t, yend = dt(t,tdf)),color="red")
+      npttext <- paste("t-Score: ",t)
+    }else if (input$nshade == "Center"){
+      t <- qt((1-prob/100)/2,tdf)
+      npt <- npt + geom_area(data=subset(s.df,x >= t & x <= -t),aes(y=y), fill ="blue", alpha = .5) + 
+        geom_segment(aes(x = t, y = 0, xend = t, yend = dt(t,tdf)),color="red") +
+        geom_segment(aes(x = -t, y = 0, xend = -t, yend = dt(-t,tdf)),color="red")
+      npttext <- paste("t-Scores: ",t," & ",-t)
+    }else if(input$nshade == "Right"){
+      t <- qt(1 - prob/100,tdf)
+      npt <- npt + geom_area(data=subset(s.df,x >= t),aes(y=y), fill ="blue", alpha = .5) + 
+        geom_segment(aes(x = t, y = 0, xend = t, yend = dt(t,tdf)),color="red")
+      npttext <- paste("t-Score: ",t) 
+    }
+    output$npt <- renderPlot({npt})
+    output$npttext <- renderText({npttext})
+  }) #EobserveEvent  
+  # <<<<<<<<<<<<<< End of Student t Tab Server
   # >>>>>>>>>>>>>> Start of t-test Tab Server
   
   output$dtt <- renderRHandsontable({rhandsontable(t.in$values)})
@@ -916,7 +1033,7 @@ server <- function(input, output, session) {
     if(input$ptest == 0){return()}
     alpha <- input$pAlpha
     ptail <- input$ptail
-    if(ptail != "two.sided"){cl <- 1-2*alpha}else if(ptail == "two.sided"){cl <- 1-alpha}
+    if(ptail != "two.tail"){cl <- 1-2*alpha}else if(ptail == "two.tail"){cl <- 1-alpha}
     pci.cv <- qnorm(mean(c(1,cl)))
     x1 <- input$x1
     n1 <- input$n1

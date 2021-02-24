@@ -41,7 +41,7 @@ binwidth <- 1
 # >>>>>>>>>>>>>>>Start of UI
 
 ui <- dashboardPage(
-  dashboardHeader(title = "Shiny Stat Tools v1.5",titleWidth = "450px",
+  dashboardHeader(title = "Shiny Stat Tools v1.6",titleWidth = "450px",
                   tags$li(class = "dropdown",tags$a("by Ken Harmon")),
                   dropdownMenuOutput(outputId = "notifications")),
   

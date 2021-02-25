@@ -643,29 +643,29 @@ server <- function(input, output, session) {
       paste("Total Probability: ",tp)
     })
   }) #EobserveEvent
-  observeEvent(c(input$p2t,input$nshade), {
+  observeEvent(c(input$p2t,input$tshade), {
     mu <- input$tmu
     sd <- input$tsd
     ss <- input$tss
     tdf <- ss - 1
-    prob <- input$prob
+    prob <- input$tprob
     s.df <- data.frame(x,y=dt(x,tdf))
     npt <- s.df %>% ggplot(aes(x,y))+geom_line()+
       geom_area(aes(y=y),alpha=0) + scale_x_continuous(sec.axis = sec_axis(~.*sd+mu, name = "A",breaks = seq(-5*sd+mu,5*sd+mu,sd)),breaks = seq(-5,5)) +
       theme(axis.title.y = element_blank(),axis.text.y = element_blank(),axis.ticks.y = element_blank()) +
       labs(x = "t") + geom_line(aes(x,dnorm(x)),color = "orange",linetype = "dashed")
-    if(input$nshade == "Left"){
+    if(input$tshade == "Left"){
       t <- qt(prob/100,tdf)
       npt <- npt + geom_area(data=subset(s.df,x <= t),aes(y=y), fill ="blue", alpha = .5) + 
         geom_segment(aes(x = t, y = 0, xend = t, yend = dt(t,tdf)),color="red")
       npttext <- paste("t-Score: ",t)
-    }else if (input$nshade == "Center"){
+    }else if (input$tshade == "Center"){
       t <- qt((1-prob/100)/2,tdf)
       npt <- npt + geom_area(data=subset(s.df,x >= t & x <= -t),aes(y=y), fill ="blue", alpha = .5) + 
         geom_segment(aes(x = t, y = 0, xend = t, yend = dt(t,tdf)),color="red") +
         geom_segment(aes(x = -t, y = 0, xend = -t, yend = dt(-t,tdf)),color="red")
       npttext <- paste("t-Scores: ",t," & ",-t)
-    }else if(input$nshade == "Right"){
+    }else if(input$tshade == "Right"){
       t <- qt(1 - prob/100,tdf)
       npt <- npt + geom_area(data=subset(s.df,x >= t),aes(y=y), fill ="blue", alpha = .5) + 
         geom_segment(aes(x = t, y = 0, xend = t, yend = dt(t,tdf)),color="red")

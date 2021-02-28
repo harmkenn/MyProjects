@@ -1,0 +1,250 @@
+---
+title: "Collection and Cleaning 2018"
+author: "Jake Harmon"
+date: "1/25/2021"
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+library(tidyverse)
+library(tidylog)
+library(rvest) #for the html_session
+library(wdman) #selenium binary manager
+library(RSelenium)
+library(xml2)
+library(selectr)
+```
+
+SPOTRAC Authentication
+```{r}
+loginpage <- "https://www.spotrac.com/signin/?redirect="
+pgsession <- html_session(loginpage)
+pgform <- html_form(pgsession)[[3]] 
+filled_form <- set_values(pgform,
+                          email="jacobwharmon@gmail.com", 
+                          password="qy3vZLM9mD!RQTx")
+submit_form(pgsession, filled_form)
+```
+
+# CAP Team Info by Year: https://www.spotrac.com/nba/<team>/cap/<year>     2020 means current
+# CAP League Info by Year: https://www.spotrac.com/nba/cap/<year> 
+# CASH Player All time https://www.spotrac.com/nba/<team>/<player_id>/cash-earnings/
+
+Grabbing all player URL's
+```{r}
+teams_SPO <- c("atlanta-hawks","boston-celtics","brooklyn-nets","charlotte-hornets","chicago-bulls",
+              "cleveland-cavaliers","dallas-mavericks","denver-nuggets","detroit-pistons","golden-state-warriors",
+              "houston-rockets","indiana-pacers","los-angeles-clippers","los-angeles-lakers","memphis-grizzlies",
+              "miami-heat","milwaukee-bucks","minnesota-timberwolves","new-orleans-pelicans","new-york-knicks",
+              "oklahoma-city-thunder","orlando-magic","philadelphia-76ers","phoenix-suns","portland-trail-blazers",
+              "sacramento-kings","san-antonio-spurs","toronto-raptors","utah-jazz","washington-wizards")
+
+years_SPO <- c(2018:2020) #only works for 2020,2019,2018. The HTML is different for the 2017 and older years
+
+player_url_list <- list()
+
+for (i in c(1:30)) { #This works for 2020 and 2019
+  temp_team <- teams_SPO[i]
+  player_url_list[[paste0(temp_team,years_SPO[1])]] <- read_html(paste0("https://www.spotrac.com/nba/",
+                                                                       temp_team,
+                                                                       "/cap/",
+                                                                       years_SPO[1])) %>%
+                                                                       querySelector("div.team-content") %>%
+                                                                       querySelector("div.teams") %>%
+                                                                       html_nodes("table") %>%
+                                                                       html_nodes("tr") %>%
+                                                                       html_nodes("td") %>%
+                                                                       html_nodes("a") %>%
+                                                                       html_attr("href")
+  print(paste0(i, "out of 30 completed"))
+}
+remove(temp_team)
+```
+
+#Note, each team can only have 15 players even though more player links got grabbed
+Grabbing Player Names, Stats
+# https://www.spotrac.com/nba/<team>/<player_id>/statistics/
+```{r}
+initial_url <- paste0(player_url_list[[paste0(teams_SPO[1],years_SPO[1])]][1],"statistics/")
+
+initial_team <- teams_SPO[1]
+
+initial_year <- years_SPO[1]
+
+initial_name <- read_html(initial_url) %>% 
+              querySelector("div.player-details") %>% 
+              querySelector("div.player-name") %>% 
+              html_nodes("h1") %>% 
+              map_chr(xml_text) %>% 
+              str_trim("both")
+
+initial_id <- as.numeric(str_remove(str_remove(player_url_list[[paste0(teams_SPO[1],years_SPO[1])]][1],
+                                               "https://www.spotrac.com/redirect/player/"),"/"))
+
+player_names_ids <- data.frame("team" = initial_team,"year" = initial_year,
+                               "name" = initial_name,"id" = initial_id)
+stat_tables <- list()
+
+for (i in c(25:30)){ #Breaks at OKC (team 21/30) 4/15 at Schroder and PHX (team 24/30) 12/15 at Elie Okobo
+  print(teams_SPO[i])
+  for (k in c(1:15)){
+    temp_year <- years_SPO[1]
+    temp_team <- teams_SPO[i]
+    temp_url <- paste0(player_url_list[[paste0(temp_team,temp_year)]][k], #k for 1:15 players
+                       "statistics/")
+    
+    temp_name <- read_html(temp_url) %>% 
+                  querySelector("div.player-details") %>% 
+                  querySelector("div.player-name") %>% 
+                  html_nodes("h1") %>% 
+                  map_chr(xml_text) %>% 
+                  str_trim("both")
+    
+    temp_id <- as.numeric(str_remove(str_remove(player_url_list[[paste0(temp_team,temp_year)]][k],
+                                                   "https://www.spotrac.com/redirect/player/"),"/"))
+    
+    player_names_ids <- rbind(player_names_ids, c("team" = temp_team, "year" = temp_year,
+                                                  "name" = temp_name, "id" = temp_id))
+    
+    try(stat_tables[[as.character(temp_id)]] <- read_html(temp_url) %>% 
+                            querySelector("li#statistics") %>% 
+                            querySelector("table.salaryTable") %>% 
+                            html_nodes("tr") %>% 
+                            html_nodes("td") %>% 
+                            map_chr(xml_text), silent = TRUE) #16 columns that need to get wrapped
+    print(paste(k,"out of 15"))
+  }
+}
+
+remove(i,k,temp_url,temp_name,temp_id,temp_team,temp_year,
+       initial_url,initial_name,initial_id,initial_team,initial_year)
+
+player_names_ids <- player_names_ids %>% unique()  
+```
+
+
+Unwrapping the vectorized stat_tables entries and creating giant playerID-year stat table
+```{r}
+init_stat_df <- data.frame(t(stat_tables[[1]][1:16]))
+names(init_stat_df) <- c("season","team","games","mpg","fg%","3pt%","ft%","orb","drb",
+                         "trb","ast","stl","blk","tov","pt","prod_pts")
+
+unwrap_fx <- function(x){
+  numrow <- length(x) / 16
+  temp_df <- data.frame(matrix(NA, nrow = 0, ncol = 16))
+  names(temp_df) <- c("season","team","games","mpg","fg%","3pt%","ft%","orb",
+                      "drb","trb","ast","stl","blk","tov","pt","prod_pts")
+  for(k in c(1:numrow)){
+    which_rows <- c(1:16)
+    temp_df[k, ] <- x[which_rows + (16*(k-1))]
+  }
+  return(temp_df)
+}
+
+# for each index across stat_tables, create a column equal to the playerID and then add their stat table
+
+big_stat_table <- data.frame(matrix(NA, nrow = 0, ncol = 17))
+names(big_stat_table) <- c("player_id","season","team","games","mpg","fg%","3pt%","ft%","orb",
+                                    "drb","trb","ast","stl","blk","tov","pt","prod_pts")
+player_id_vec <- names(stat_tables)
+
+for (i in c(1:442)) {
+  temp_df <- unwrap_fx(stat_tables[[i]])
+  temp_df$player_id <- player_id_vec[i]
+  temp_df <- temp_df %>% select(player_id, everything())
+  big_stat_table <- rbind(big_stat_table, temp_df)
+}
+
+big_stat_table <- big_stat_table %>% filter(season != "Totals")
+
+big_stat_table <-left_join(big_stat_table, player_names_ids,
+                           by = c("player_id" = "id")) %>% select("name",everything(), -year, -team.y)
+
+write_csv(big_stat_table, "big_stat_table_2018.csv")
+write_csv(player_names_ids, "player_names_ids_2018.csv")
+```
+
+Dennis Schröder
+```{r}
+    temp_year <- years_SPO[1]
+    temp_team <- teams_SPO[21]
+    temp_url <- paste0(player_url_list[[paste0(temp_team,temp_year)]][4], #k for 1:15 players
+                       "statistics/")
+    
+    temp_name <- "Dennis Schröder"
+    
+    temp_id <- as.numeric(str_remove(str_remove(player_url_list[[paste0(temp_team,temp_year)]][4],
+                                                   "https://www.spotrac.com/redirect/player/"),"/"))
+    
+    player_names_ids <- rbind(player_names_ids, c("team" = temp_team, "year" = temp_year,
+                                                  "name" = temp_name, "id" = temp_id))
+    
+    try(stat_tables[[as.character(temp_id)]] <- read_html(temp_url) %>% 
+                            querySelector("li#statistics") %>% 
+                            querySelector("table.salaryTable") %>% 
+                            html_nodes("tr") %>% 
+                            html_nodes("td") %>% 
+                            map_chr(xml_text), silent = TRUE)
+```
+
+Élie Okobo
+```{r}
+    temp_year <- years_SPO[1]
+    temp_team <- teams_SPO[24]
+    temp_url <- paste0(player_url_list[[paste0(temp_team,temp_year)]][12], #k for 1:15 players
+                       "statistics/")
+    
+    temp_name <- "Élie Okobo"
+    
+    temp_id <- as.numeric(str_remove(str_remove(player_url_list[[paste0(temp_team,temp_year)]][13],
+                                                   "https://www.spotrac.com/redirect/player/"),"/"))
+    
+    player_names_ids <- rbind(player_names_ids, c("team" = temp_team, "year" = temp_year,
+                                                  "name" = temp_name, "id" = temp_id))
+    
+    try(stat_tables[[as.character(temp_id)]] <- read_html(temp_url) %>% 
+                            querySelector("li#statistics") %>% 
+                            querySelector("table.salaryTable") %>% 
+                            html_nodes("tr") %>% 
+                            html_nodes("td") %>% 
+                            map_chr(xml_text), silent = TRUE)
+```
+
+
+Grabbing Player Contract Info: VIP
+```{r}
+temp_contract_table <- read_html(temp_url) %>% 
+                        querySelector("li#contracts") %>% 
+                        querySelector("table.salaryTable") %>% 
+                        html_nodes("tr") %>% 
+                        html_nodes("td") %>% 
+                        map_chr(xml_text) #grabs the current contract info
+```
+
+
+
+Error Checking
+```{r}
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

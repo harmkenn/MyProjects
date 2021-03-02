@@ -403,9 +403,9 @@ ui <- dashboardPage(
                            splitLayout(
                              actionButton("disc.reset","Clear"),
                              actionButton("disc.add","Add Column"),
-                             actionButton("disc.run","Run"),
-                             plotlyOutput("DPHist")
+                             actionButton("disc.run","Run")
                            ), #EsplitLayout
+                           plotlyOutput("DPHist"),
                            tableOutput("disc.results")
                        ), #Ebox
                        box(title = "Binomial", width = NULL, status = "primary",

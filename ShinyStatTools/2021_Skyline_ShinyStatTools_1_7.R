@@ -633,7 +633,7 @@ server <- function(input, output, session) {
       geom_line(aes(x,dnorm(x)),color = "orange",linetype = "dashed")
     if(input$st_Left == TRUE){t2pp <- t2pp + geom_area(data=subset(st.df,x<lt),aes(y=y), fill ="blue", alpha = .5)} else {t2pp}
     if(input$st_Center == TRUE){t2pp <- t2pp + geom_area(data=subset(st.df,x > lt & x < rt),aes(y=y), fill ="blue", alpha = .5)} else {t2pp}
-    if(input$st_Right == TRUE){t2pp + geom_area(data=subset(st.df,x > rt),aes(y=y), fill ="blue", alpha = .5)} else {t2pp}
+    if(input$st_Right == TRUE){t2pp <- t2pp + geom_area(data=subset(st.df,x > rt),aes(y=y), fill ="blue", alpha = .5)} else {t2pp}
     output$st_t2p_plot <- renderPlot({t2pp})
 
     if(input$st_Left == TRUE){t2ptext <- pt(lt,st_df)}else{t2ptext <- 0}

@@ -5,9 +5,10 @@ account: harmkenn
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 1607482
-bundleId: 4297625
+bundleId: 4300287
 url: https://harmkenn.shinyapps.io/ShinyStatTools/
-when: 1614815705.99484
+when: 1614865099.00627
+lastSyncTime: 1614865099.00627
 asMultiple: FALSE
 asStatic: FALSE
-ignoredFiles: 2021_Skyline_ShinyStatTools.R|2021_Skyline_ShinyStatTools_1_5.R|2021_Skyline_ShinyStatTools_1_6.R|App.R|BYUIdata.Rdata|datasets.R|datasets2.R|stat_tools B.R|stat_tools D.R|stat_tools.R|stat_tools_C.R|stat_tools_ex.R|tdist.xlsx|tinker B.R|tinker.R|tinker.Rmd|tinkerB.R|datasets3/app.R|Standalone/standalone.R|Standalone/Standalone.rmd|www/custom.css
+ignoredFiles: 2021_Skyline_ShinyStatTools.R|2021_Skyline_ShinyStatTools_1_5.R|2021_Skyline_ShinyStatTools_1_6.R|App.R|BYUIdata.Rdata|datasets.R|datasets2.R|datasets3/app.R|Standalone/standalone.R|Standalone/Standalone.rmd|stat_tools B.R|stat_tools D.R|stat_tools.R|stat_tools_C.R|stat_tools_ex.R|tdist.xlsx|tinker B.R|tinker.R|tinker.Rmd|tinkerB.R|www/custom.css

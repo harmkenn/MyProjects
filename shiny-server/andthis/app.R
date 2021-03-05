@@ -1,4 +1,4 @@
-library(ggpmisc) 
+library(ggpmisc)
 library(janitor)
 library(shiny)
 library(shinyjs)

@@ -246,7 +246,7 @@ ui <- dashboardPage(
                              radioButtons("t_tail","",c("Left Tail"="less","Two Tail"="two.sided","Right Tail"="greater"),inline = FALSE,width = "50%"),
                              actionButton("t_test_btn","Test")
                            ), #EsplitLayout
-                           conditionalPanel(condition = "input.t_choice == '2 Sample t-Test'",checkboxInput("eqvar","Equal Variances",TRUE)),
+                           conditionalPanel(condition = "input.t_choice == '2 Sample t-Test'",checkboxInput("eqvar","Equal Variances",FALSE)),
                            plotOutput("t_test_graph")
                        ), #Ebox
                 ) #Ecolumn

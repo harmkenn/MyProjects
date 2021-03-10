@@ -852,8 +852,8 @@ server <- function(input, output, session) {
         tp <- st.df %>% ggplot(aes(x,y))+geom_line()+
           geom_area(data=subset(st.df,x <= -abs(tcv)),aes(y=y), fill ="red", alpha = .5) +
           geom_area(data=subset(st.df,x >= abs(tcv)),aes(y=y), fill ="red", alpha = .5) +
-          geom_area(data=subset(st.df,x <= -abs(t_se)),aes(y=y), fill ="blue", alpha = .5) +
-          geom_area(data=subset(st.df,x >= abs(t_se)),aes(y=y), fill ="blue", alpha = .5)
+          geom_area(data=subset(st.df,x <= -abs(t_score)),aes(y=y), fill ="blue", alpha = .5) +
+          geom_area(data=subset(st.df,x >= abs(t_score)),aes(y=y), fill ="blue", alpha = .5)
       } #Eif
       
       ############ t-Test Statistics Server #############################           

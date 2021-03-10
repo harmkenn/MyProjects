@@ -797,14 +797,14 @@ server <- function(input, output, session) {
         df <- ttr$parameter
         tcv <- qt(alpha,df)
         t_score <- ttr$statistic
-        t.p <- pt(t_se,df)
+        t.pv <- pt(t_score,df)
         U <- max(abs(tcv),abs(t_se))+1
         L <- -1*U
         x <- seq(from = L, to = U, by = .01)
         st.df <- data.frame(x,y=dt(x,df))
         tp <- st.df %>% ggplot(aes(x,y))+geom_line()+
           geom_area(data=subset(st.df,x<=tcv),aes(y=y), fill ="red", alpha = .5) +
-          geom_area(data=subset(st.df,x<=t_se),aes(y=y), fill ="blue", alpha = .5)
+          geom_area(data=subset(st.df,x<=t_score),aes(y=y), fill ="blue", alpha = .5)
       }else if(tail == "greater"){
         cl <- 1 - 2*alpha
         if(input$t_choice == "2 Sample t-Test"){
@@ -820,14 +820,14 @@ server <- function(input, output, session) {
         df <- ttr$parameter
         tcv <- qt(1-alpha,df)
         t_score <- ttr$statistic
-        t.p <- 1 - pt(t_se,df)
+        t.pv <- 1 - pt(t_score,df)
         U <- max(abs(tcv),abs(t_se))+1
         L <- -1*U
         x <- seq(from = L, to = U, by = .01)
         st.df <- data.frame(x,y=dt(x,df))
         tp <- st.df %>% ggplot(aes(x,y))+geom_line()+
           geom_area(data=subset(st.df,x>=tcv),aes(y=y), fill ="red", alpha = .5) +
-          geom_area(data=subset(st.df,x>=t_se),aes(y=y), fill ="blue", alpha = .5)
+          geom_area(data=subset(st.df,x>=t_score),aes(y=y), fill ="blue", alpha = .5)
       }else{
         cl <- 1 - alpha
         if(input$t_choice == "2 Sample t-Test"){
@@ -844,7 +844,7 @@ server <- function(input, output, session) {
         df <- ttr$parameter
         tcv <- qt(alpha/2,df)
         t_score <- ttr$statistic
-        t.p <- 2*(pt(-abs(t_se),df))
+        t.pv <- 2*(pt(-abs(t_score),df))
         U <- max(abs(tcv),abs(t_se))+2
         L <- -1*U
         x <- seq(from = L, to = U, by = .01)
@@ -886,29 +886,29 @@ server <- function(input, output, session) {
       if (tail == "less"){
         cl <- 1 - 2*alpha
         tcv <- qt(alpha,df)
-        t.p <- pt(t_score,df)
+        t.pv <- pt(t_score,df)
         U <- max(abs(tcv),abs(t_se))+1
         L <- -1*U
         x <- seq(from = L, to = U, by = .01)
         st.df <- data.frame(x,y=dt(x,df))
         tp <- st.df %>% ggplot(aes(x,y))+geom_line()+
           geom_area(data=subset(st.df,x<=tcv),aes(y=y), fill ="red", alpha = .5) +
-          geom_area(data=subset(st.df,x<=t_se),aes(y=y), fill ="blue", alpha = .5)
+          geom_area(data=subset(st.df,x<=t_score),aes(y=y), fill ="blue", alpha = .5)
       }else if(tail == "greater"){
         cl <- 1 - 2*alpha
         tcv <- qt(1-alpha,df)
-        t.p <- 1 - pt(t_score,df)
+        t.pv <- 1 - pt(t_score,df)
         U <- max(abs(tcv),abs(t_se))+1
         L <- -1*U
         x <- seq(from = L, to = U, by = .01)
         st.df <- data.frame(x,y=dt(x,df))
         tp <- st.df %>% ggplot(aes(x,y))+geom_line()+
           geom_area(data=subset(st.df,x>=tcv),aes(y=y), fill ="red", alpha = .5) +
-          geom_area(data=subset(st.df,x>=t_se),aes(y=y), fill ="blue", alpha = .5)
+          geom_area(data=subset(st.df,x>=t_score),aes(y=y), fill ="blue", alpha = .5)
       }else if(tail == "two.sided"){
         cl <- 1 - alpha
         tcv <- qt(alpha/2,df)
-        t.p <- 2*(pt(-abs(t_score),df))
+        t.pv <- 2*(pt(-abs(t_score),df))
         U <- max(abs(tcv),abs(t_score))+2
         L <- -1*U
         x <- seq(from = L, to = U, by = .01)
@@ -922,7 +922,7 @@ server <- function(input, output, session) {
     } #Eif
     
     m.e <- abs(tcv) * t_se
-    ttt <- matrix(formatC(c(df,t_score,t.p,tcv,t_se,m.e),
+    ttt <- matrix(formatC(c(df,t_score,t.pv,tcv,t_se,m.e),
                           format="f",digits = 6,drop0trailing = TRUE),ncol=6,nrow=1)
     colnames(ttt) <- c("df","t-score","P-Value","CV","SE","ME")
     

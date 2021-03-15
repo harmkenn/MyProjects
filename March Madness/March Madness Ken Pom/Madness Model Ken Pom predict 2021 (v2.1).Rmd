@@ -58,7 +58,7 @@ nas <- teamcomb %>% summarise_all(~ sum(is.na(.)))
 ```{r btm}
 pyear <- 2021 #floor(runif(1, min=2003, max=2019))
 rm <- 0
-rsd <- 4
+rsd <- 5
 
 # Separate Favored and Underdogs 02 to 18 
 AG0219F <- teamcomb %>% filter(Favored == "F" & Year != pyear)

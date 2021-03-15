@@ -1,4 +1,4 @@
-library(ggpmisc) 
+library(ggpmisc)
 library(janitor)
 library(shiny)
 library(shinyjs)
@@ -41,7 +41,7 @@ binwidth <- 1
 # >>>>>>>>>>>>>>>Start of UI
 
 ui <- dashboardPage(
-  dashboardHeader(title = "Shiny Stat Tools v1.7",titleWidth = "450px",
+  dashboardHeader(title = "Shiny Stat Tools v1.8",titleWidth = "450px",
                   tags$li(class = "dropdown",tags$a("by Ken Harmon")),
                   dropdownMenuOutput(outputId = "notifications")),
   
@@ -51,10 +51,10 @@ ui <- dashboardPage(
                    sidebarMenu(
                      menuItem("Descriptive Stats", tabName = "ds"),
                      menuItem("Normal", tabName = "normal"),
+                     menuItem("Proportions", tabName = "props"),
                      menuItem("Student's t", tabName = "student"),
                      menuItem("All t-Tests", tabName = "t_test_tab"),
                      menuItem("ANOVA", tabName = "anova"),
-                     menuItem("Proportions", tabName = "props"),
                      menuItem("Chi-Square", tabName = "Chi"),
                      menuItem("Linear Regression", tabName = "LR"),
                      menuItem("Discrete", tabName = "disc"),
@@ -219,10 +219,10 @@ ui <- dashboardPage(
                            conditionalPanel(condition = "input.Stat_check == 1 && input.t_choice == '2 Sample t-Test'",
                                             numericInput("t_xbar.a","Mean A:",0),
                                             numericInput("t_sd.a","Standard Deviation A:",1),
-                                            numericInput("t_n.a","Count A:",1),
+                                            numericInput("t_n.a","Count A:",2),
                                             numericInput("t_xbar.b","Mean B:",0),
                                             numericInput("t_sd.b","Standard Deviation B:",1),
-                                            numericInput("t_n.b","Count B:",1)
+                                            numericInput("t_n.b","Count B:",2)
                            ), #End of conditionalPanel
                        ), #Ebox
                 ), #Ecolumn
@@ -246,7 +246,7 @@ ui <- dashboardPage(
                              radioButtons("t_tail","",c("Left Tail"="less","Two Tail"="two.sided","Right Tail"="greater"),inline = FALSE,width = "50%"),
                              actionButton("t_test_btn","Test")
                            ), #EsplitLayout
-                           conditionalPanel(condition = "input.t_choice == '2 Sample t-Test'",checkboxInput("eqvar","Equal Variances",TRUE)),
+                           conditionalPanel(condition = "input.t_choice == '2 Sample t-Test'",checkboxInput("eqvar","Equal Variances",FALSE)),
                            plotOutput("t_test_graph")
                        ), #Ebox
                 ) #Ecolumn
@@ -783,62 +783,68 @@ server <- function(input, output, session) {
       if (tail == "less"){
         cl <- 1 - 2*alpha
         if(input$t_choice == "2 Sample t-Test"){
+          t.x.a <- t.in$values[,1]
+          t.x.a <- t.x.a[!is.na(t.x.a)]
           t.x.b <- t.in$values[,2]
           t.x.b <- t.x.b[!is.na(t.x.b)]
-          t_xbar <- t_xbar - mean(t.x.b)
-          ttr <- t.test(t.x,t.x.b,alternative = tail,mu=mu, var.equal = input$eqvar, conf.level = cl)
-          t_se <- sqrt(sd(t.x.b)^2/length(t.x.b)+sd(t.x)^2/length(t.x))
+          t_xbar <- mean(t.x.a) - mean(t.x.b)
+          ttr <- t.test(t.x.a,t.x.b,alternative = tail,mu=mu, var.equal = input$eqvar, conf.level = cl)
+          t_se <- sqrt(sd(t.x.b)^2/length(t.x.b)+sd(t.x.a)^2/length(t.x.a))
         }else{
           ttr <- t.test(t.x,alternative = tail,mu=mu, conf.level = cl)
           
         }
         df <- ttr$parameter
         tcv <- qt(alpha,df)
-        t_se <- ttr$statistic
-        t.p <- pt(t_se,df)
+        t_score <- ttr$statistic
+        t.pv <- pt(t_score,df)
         U <- max(abs(tcv),abs(t_se))+1
         L <- -1*U
         x <- seq(from = L, to = U, by = .01)
         st.df <- data.frame(x,y=dt(x,df))
         tp <- st.df %>% ggplot(aes(x,y))+geom_line()+
           geom_area(data=subset(st.df,x<=tcv),aes(y=y), fill ="red", alpha = .5) +
-          geom_area(data=subset(st.df,x<=t_se),aes(y=y), fill ="blue", alpha = .5)
+          geom_area(data=subset(st.df,x<=t_score),aes(y=y), fill ="blue", alpha = .5)
       }else if(tail == "greater"){
         cl <- 1 - 2*alpha
         if(input$t_choice == "2 Sample t-Test"){
+          t.x.a <- t.in$values[,1]
+          t.x.a <- t.x.a[!is.na(t.x.a)]
           t.x.b <- t.in$values[,2]
           t.x.b <- t.x.b[!is.na(t.x.b)]
-          ttr <- t.test(t.x,t.x.b,alternative = tail,mu=mu, var.equal = input$eqvar, conf.level = cl)
-          t_se <- sqrt(sd(t.x.b)^2/length(t.x.b)+sd(t.x)^2/length(t.x))
+          ttr <- t.test(t.x.a,t.x.b,alternative = tail,mu=mu, var.equal = input$eqvar, conf.level = cl)
+          t_se <- sqrt(sd(t.x.b)^2/length(t.x.b)+sd(t.x.a)^2/length(t.x.a))
         }else{
           ttr <- t.test(t.x,alternative = tail,mu=mu, conf.level = cl)
         }
         df <- ttr$parameter
         tcv <- qt(1-alpha,df)
-        t_se <- ttr$statistic
-        t.p <- 1 - pt(t_se,df)
+        t_score <- ttr$statistic
+        t.pv <- 1 - pt(t_score,df)
         U <- max(abs(tcv),abs(t_se))+1
         L <- -1*U
         x <- seq(from = L, to = U, by = .01)
         st.df <- data.frame(x,y=dt(x,df))
         tp <- st.df %>% ggplot(aes(x,y))+geom_line()+
           geom_area(data=subset(st.df,x>=tcv),aes(y=y), fill ="red", alpha = .5) +
-          geom_area(data=subset(st.df,x>=t_se),aes(y=y), fill ="blue", alpha = .5)
+          geom_area(data=subset(st.df,x>=t_score),aes(y=y), fill ="blue", alpha = .5)
       }else{
         cl <- 1 - alpha
         if(input$t_choice == "2 Sample t-Test"){
+          t.x.a <- t.in$values[,1]
+          t.x.a <- t.x.a[!is.na(t.x.a)]
           t.x.b <- t.in$values[,2]
           t.x.b <- t.x.b[!is.na(t.x.b)]
-          ttr <- t.test(t.x,t.x.b,alternative = tail,mu=mu, var.equal = input$eqvar, conf.level = cl)
-          t_se <- sqrt(sd(t.x.b)^2/length(t.x.b)+sd(t.x)^2/length(t.x))
+          ttr <- t.test(t.x.a,t.x.b,alternative = tail,mu=mu, var.equal = input$eqvar, conf.level = cl)
+          t_se <- sqrt(sd(t.x.b)^2/length(t.x.b)+sd(t.x.a)^2/length(t.x.a))
         }else{
           ttr <- t.test(t.x,alternative = tail,mu=mu, conf.level = cl)
         }
         
         df <- ttr$parameter
         tcv <- qt(alpha/2,df)
-        t_se <- ttr$statistic
-        t.p <- 2*(pt(-abs(t_se),df))
+        t_score <- ttr$statistic
+        t.pv <- 2*(pt(-abs(t_score),df))
         U <- max(abs(tcv),abs(t_se))+2
         L <- -1*U
         x <- seq(from = L, to = U, by = .01)
@@ -846,8 +852,8 @@ server <- function(input, output, session) {
         tp <- st.df %>% ggplot(aes(x,y))+geom_line()+
           geom_area(data=subset(st.df,x <= -abs(tcv)),aes(y=y), fill ="red", alpha = .5) +
           geom_area(data=subset(st.df,x >= abs(tcv)),aes(y=y), fill ="red", alpha = .5) +
-          geom_area(data=subset(st.df,x <= -abs(t_se)),aes(y=y), fill ="blue", alpha = .5) +
-          geom_area(data=subset(st.df,x >= abs(t_se)),aes(y=y), fill ="blue", alpha = .5)
+          geom_area(data=subset(st.df,x <= -abs(t_score)),aes(y=y), fill ="blue", alpha = .5) +
+          geom_area(data=subset(st.df,x >= abs(t_score)),aes(y=y), fill ="blue", alpha = .5)
       } #Eif
       
       ############ t-Test Statistics Server #############################           
@@ -862,45 +868,47 @@ server <- function(input, output, session) {
         t_se <- t_sd/sqrt(t_n)
         t_score <- (t_xbar-mu)/t_se
       }else if(input$t_choice == "2 Sample t-Test" && input$eqvar == TRUE){
-        t_xbar <- input$t_xbar - input$t_xbar.b
-        df <- input$t_n + input$t_n.b - 2
-        sea <- input$t_sd/sqrt(input$t_n)
+        t_xbar <- input$t_xbar.a - input$t_xbar.b
+        df <- input$t_n.a + input$t_n.b - 2
+        sea <- input$t_sd.a/sqrt(input$t_n.a)
         seb <- input$t_sd.b/sqrt(input$t_n.b)
         t_se <- sqrt(sea^2+seb^2)
-        t_score <- (input$t_xbar-input$t_xbar.b)/t_se
+        t_score <- (input$t_xbar.a-input$t_xbar.b)/t_se
       }else if(input$t_choice == "2 Sample t-Test" && input$eqvar == FALSE){
-        sea <- input$t_sd/sqrt(input$t_n)
+        sea <- input$t_sd.a/sqrt(input$t_n.a)
         seb <- input$t_sd.b/sqrt(input$t_n.b)
         t_se <- sqrt(sea^2+seb^2)
-        df <- t_se^4/(sea^4/(input$t_n-1)+seb^4/(input$t_n.b-1))
+        df <- t_se^4/(sea^4/(input$t_n.a-1)+seb^4/(input$t_n.b-1))
+        t_score <- (input$t_xbar.a-input$t_xbar.b)/t_se
+        t_xbar <- input$t_xbar.a - input$t_xbar.b
       }
       
       if (tail == "less"){
         cl <- 1 - 2*alpha
         tcv <- qt(alpha,df)
-        t.p <- pt(t_score,df)
+        t.pv <- pt(t_score,df)
         U <- max(abs(tcv),abs(t_se))+1
         L <- -1*U
         x <- seq(from = L, to = U, by = .01)
         st.df <- data.frame(x,y=dt(x,df))
         tp <- st.df %>% ggplot(aes(x,y))+geom_line()+
           geom_area(data=subset(st.df,x<=tcv),aes(y=y), fill ="red", alpha = .5) +
-          geom_area(data=subset(st.df,x<=t_se),aes(y=y), fill ="blue", alpha = .5)
+          geom_area(data=subset(st.df,x<=t_score),aes(y=y), fill ="blue", alpha = .5)
       }else if(tail == "greater"){
         cl <- 1 - 2*alpha
         tcv <- qt(1-alpha,df)
-        t.p <- 1 - pt(t_score,df)
+        t.pv <- 1 - pt(t_score,df)
         U <- max(abs(tcv),abs(t_se))+1
         L <- -1*U
         x <- seq(from = L, to = U, by = .01)
         st.df <- data.frame(x,y=dt(x,df))
         tp <- st.df %>% ggplot(aes(x,y))+geom_line()+
           geom_area(data=subset(st.df,x>=tcv),aes(y=y), fill ="red", alpha = .5) +
-          geom_area(data=subset(st.df,x>=t_se),aes(y=y), fill ="blue", alpha = .5)
+          geom_area(data=subset(st.df,x>=t_score),aes(y=y), fill ="blue", alpha = .5)
       }else if(tail == "two.sided"){
         cl <- 1 - alpha
         tcv <- qt(alpha/2,df)
-        t.p <- 2*(pt(-abs(t_score),df))
+        t.pv <- 2*(pt(-abs(t_score),df))
         U <- max(abs(tcv),abs(t_score))+2
         L <- -1*U
         x <- seq(from = L, to = U, by = .01)
@@ -914,7 +922,7 @@ server <- function(input, output, session) {
     } #Eif
     
     m.e <- abs(tcv) * t_se
-    ttt <- matrix(formatC(c(df,t_score,t.p,tcv,t_se,m.e),
+    ttt <- matrix(formatC(c(df,t_score,t.pv,tcv,t_se,m.e),
                           format="f",digits = 6,drop0trailing = TRUE),ncol=6,nrow=1)
     colnames(ttt) <- c("df","t-score","P-Value","CV","SE","ME")
     

@@ -42,9 +42,9 @@ https://kenpom.com/index.php?y=2018&s=TeamName
 ```{r wld}
 # Start With All Games 02-19 stacked with Favored team F over Underdog U
 # Append on Season stats to each team
-AG0219stacked <- read.csv("AG0221stacked.csv")
+AG0221stacked <- read.csv("AG0221stacked.csv")
 teamstats <- read.csv("KenPom02-21.csv")
-teamcomb <- left_join(AG0219stacked,teamstats,by=c("Year"="Year","Team"="Team"))
+teamcomb <- left_join(AG0221stacked,teamstats,by=c("Year"="Year","Team"="Team"))
 
 #Where are the NAs
 nas <- teamcomb %>% summarise_all(~ sum(is.na(.)))
@@ -65,14 +65,14 @@ AG0219F <- teamcomb %>% filter(Favored == "F" & Year != pyear)
 AG0219U <- teamcomb %>% filter(Favored == "U" & Year != pyear)
 
 #Get the difference of the just stats
-AG0219FS <- AG0219F %>% select(7,10,20:30)
-AG0219US <- AG0219U %>% select(7,10,20:30)
+AG0219FS <- AG0219F %>% select(7,10,15,18,20:28)
+AG0219US <- AG0219U %>% select(7,10,15,18,20:28)
 
 dStats0219 <- AG0219FS - AG0219US
 
 # Set seed and create assignment
 
-assignment <- sample(1:2, size = nrow(dStats0219), prob = c(.9,.1), replace = TRUE)
+assignment <- sample(1:2, size = nrow(dStats0219), prob = c(.7,.3), replace = TRUE)
 
 # Create a train, validation and tests from the original data frame 
 NCAA_train <- dStats0219[assignment == 1, ]    # subset NCAA to training indices only
@@ -109,8 +109,8 @@ The64F <- The64 %>% filter(Favored == "F")
 The64U <- The64 %>% filter(Favored == "U")
 
 #Get the difference of the just stats
-The64FS <- The64F %>% select(7,10,20:30)
-The64US <- The64U %>% select(7,10,20:30)
+The64FS <- The64F %>% select(7,10,15,18,20:28)
+The64US <- The64U %>% select(7,10,15,18,20:28)
 The64DS <- The64FS - The64US
 
 #Combine the F and U Leading Columns with dif stats
@@ -139,8 +139,8 @@ The32F <- The32 %>% filter(Favored == "F")
 The32U <- The32 %>% filter(Favored == "U")
 
 #Get the difference of the just stats
-The32FS <- The32F %>% select(7,10,20:30)
-The32US <- The32U %>% select(7,10,20:30)
+The32FS <- The32F %>% select(7,10,15,18,20:28)
+The32US <- The32U %>% select(7,10,15,18,20:28)
 The32DS <- The32FS - The32US
 
 #Combine the F and U Leading Columns with dif stats
@@ -169,8 +169,8 @@ The16F <- The16 %>% filter(Favored == "F")
 The16U <- The16 %>% filter(Favored == "U")
 
 #Get the difference of the just stats
-The16FS <- The16F %>% select(7,10,20:30)
-The16US <- The16U %>% select(7,10,20:30)
+The16FS <- The16F %>% select(7,10,15,18,20:28)
+The16US <- The16U %>% select(7,10,15,18,20:28)
 The16DS <- The16FS - The16US
 
 #Combine the F and U Leading Columns with dif stats
@@ -198,8 +198,8 @@ The8F <- The8 %>% filter(Favored == "F")
 The8U <- The8 %>% filter(Favored == "U")
 
 #Get the difference of the just stats
-The8FS <- The8F %>% select(7,10,20:30)
-The8US <- The8U %>% select(7,10,20:30)
+The8FS <- The8F %>% select(7,10,15,18,20:28)
+The8US <- The8U %>% select(7,10,15,18,20:28)
 The8DS <- The8FS - The8US
 
 #Combine the F and U Leading Columns with dif stats
@@ -229,8 +229,8 @@ The4F <- The4 %>% filter(Favored == "F")
 The4U <- The4 %>% filter(Favored == "U")
 
 #Get the difference of the just stats
-The4FS <- The4F %>% select(7,10,20:30)
-The4US <- The4U %>% select(7,10,20:30)
+The4FS <- The4F %>% select(7,10,15,18,20:28)
+The4US <- The4U %>% select(7,10,15,18,20:28)
 The4DS <- The4FS - The4US
 
 #Combine the F and U Leading Columns with dif stats
@@ -259,8 +259,8 @@ The2F <- The2 %>% filter(Favored == "F")
 The2U <- The2 %>% filter(Favored == "U")
 
 #Get the difference of the just stats
-The2FS <- The2F %>% select(7,10,20:30)
-The2US <- The2U %>% select(7,10,20:30)
+The2FS <- The2F %>% select(7,10,15,18,20:28)
+The2US <- The2U %>% select(7,10,15,18,20:28)
 The2DS <- The2FS - The2US
 
 #Combine the F and U Leading Columns with dif stats
@@ -277,4 +277,5 @@ pred6 <- ifelse(p>0,New2$Team,New2$U.Team)
 st6 <- ifelse(p>0,paste(New2$Seed,New2$Team,round(p,0)),paste(New2$U.Seed,New2$U.Team,round(p,0)))
 cbind(st1,st2,st3,st4,st5,st6)
 ```
+
 

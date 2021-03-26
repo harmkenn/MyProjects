@@ -1194,7 +1194,9 @@ server <- function(input, output, session) {
       c<-sum(substring(colnames(Chi.gof), 1, 1)== "X")
       Chi.gof.ob <- as.numeric(Chi.gof[1,1:c])
       Chi.gof.exp <- as.numeric(Chi.gof[2,1:c])
+      Chi.gof.exp <- Chi.gof.exp*sum(Chi.gof.ob)/sum(Chi.gof.exp)
       chi.test <- chisq.test(x = Chi.gof.ob, p = Chi.gof.exp/sum(Chi.gof.ob))
+      Chi.gof <- rbind(Obs = Chi.gof.ob,Exp = Chi.gof.exp)
       Chi.gof <- cbind(Chi.gof, Total = rowSums(Chi.gof, na.rm = TRUE))
       Chi.gof <- rbind(Chi.gof, Chi = chi.test$residuals^2)
       Chi.gof[3,c+1]<-NA

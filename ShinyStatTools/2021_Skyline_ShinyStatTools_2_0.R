@@ -41,7 +41,7 @@ binwidth <- 1
 # >>>>>>>>>>>>>>>Start of UI
 
 ui <- dashboardPage(
-  dashboardHeader(title = "Shiny Stat Tools v1.9",titleWidth = "450px",
+  dashboardHeader(title = "Shiny Stat Tools v2.0",titleWidth = "450px",
                   tags$li(class = "dropdown",tags$a("by Ken Harmon")),
                   dropdownMenuOutput(outputId = "notifications")),
   
@@ -1150,8 +1150,16 @@ server <- function(input, output, session) {
   observeEvent(c(input$Chi.r,input$chic),{
     if(input$chic == "Independence"){
       output$Chi <- renderRHandsontable({rhandsontable(chi.ti.in$values)}) 
+      output$Chiexptitle <- renderText({""})
+      output$Chiexp <- renderTable({})
+      output$ChiSquares <- renderText({""})
+      output$chicell <- renderTable({})
     }else if(input$chic == "Goodness of Fit"){
       output$Chi <- renderRHandsontable({rhandsontable(chi.gof.in$values)})
+      output$Chiexptitle <- renderText({""})
+      output$Chiexp <- renderTable({})
+      output$ChiSquares <- renderText({""})
+      output$chicell <- renderTable({})
     } #Eif
   }) #EobserveEvent
   
@@ -1200,10 +1208,10 @@ server <- function(input, output, session) {
       Chi.gof <- cbind(Chi.gof, Total = rowSums(Chi.gof, na.rm = TRUE))
       Chi.gof <- rbind(Chi.gof, Chi = chi.test$residuals^2)
       Chi.gof[3,c+1]<-NA
-      output$Chi <- renderRHandsontable({rhandsontable(Chi.gof)%>% hot_cols(format = "0", halign = "htCenter")%>% 
-          hot_col(ncol(Chi.gof), readOnly = TRUE) %>% hot_row(nrow(Chi.gof), readOnly = TRUE)}) 
+     # output$Chi <- renderRHandsontable({rhandsontable(Chi.gof)%>% hot_cols(format = "0", halign = "htCenter")%>% 
+     #     hot_col(ncol(Chi.gof), readOnly = TRUE) %>% hot_row(nrow(Chi.gof), readOnly = TRUE)}) 
       output$Chiexptitle <- renderText({""})
-      output$Chiexp <- renderTable({})
+      output$Chiexp <- renderTable({Chi.gof},rownames = TRUE,colnames=TRUE, digits = 5)
       output$ChiSquares <- renderText({""})
       output$chicell <- renderTable({})
       chi.cv <- qchisq(1-input$chi.alpha,chi.test$parameter)

@@ -104,3 +104,25 @@ colnames(team.pase) <- "Pase"
 datatable(team.pase)
 ```
 
+## BPI
+
+```{r}
+pacman::p_load(tidyverse, rvest)
+ESPN_BPI <- data.frame()
+for (each_year in seq(from = 2008, to = 2021)){
+  for (each_page in seq(from = 1, to = 7)) {
+      link = paste0("https://www.espn.com/mens-college-basketball/bpi/_/view/bpi/season/",each_year,"/page/",each_page)
+      page <- read_html(link)
+      Year <- each_year
+      RK <- page %>% html_nodes(".bpi__table td:nth-child(1)") %>% html_text()
+      Team <- page %>% html_nodes(".team-names") %>% html_text()
+      Conf <- page %>% html_nodes(".align-left+ td.align-left") %>% html_text()
+      WL <- page %>% html_nodes(".align-left~ .align-left+ td") %>% html_text()
+      BPI_OFF <- page %>% html_nodes("td:nth-child(5)") %>% html_text()
+      BPI_DEF <- page %>% html_nodes("td:nth-child(6)") %>% html_text()
+      BPI <- page %>% html_nodes("td:nth-child(7)") %>% html_text()
+      ESPN_BPI <- rbind(ESPN_BPI,data.frame(Year,RK,Team,Conf,WL,BPI_DEF,BPI_OFF,BPI,stringsAsFactors = FALSE))
+  }
+}
+datatable(ESPN_BPI)
+```

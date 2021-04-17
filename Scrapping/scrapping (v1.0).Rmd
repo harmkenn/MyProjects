@@ -1,0 +1,61 @@
+---
+title: "Scrapping IMDB"
+author: "Ken Harmon"
+date: "`r format(Sys.time(), '%Y %B %d')`"
+output:
+  html_document:  
+    keep_md: true
+    code_folding: hide
+    fig_height: 6
+    fig_width: 12
+    fig_align: 'center'
+editor_options: 
+  chunk_output_type: console
+---
+
+# {.tabset .tabset-fade}
+
+```{r, echo=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
+```
+
+```{r load_libraries, include=FALSE}
+# Use this R-Chunk to load all your libraries!
+pacman::p_load(tidyverse, rvest, DT)
+```
+
+```{r swd, eval=FALSE, echo=FALSE}
+# this is set to not run during the knit process
+# this sets the working directory to the file location
+setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
+```
+
+https://www.youtube.com/watch?v=v8Yh_4oE-Fs&t=0s
+
+https://chrome.google.com/webstore/detail/selectorgadget/mhjhnkcfbdhnjickkkdbjoemdmbfginb?hl=en
+
+https://www.imdb.com/search/title/?genres=adventure&sort=user_rating,desc&title_type=feature&num_votes=25000,
+
+
+## IMDB
+
+Now get all the pages
+
+https://www.imdb.com/search/title/?title_type=feature&num_votes=25000,&genres=adventure&sort=user_rating,desc&start=51&ref_=adv_nxt
+
+```{r}
+movies <- data.frame()
+for (page_result in seq(from = 1, to = 1112, by = 50)){
+  link = paste0("https://www.imdb.com/search/title/?title_type=feature&num_votes=25000,&genres=adventure&sort=user_rating,desc&start=",page_result,"&ref_=adv_nxt")
+  page <- read_html(link)
+
+name <- page %>% html_nodes(".lister-item-header a") %>% html_text()
+year <- page %>% html_nodes(".text-muted.unbold") %>% html_text()
+rating <- page %>% html_nodes(".ratings-imdb-rating strong") %>% html_text()
+synopsis <- page %>% html_nodes(".ratings-bar+ .text-muted") %>% html_text()
+movies <- rbind(movies,data.frame(name,year,rating,synopsis,stringsAsFactors = FALSE))
+}
+
+datatable(movies)
+```
+

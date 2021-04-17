@@ -10,11 +10,6 @@ output:
     fig_width: 12
     fig_align: 'center'
 editor_options: 
-<<<<<<< HEAD
-  chunk_output_type: console 
-=======
-  chunk_output_type: console
->>>>>>> dad33a0aaa8bec4c155d38b3321163a8fde5c75c
 ---
 
 # {.tabset .tabset-fade}
@@ -122,7 +117,3 @@ for (each_year in seq(from = 2008, to = 2020)){
 datatable(BasRef)
 write.csv(BasRef,"BasRef.csv")
 ```
-<<<<<<< HEAD
-
-=======
->>>>>>> dad33a0aaa8bec4c155d38b3321163a8fde5c75c

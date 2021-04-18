@@ -54,7 +54,7 @@ ui <- dashboardPage(
 
 ########################### Start of the Server
 server <- function(input, output, session) {
-  output$tbl_all_games <- renderDT(AllGames)
+  output$tbl_all_games <- renderDT(AllGames%>%select(c(2,4,6:11)),rownames = FALSE)
 } ######################## End of the server
 
 ########################## Run the application 

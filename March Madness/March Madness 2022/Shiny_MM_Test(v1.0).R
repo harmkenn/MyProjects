@@ -18,6 +18,7 @@ ui <- dashboardPage(
   dashboardSidebar(width = 150,
      sidebarMenu(
        menuItem("All Games", tabName = "all_games"),
+       menuItem("Brackets", tabName = "brackets"),
        menuItem("Seed History", tabName = "seed_history")
      ) #################### End sidebarMenu
   ), ###################### End dashboardSidebar
@@ -37,6 +38,17 @@ ui <- dashboardPage(
           ), ############## End column      
         ) ################# End of fluidrow
       ), ################### End All Games Tab
+########################### Starts Brackets Tab
+      tabItem("brackets",
+              fluidRow(
+                column(width = 12,
+                       box(title = "Brackets since 1985", width = NULL, status = "primary",
+                          textOutput("txt_brackets")       
+                       ) ############# End box
+                ), ############## End column      
+              ) ################# End of fluidrow
+      ), ################### End Brackets Tab
+########################### Start Seed History Tab
       tabItem("seed_history",
         fluidRow(
           column(width = 12,
@@ -45,7 +57,7 @@ ui <- dashboardPage(
              ) ############# End box
           ), ############## End column      
         ) ################# End of fluidrow
-      ) ################### End All Games Tab     
+      ) ################### End Seed History Tab     
     ) ##################### End tabItems
   ) ####################### End dashboard Body
 ) ######################### End dashboard Page
@@ -54,7 +66,13 @@ ui <- dashboardPage(
 
 ########################### Start of the Server
 server <- function(input, output, session) {
-  output$tbl_all_games <- renderDT(AllGames%>%select(c(2,4,6:11)),rownames = FALSE)
+########################### Start of All Games Tab
+  output$tbl_all_games <- renderDT(AllGames%>%select(c(2:11)),rownames = FALSE)
+########################### End of All Games Tab
+########################### Start of Brackets Tab
+  plot.new()
+  output$txt_brackets <- renderText(text(50,50,"This Stuff"))
+########################### End of Brackets Tab
 } ######################## End of the server
 
 ########################## Run the application 

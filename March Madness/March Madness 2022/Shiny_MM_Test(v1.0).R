@@ -43,7 +43,7 @@ ui <- dashboardPage(
               fluidRow(
                 column(width = 12,
                        box(title = "Brackets since 1985", width = NULL, status = "primary",
-                          textOutput("txt_brackets")       
+                          tableOutput("tbl_brackets")       
                        ) ############# End box
                 ), ############## End column      
               ) ################# End of fluidrow
@@ -70,8 +70,7 @@ server <- function(input, output, session) {
   output$tbl_all_games <- renderDT(AllGames%>%select(c(2:11)),rownames = FALSE)
 ########################### End of All Games Tab
 ########################### Start of Brackets Tab
-  plot.new()
-  output$txt_brackets <- renderText(text(50,50,"This Stuff"))
+  output$tbl_brackets <- renderTable(table(c(1,2)))
 ########################### End of Brackets Tab
 } ######################## End of the server
 

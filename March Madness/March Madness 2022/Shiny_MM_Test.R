@@ -1,0 +1,1376 @@
+library(shiny)
+library(shinydashboard)
+library(tidyverse)
+
+ui <- dashboardPage(
+    dashboardHeader(title = "Shiny Stat Tools v2.0",titleWidth = "450px",
+                    tags$li(class = "dropdown",tags$a("by Ken Harmon")),
+                    dropdownMenuOutput(outputId = "notifications")),
+    
+    # >>>>>>>>>>>>>>>Side Bar  
+    
+    dashboardSidebar(width = 150,
+                     sidebarMenu(
+                         menuItem("Quantitative Stats", tabName = "qs"),
+                         menuItem("Discrete", tabName = "disc"),
+                         menuItem("Normal", tabName = "normal"),
+                         menuItem("Proportions", tabName = "props"),
+                         menuItem("Student's t", tabName = "student"),
+                         menuItem("All t-Tests", tabName = "t_test_tab"),
+                         menuItem("ANOVA", tabName = "anova"),
+                         menuItem("Chi-Square", tabName = "Chi"),
+                         menuItem("Linear Regression", tabName = "LR"),
+                         menuItem("Data Sets", tabName = "datasets")
+                     ) #End sidebarMenu
+    ), #End dashboardSidebar
+    
+    # <<<<<<<<<<<<<End Sidebar
+    # >>>>>>>>>>>>>Dashboard Body
+    
+    dashboardBody(
+        
+        tabItems(
+            
+            # >>>>>>>>>>>>>> Quantitative Tab UI
+            
+            tabItem("qs",
+                    fluidRow(
+                        column(width = 2,
+                               box(title = "Data Input", width = NULL, status = "primary",
+                                   actionButton("clear","Clear"),actionButton("plot","Plot"),
+                                   rHandsontableOutput("dt")
+                               ) #Ebox
+                        ), #Ecolumn
+                        column(width = 5,
+                               box(title = "Plots", width = NULL,
+                                   checkboxInput("ck.hist","Histogram"),
+                                   checkboxInput("ck.box","Box Plot"),
+                                   checkboxInput("ck.dot","Dot Plot"),
+                                   plotlyOutput("qsplots")
+                               ) #Ebox
+                        ), #Ecolumn
+                        column(width = 5,
+                               box(title = "Summary Statistics", width = NULL, solidHeader = TRUE,
+                                   tableOutput("dss")
+                               ), #Ebox
+                               box(title = "Percentile", width = NULL,
+                                   splitLayout(
+                                       numericInput("ptile","Percentile:",50,width="50%"),
+                                       actionButton("goptile","Get"),
+                                       textOutput("pptile")
+                                   ) #EsplitLayout
+                               ), #Ebox
+                               box(title = "qqplot", width = NULL, background = "blue",
+                                   plotOutput("qqplot"),
+                                   valueBoxOutput("qqalert")
+                               ) #Ebox
+                        ) #Ecolumn
+                    ) #EfluidRow
+            ), #EtabItem ds
+            
+            # <<<<<<<<<<<<< Quantitative Tab UI
+            # >>>>>>>>>>>>> Normal Tab UI
+            
+            tabItem("normal",
+                    fluidRow(
+                        column(width = 3,
+                               box(title = "Selections", width = NULL, solidHeader = TRUE,
+                                   radioButtons("nway","",c("z to Prob","Prob to z")),
+                                   numericInput("nmu","Mean:",0),
+                                   numericInput("nsd", "Standard Dev:",1),
+                                   actionButton("nReset","Reset")
+                               ), #Ebox
+                               conditionalPanel(condition = "input.nway == 'z to Prob'",
+                                                helpText("Shade:"),
+                                                checkboxInput("Left","Left"),
+                                                checkboxInput("Center","Center"),
+                                                checkboxInput("Right","Right"),
+                                                helpText("z-Score Cut-offs"),
+                                                checkboxInput("nsym","Symmetric"),
+                               ), #EconditionalPanel
+                               conditionalPanel(condition = "input.nway == 'Prob to z'",
+                                                radioButtons("nshade","Shade", choices = c("Left","Center","Right"))
+                               ), #EconditionalPanel
+                        ), #Ecolumn left
+                        column(width = 9,
+                               conditionalPanel(condition = "input.nway == 'z to Prob'",
+                                                splitLayout(
+                                                    numericInput("lz","Left z-Score",-1,width="25%",step = .1),
+                                                    actionButton("z2p","Find Probability"),
+                                                    numericInput("rz","Right z-Score",1,width="25%", step = .1)
+                                                ), #EsplitLayout
+                                                plotOutput("npp"),
+                                                textOutput("npptext")
+                               ), #EconditionalPanel
+                               conditionalPanel(condition = "input.nway == 'Prob to z'",
+                                                splitLayout(
+                                                    numericInput("prob","Percent",40,width="25%"),
+                                                    actionButton("p2z","Find Probability")
+                                                ), #EsplitLayout
+                                                plotOutput("npz"),
+                                                textOutput("npztext")
+                               ) #EconditionalPanel
+                        ) #Ecolumn Main
+                    ) #EfluidRow Normal Tab
+            ), #EtabItem Normal
+            
+            # <<<<<<<<<<<<<<<<< Normal TAB UI
+            # >>>>>>>>>>>>>>>>> Student t TAB UI Start
+            tabItem("student",
+                    fluidRow(
+                        column(width = 3,
+                               box(title = "Selections", width = NULL, solidHeader = TRUE,
+                                   radioButtons("st_way","",c("t to Prob","Prob to t")),
+                                   numericInput("st_mu","Mean:",0),
+                                   numericInput("st_sd", "Standard Dev:",1),
+                                   numericInput("st_n", "Sample Size:",2),
+                                   actionButton("st_reset","Reset")
+                               ), #Ebox
+                               conditionalPanel(condition = "input.st_way == 't to Prob'",
+                                                helpText("Shade:"),
+                                                checkboxInput("st_Left","Left"),
+                                                checkboxInput("st_Center","Center"),
+                                                checkboxInput("st_Right","Right"),
+                                                helpText("t-Score Cut-offs"),
+                                                checkboxInput("st_sym","Symmetric"),
+                               ), #EconditionalPanel
+                               conditionalPanel(condition = "input.st_way == 'Prob to t'",
+                                                radioButtons("st_shade","Shade", choices = c("Left","Center","Right"))
+                               ), #EconditionalPanel
+                        ), #Ecolumn left
+                        column(width = 9,
+                               conditionalPanel(condition = "input.st_way == 't to Prob'",
+                                                splitLayout(
+                                                    numericInput("lt","Left t-Score",-1,width="25%",step = .1),
+                                                    actionButton("f_t2p","Find Probability"),
+                                                    numericInput("rt","Right t-Score",1,width="25%", step = .1)
+                                                ), #EsplitLayout
+                                                plotOutput("st_t2p_plot"),
+                                                textOutput("st_t2p_text")
+                               ), #EconditionalPanel
+                               conditionalPanel(condition = "input.st_way == 'Prob to t'",
+                                                splitLayout(
+                                                    numericInput("tprob","Percent",40,width="25%"),
+                                                    actionButton("f_p2t","Find Probability")
+                                                ), #EsplitLayout
+                                                plotOutput("st_p2t_plot"),
+                                                textOutput("st_p2t_text")
+                               ) #EconditionalPanel
+                        ) #Ecolumn Main
+                    ) #EfluidRow student Tab
+            ), #EtabItem student
+            # <<<<<<<<<<<<<<<<< Student t TAB UI End
+            # >>>>>>>>>>>>>>>>> tTest TAB UI
+            
+            tabItem("t_test_tab",
+                    fluidRow(
+                        column(width = 3,
+                               box(title = "Data Input",width = NULL,status = "primary",
+                                   checkboxInput("Stat_check","Statistics"),
+                                   conditionalPanel(condition = "input.Stat_check == 0",
+                                                    radioButtons("t_choice","Input:",c("Single Data","Paired Data","2 Sample t-Test")),
+                                                    actionButton("clear_t", "Clear"),
+                                                    actionButton("plot_t", "Plot"),
+                                                    rHandsontableOutput("dt_t")
+                                   ), #End of conditionalPanel
+                                   conditionalPanel(condition = "input.Stat_check == 1",
+                                                    radioButtons("t_choice","Input:",c("Single Data","2 Sample t-Test")),
+                                   ), #End of conditionalPanel
+                                   conditionalPanel(condition = "input.Stat_check == 1 && input.t_choice == 'Single Data'",
+                                                    numericInput("t_xbar","Mean (xbar):",0),
+                                                    numericInput("t_sd","Standard Deviation (s):",10),
+                                                    numericInput("t_n","Count (Sample Size):",2)
+                                   ), #End of conditionalPanel
+                                   conditionalPanel(condition = "input.Stat_check == 1 && input.t_choice == '2 Sample t-Test'",
+                                                    numericInput("t_xbar.a","Mean A:",0),
+                                                    numericInput("t_sd.a","Standard Deviation A:",1),
+                                                    numericInput("t_n.a","Count A:",2),
+                                                    numericInput("t_xbar.b","Mean B:",0),
+                                                    numericInput("t_sd.b","Standard Deviation B:",1),
+                                                    numericInput("t_n.b","Count B:",2)
+                                   ), #End of conditionalPanel
+                               ), #Ebox
+                        ), #Ecolumn
+                        conditionalPanel(condition = "input.Stat_check == 0",
+                                         column(width = 4,
+                                                box(title = "Summary Statistics", width = NULL, background = "blue",
+                                                    tableOutput("ttst"),
+                                                    plotOutput("ttqq"),
+                                                    splitLayout(
+                                                        valueBoxOutput("qqalertt", width = NULL),
+                                                        valueBoxOutput("qqalertt.b", width = NULL)
+                                                    ), #EsplitLayout
+                                                ), #Ebox
+                                         ), #Ecolumn
+                        ), #End of Conditional
+                        column(width = 5,
+                               box(title = "Hypothesis Test", width = NULL,
+                                   splitLayout(
+                                       numericInput("t_h0","Null:",0,width=NULL),
+                                       numericInput("t_alpha","Alpha:",.05,width=NULL),
+                                       radioButtons("t_tail","",c("Left Tail"="less","Two Tail"="two.sided","Right Tail"="greater"),inline = FALSE,width = "50%"),
+                                       actionButton("t_test_btn","Test")
+                                   ), #EsplitLayout
+                                   conditionalPanel(condition = "input.t_choice == '2 Sample t-Test'",checkboxInput("eqvar","Equal Variances",FALSE)),
+                                   plotOutput("t_test_graph")
+                               ), #Ebox
+                        ) #Ecolumn
+                    ) #EfluidRow
+            ), #EtabItem tTest
+            
+            ######################## End t-test TAB UI #######################
+            ######################## ANOVA Tab UI #############################
+            
+            tabItem("anova",
+                    fluidRow(
+                        column(width = 4, 
+                               box(title = "Data Input", width = 12, 
+                                   checkboxInput("anovastat","Statistics"),
+                                   actionButton("anovatc", "Clear"),
+                                   actionButton("anovaplot", "Plot"),
+                                   rHandsontableOutput("anovat")
+                               ), #Ebox
+                        ), #Ecolumn left
+                        conditionalPanel(condition = "input.anovastat == 0",
+                                         column(width = 3, 
+                                                box(title = "graphs",width = 12, background = "blue", 
+                                                    plotOutput("anovabox"),
+                                                    plotOutput("anovaqq")
+                                                ), #Ebox
+                                         ), #Ecolumn middle
+                        ), #EconditionalPanel
+                        column(width = 5, 
+                               box(title = "Results", width = 12, 
+                                   tableOutput("anovaut"),
+                                   tableOutput("anovalt"),
+                                   numericInput("F.alpha","Alpha:",.05),
+                                   plotOutput("F.plot")
+                               ), #Ebox
+                        ), #Ecolumn right
+                    ) #EfluidRow
+            ), #EtabItem ANOVA
+            
+            ######################## End ANOVA Tab UI #########################
+            ######################## Proportions UI ##############################
+            
+            tabItem("props",
+                    fluidRow(
+                        column(width = 4, offset = 0, style='padding:0px;',
+                               box(title = "Data Input", width = 12, 
+                                   radioButtons("props","",choices = c("1 Proportion", "2 Proportions")),
+                                   splitLayout(
+                                       numericInput("x1","Set 1 x:",0),
+                                       numericInput("n1","Set 1 n:",1)
+                                   ), #Esplit
+                                   conditionalPanel(condition = "input.props == '2 Proportions'",
+                                                    splitLayout(
+                                                        numericInput("x2","Set 2 x:",0),
+                                                        numericInput("n2","Set 2 n:",1)
+                                                    ), #Esplit
+                                   ), #EconditionalPanel
+                               ), #Ebox
+                        ), #Ecolumn left
+                        column(width = 3, offset = 0, style='padding:0px;',
+                               box(title = "Graphs",width = 12, background = "blue", 
+                                   plotOutput("pplot")
+                               ) #Ebox
+                        ), #Ecolumn Middle  
+                        column(width = 5, offset = 0, style='padding:0px;',
+                               box(title = "Results",width = 12,  
+                                   splitLayout(
+                                       conditionalPanel(condition = "input.props == '1 Proportion'",numericInput("ph0","Null:",.5,width=NULL)),
+                                       numericInput("pAlpha","Alpha:",.05,width=NULL),
+                                       radioButtons("ptail","",c("Left Tail"="less","Two Tail"="two.sided","Right Tail"="greater"),inline = FALSE,width = "50%"),
+                                       actionButton("ptest","Test")
+                                   ), #EsplitLayout
+                                   plotOutput("ptgraph")
+                               ) #Ebox
+                        ), #Ecolumn Right 
+                    ) #EfluidRow
+            ), #EtabItem props
+            
+            ######################## End Proportions UI #############################
+            ######################## Chi Square UI ##################################
+            
+            tabItem("Chi",
+                    fluidRow(
+                        column(width = 6, offset = 0, style='padding:0px;',
+                               box(title = "Data Input", width = 12, 
+                                   splitLayout(
+                                       radioButtons("chic","",c("Independence","Goodness of Fit")),
+                                       numericInput("chi.alpha","Alpha:",.05, width = 100)
+                                   ), #EsplitLayout
+                                   actionButton("Chi.r", "Reset"),
+                                   actionButton("Chitest", "Test"),
+                                   rHandsontableOutput("Chi"),
+                                   tags$hr(style="border-color: blue;"),
+                                   textOutput("Chiexptitle"),
+                                   tableOutput("Chiexp"),
+                                   tags$hr(style="border-color: blue;"),
+                                   textOutput("ChiSquares"),
+                                   tableOutput("chicell"),
+                               ), #Ebox
+                        ), #Ecolumn left
+                        column(width = 6, offset = 0, style='padding:0px;',
+                               box(title = "Results", width = 12, 
+                                   tableOutput("Chiresult"),
+                                   tags$hr(style="border-color: blue;"),
+                                   plotOutput("Chi.plot")
+                               ), #Ebox
+                        ), #Ecolumn right
+                    ) #EfluidRow
+            ), #EtabItem Chi
+            
+            ######################## End Chi Square UI #############################
+            ######################## Linear Regression UI #############################
+            
+            tabItem("LR",
+                    fluidRow(
+                        column(width = 3,
+                               box(title = "Data Input",width = NULL,status = "primary",
+                                   actionButton("lr.reset", "Reset"),
+                                   actionButton("lr.test", "Test"),
+                                   rHandsontableOutput("lr.data")
+                               ), #Ebox
+                        ), #Ecolumn
+                        column(width = 4,
+                               box(title = "Graphs", width = NULL, background = "blue",
+                                   plotOutput("lr.big3"),
+                                   valueBoxOutput("lr.qqplot",width = 6)
+                               ), #Ebox
+                        ), #Ecolumn
+                        column(width = 5,
+                               box(title = "Test Results", width = NULL,
+                                   tableOutput("lr.stats"),
+                                   tableOutput("lr.rstats"),
+                                   tableOutput("lr.test"),
+                                   numericInput("lr.alpha","Alpha:",.05),
+                                   textOutput("ci.slope"),
+                                   splitLayout(
+                                       numericInput("lr.x","x:",26),
+                                       tableOutput("lr.point")
+                                   ), #EsplitLayout
+                                   textOutput("ci.meany"),
+                                   textOutput("pi.y")
+                               ), #Ebox
+                        ) #Ecolumn
+                    ) #EfluidRow
+            ), #EtabItem LR
+            
+            ######################## End Linear Rergression UI #####################
+            ########################## Discrete Probability UI #######################
+            
+            tabItem("disc",
+                    fluidRow(
+                        column(width = 6,
+                               box(title = "Discrete Probability",width = NULL,status = "primary",
+                                   rHandsontableOutput("disc.data"),
+                                   splitLayout(
+                                       actionButton("disc.reset","Clear"),
+                                       actionButton("disc.add","Add Column"),
+                                       actionButton("disc.run","Run")
+                                   ), #EsplitLayout
+                                   plotlyOutput("DPHist"),
+                                   tableOutput("disc.results")
+                               ), #Ebox
+                               box(title = "Binomial", width = NULL, status = "primary",
+                                   splitLayout(
+                                       numericInput("bip","P(Hit)",.5),
+                                       numericInput("bih", "Hits",0),
+                                       numericInput("bit", "Tries",5)
+                                   ),
+                                   actionButton("bi.run","Run"),
+                                   tableOutput("biout"),
+                                   plotOutput("biplot")
+                               ) #Ebox
+                        ), #Ecolumn
+                        column(width = 6,
+                               box(title = "Geometric", width = NULL, status = "primary",
+                                   splitLayout(
+                                       numericInput("gep","P(Hit)",.5),
+                                       numericInput("get", "Tries",5)
+                                   ),
+                                   actionButton("ge.run","Run"),
+                                   tableOutput("geout"),
+                                   plotOutput("geplot")
+                               ), #Ebox
+                               box(title = "Poisson", width = NULL, status = "primary",
+                                   splitLayout(
+                                       numericInput("poil","E(Hit)",2),
+                                       numericInput("poih", "Hits",5)
+                                   ),
+                                   actionButton("poi.run","Run"),
+                                   tableOutput("poiout"),
+                                   plotOutput("poiplot")
+                               ), #Ebox
+                        ), #Ecolumn
+                    ) #EfluidRow
+            ), #EtabItem LR
+            
+            ######################## End Discrete Probability UI #####################
+            
+            
+            
+            tabItem("datasets", "All the pre-built datasets will go here") #EtabItem Datasets
+        ) #End tabItems
+    ) #EdashboardBody
+) #EdashboardPage
+
+# >>>>>>>>>>> Start of the Server
+server <- function(input, output, session) {
+    
+    # >>>>>>>>>> Variables
+    
+    quant.in <- reactiveValues(values = data.quant)
+    t.in <- reactiveValues(values = data.ttest)
+    anova.in <- reactiveValues(values = data.anova)
+    anova.s.in <- reactiveValues(values = data.anova.s)
+    chi.ti.in <- reactiveValues(values =  data.Chi.ti)
+    chi.gof.in <- reactiveValues(values =  data.Chi.gof)
+    lr.in <- reactiveValues(values =  data.lr)
+    disc.in <- reactiveValues(values =  data.disc)
+    
+    #>>>>>>>>>> Quantitative Tab Server  
+    
+    output$dt <- renderRHandsontable({rhandsontable(quant.in$values)})
+    
+    observeEvent(eventExpr = input$plot, {
+        quant.in$values <- hot_to_r(input$dt)
+        if(sum(!is.na(quant.in$values[,1]))>1){
+            quant.x <- quant.in$values[!is.na(quant.in$values)]
+            count <- length(quant.x)
+            bins <- ceiling(1+3.322*log10(count))
+            if (count > 2) {binwidth <- (max(quant.x)-min(quant.x))/(bins)}
+            quant.df <- data.frame(quant.x)
+            if(!is.null(tryCatch(ggplot(quant.df), error = function(e){}))){
+                qs.plots <- quant.df %>%
+                    ggplot() +
+                    theme_classic()
+                if(input$ck.hist == TRUE){
+                    qs.plots <- qs.plots +
+                        geom_histogram(aes(y=quant.x),color="darkblue", fill="lightblue",binwidth=binwidth)+
+                        coord_flip()
+                }
+                if(input$ck.box == TRUE){
+                    qs.plots <- qs.plots +
+                        geom_boxplot(aes(x = "", y = quant.x),
+                                     color="brown", fill="lightgreen", 
+                                     outlier.colour="red", outlier.shape=8, outlier.size=4)+
+                        coord_flip()
+                }
+                if(input$ck.dot == TRUE){
+                    qs.plots <- qs.plots +
+                        geom_jitter(aes(x = "", y = quant.x), color= "orange", height = .01) +
+                        coord_flip()
+                }
+            }
+            
+            #geom_boxplot(aes(x = "", y = quant.x),color="darkblue", fill="lightgreen", outlier.colour="red", outlier.shape=8, outlier.size=4) + 
+            #geom_jitter(aes(x = "", y = quant.x), color= "orange", height = .01) +
+            #scale_y_discrete(breaks=seq(min(quant.x), max(quant.x), binwidth)) + 
+            #scale_x_discrete(breaks=seq(min(quant.x), max(quant.x), binwidth)) +
+            #coord_flip() +
+            #ylim(c(min(quant.x)-binwidth,max(quant.x)+binwidth)) +
+            
+            #box.plot <- quant.df %>%
+            #ggplot(aes(x = "",  y = quant.x)) +
+            #geom_boxplot(color="darkblue", fill="lightgreen", 
+            #             outlier.colour="red", outlier.shape=8, outlier.size=4) +
+            #coord_flip() +
+            # theme_classic()
+            #Eif
+            output$qsplots <- renderPlotly(ggplotly(qs.plots)) #Eoutput$qsplots
+            
+            output$qqplot <- renderPlot({
+                quant.df %>% ggplot(mapping = aes(sample = quant.x)) +
+                    stat_qq_band() +
+                    stat_qq_line() +
+                    stat_qq_point() +
+                    labs(x = "Theoretical Quantiles", y = "Sample Quantiles")
+            }) #Eoutput$qqplot
+            good <- shapiro.test(quant.x)
+            output$qqalert <- renderValueBox({
+                valueBox(round(good$p.value,3), subtitle = "p-value",width = 5,color = if (good$p.value < .05) {"red"} else {"green"})
+            }) #Eoutput$qqalert
+            sx <- summary(quant.x)
+            sxe <- quantile(quant.x, c(0.25, 0.75), type = 6)
+            dsse <- matrix(formatC(c("","","","","",sxe[2],"",sxe[1],""),
+                                   format="f",digits = 6,drop0trailing = TRUE),ncol=1,nrow=9)
+            dss <- matrix(formatC(c(length(quant.x),sx[4],sd(quant.x),var(quant.x),
+                                    sx[6],sx[5],sx[3],sx[2],sx[1]),
+                                  format="f",digits = 6,drop0trailing = TRUE),ncol=1,nrow=9)
+            dss <- cbind(dss,dsse)
+            rownames(dss) <- c("Count","Mean","Standard Dev","Variance","Max","3rd Quartile","Median","1st Quartile","Min")
+            output$dss <- renderTable({dss},rownames = TRUE,colnames=FALSE)
+        }#Eif
+    }) #EobserveEvent
+    observeEvent(eventExpr = input$clear, {
+        data.quant <- data.frame(matrix(NA_real_, nrow = 500, ncol = 1))
+        colnames(data.quant) <- "A"
+        quant.in <- reactiveValues(values = data.quant)
+        output$dt <- renderRHandsontable({rhandsontable(quant.in$values)})
+    }) #EobserveEvent
+    observeEvent(eventExpr = input$goptile, {
+        quant.in$values <- hot_to_r(input$dt)
+        if(sum(!is.na(quant.in$values[,1]))>1){
+            quant.x <- quant.in$values[!is.na(quant.in$values)]
+        }
+        ptileout <- quantile(quant.x, (input$ptile) / 100, type = 6)
+        output$pptile <- renderText({paste("The ",input$ptile," percentile is: ",round(ptileout,2))})
+    }) #EobserveEvent
+    
+    # <<<<<<<<<<<<<< End of Quantitative Tab Server
+    # >>>>>>>>>>>>>> Start of Normal Tab Server
+    
+    x <- seq(from = -4, to = 4, by = .01)
+    observeEvent(input$rz, {
+        if(input$nsym == TRUE){
+            updateNumericInput(session, "lz", value = -1*input$rz)
+        }
+    }, ignoreInit = TRUE)
+    observeEvent(input$nsym, {
+        if(input$nsym == TRUE){
+            updateNumericInput(session, "lz", value = -1*input$rz)
+            disable("lz")
+        }
+    }, ignoreInit = TRUE)
+    observeEvent(c(input$z2p,input$nsym), {
+        mu <- input$nmu
+        sd <- input$nsd
+        lz <- input$lz
+        rz <- input$rz
+        st.df <- data.frame(x,y=dnorm(x))
+        normp <- st.df %>% ggplot(aes(x,y))+geom_line()+
+            geom_area(aes(y=y),alpha=0) + scale_x_continuous(sec.axis = sec_axis(~.*sd+mu, name = "A",breaks = seq(-4*sd+mu,4*sd+mu,sd)),breaks = seq(-4,4)) +
+            theme(axis.title.y = element_blank(),axis.text.y = element_blank(),axis.ticks.y = element_blank()) +
+            labs(x = "Z") + geom_segment(aes(x = lz, y = 0, xend = lz, yend = dnorm(lz)),color="red") + 
+            geom_segment(aes(x = rz, y = 0, xend = rz, yend = dnorm(rz)),color="red")
+        output$npp <- renderPlot({
+            if(input$Left == TRUE){normp <- normp + geom_area(data=subset(st.df,x<lz),aes(y=y), fill ="blue", alpha = .5)}else{normp}
+            if(input$Center == TRUE){normp <- normp + geom_area(data=subset(st.df,x > lz & x < rz),aes(y=y), fill ="blue", alpha = .5)}else{normp}
+            if(input$Right == TRUE){normp + geom_area(data=subset(st.df,x > rz),aes(y=y), fill ="blue", alpha = .5)}else{normp}
+        })
+        output$npptext <- renderText({
+            if(input$Left == TRUE){tp <- pnorm(lz)}else{tp <- 0}
+            if(input$Center == TRUE){tp <- tp + pnorm(rz) - pnorm(lz)}else{tp <- tp}
+            if(input$Right == TRUE){tp <- tp + 1 - pnorm(rz)}else{tp <- tp}
+            paste("Total Probability: ",tp)
+        })
+    }) #EobserveEvent
+    observeEvent(c(input$p2z,input$nshade), {
+        mu <- input$nmu
+        sd <- input$nsd
+        prob <- input$prob
+        st.df <- data.frame(x,y=dnorm(x))
+        npz <- st.df %>% ggplot(aes(x,y))+geom_line()+
+            geom_area(aes(y=y),alpha=0) + scale_x_continuous(sec.axis = sec_axis(~.*sd+mu, name = "A",breaks = seq(-4*sd+mu,4*sd+mu,sd)),breaks = seq(-4,4)) +
+            theme(axis.title.y = element_blank(),axis.text.y = element_blank(),axis.ticks.y = element_blank()) +
+            labs(x = "Z") 
+        if(input$nshade == "Left"){
+            z <- qnorm(prob/100)
+            npz <- npz + geom_area(data=subset(st.df,x <= z),aes(y=y), fill ="blue", alpha = .5) + 
+                geom_segment(aes(x = z, y = 0, xend = z, yend = dnorm(z)),color="red")
+            npztext <- paste("z-Score: ",z)
+        }else if (input$nshade == "Center"){
+            z <- qnorm((1-prob/100)/2)
+            npz <- npz + geom_area(data=subset(st.df,x >= z & x <= -z),aes(y=y), fill ="blue", alpha = .5) + 
+                geom_segment(aes(x = z, y = 0, xend = z, yend = dnorm(z)),color="red") +
+                geom_segment(aes(x = -z, y = 0, xend = -z, yend = dnorm(-z)),color="red")
+            npztext <- paste("z-Scores: ",z," & ",-z)
+        }else if(input$nshade == "Right"){
+            z <- qnorm(1 - prob/100)
+            npz <- npz + geom_area(data=subset(st.df,x >= z),aes(y=y), fill ="blue", alpha = .5) + 
+                geom_segment(aes(x = z, y = 0, xend = z, yend = dnorm(z)),color="red")
+            npztext <- paste("z-Score: ",z) 
+        }
+        output$npz <- renderPlot({npz})
+        output$npztext <- renderText({npztext})
+    }) #EobserveEvent  
+    
+    # <<<<<<<<<<<<<< End of Normal Tab Server
+    # >>>>>>>>>>>>>> Start of Student t Tab Server
+    x <- seq(from = -5, to = 5, by = .01)
+    observeEvent(input$rt, {
+        if(input$st_sym == TRUE){
+            updateNumericInput(session, "lt", value = -1*input$rt)
+        }
+    }, ignoreInit = TRUE)
+    observeEvent(input$st_sym, {
+        if(input$st_sym == TRUE){
+            updateNumericInput(session, "lt", value = -1*input$rt)
+            disable("lt")
+        }
+    }, ignoreInit = TRUE)
+    observeEvent(c(input$f_t2p,input$st_sym), {
+        st_mu <- input$st_mu
+        st_sd <- input$st_sd
+        st_n <- input$st_n
+        st_df <- st_n - 1
+        lt <- input$lt
+        rt <- input$rt
+        st.df <- data.frame(x,y=dt(x,st_df))
+        t2pp <- st.df %>% ggplot(aes(x,y))+geom_line()+
+            geom_area(aes(y=y),alpha=0) + scale_x_continuous(sec.axis = sec_axis(~.*st_sd+st_mu, name = "A",breaks = seq(-5*st_sd+st_mu,5*st_sd+st_mu,st_sd)),breaks = seq(-5,5)) +
+            theme(axis.title.y = element_blank(),axis.text.y = element_blank(),axis.ticks.y = element_blank()) +
+            labs(x = "t") + geom_segment(aes(x = lt, y = 0, xend = lt, yend = dt(lt,st_df)),color="red") + 
+            geom_segment(aes(x = rt, y = 0, xend = rt, yend = dt(rt,st_df)),color="red") +
+            geom_line(aes(x,dnorm(x)),color = "orange",linetype = "dashed")
+        if(input$st_Left == TRUE){t2pp <- t2pp + geom_area(data=subset(st.df,x<lt),aes(y=y), fill ="blue", alpha = .5)} else {t2pp}
+        if(input$st_Center == TRUE){t2pp <- t2pp + geom_area(data=subset(st.df,x > lt & x < rt),aes(y=y), fill ="blue", alpha = .5)} else {t2pp}
+        if(input$st_Right == TRUE){t2pp <- t2pp + geom_area(data=subset(st.df,x > rt),aes(y=y), fill ="blue", alpha = .5)} else {t2pp}
+        output$st_t2p_plot <- renderPlot({t2pp})
+        
+        if(input$st_Left == TRUE){t2ptext <- pt(lt,st_df)}else{t2ptext <- 0}
+        if(input$st_Center == TRUE){t2ptext <- t2ptext + pt(rt,st_df) - pt(lt,st_df)}else{t2ptext <- t2ptext}
+        if(input$st_Right == TRUE){t2ptext <- t2ptext + 1 - pt(rt,st_df)}else{t2ptext <- t2ptext}  
+        output$st_t2p_text <- renderText({paste("Total Probability: ",t2ptext)})
+        
+    }) #EobserveEvent
+    observeEvent(c(input$f_p2t,input$st_shade), {
+        st_mu <- input$st_mu
+        st_sd <- input$st_sd
+        st_n <- input$st_n
+        st_df <- st_n - 1
+        prob <- input$tprob
+        st.df <- data.frame(x,y=dt(x,st_df))
+        p2t <- st.df %>% ggplot(aes(x,y))+geom_line()+
+            geom_area(aes(y=y),alpha=0) + scale_x_continuous(sec.axis = sec_axis(~.*st_sd+st_mu, name = "A",breaks = seq(-5*st_sd+st_mu,5*st_sd+st_mu,st_sd)),breaks = seq(-5,5)) +
+            theme(axis.title.y = element_blank(),axis.text.y = element_blank(),axis.ticks.y = element_blank()) +
+            labs(x = "t") + geom_line(aes(x,dnorm(x)),color = "orange",linetype = "dashed")
+        if(input$st_shade == "Left"){
+            t <- qt(prob/100,st_df)
+            p2t <- p2t + geom_area(data=subset(st.df,x <= t),aes(y=y), fill ="blue", alpha = .5) + 
+                geom_segment(aes(x = t, y = 0, xend = t, yend = dt(t,st_df)),color="red")
+            p2ttext <- paste("t-Score: ",t)
+        }else if (input$st_shade == "Center"){
+            t <- qt((1-prob/100)/2,st_df)
+            p2t <- p2t + geom_area(data=subset(st.df,x >= t & x <= -t),aes(y=y), fill ="blue", alpha = .5) + 
+                geom_segment(aes(x = t, y = 0, xend = t, yend = dt(t,st_df)),color="red") +
+                geom_segment(aes(x = -t, y = 0, xend = -t, yend = dt(-t,st_df)),color="red")
+            p2ttext <- paste("t-Scores: ",t," & ",-t)
+        }else if(input$st_shade == "Right"){
+            t <- qt(1 - prob/100,st_df)
+            p2t <- p2t + geom_area(data=subset(st.df,x >= t),aes(y=y), fill ="blue", alpha = .5) + 
+                geom_segment(aes(x = t, y = 0, xend = t, yend = dt(t,st_df)),color="red")
+            p2ttext <- paste("t-Score: ",t) 
+        }
+        output$st_p2t_plot <- renderPlot({p2t})
+        output$st_p2t_text <- renderText({p2ttext})
+    }) #EobserveEvent  
+    # <<<<<<<<<<<<<< End of Student t Tab Server
+    # >>>>>>>>>>>>>> Start of t-test Tab Server
+    
+    output$dt_t <- renderRHandsontable({rhandsontable(t.in$values)})
+    
+    observeEvent(c(input$clear_t,input$t_choice), {
+        if(input$t_choice == "Single Data"){
+            data.ttest <- data.frame(matrix(NA_real_, nrow = 500, ncol = 1))
+            colnames(data.ttest) <- "A"
+            t.in <- reactiveValues(values = data.ttest)
+            output$dt_t <- renderRHandsontable({rhandsontable(t.in$values)})
+        }else if(input$t_choice == "Paired Data"){
+            data.ttest <- data.frame(matrix(NA_real_, nrow = 500, ncol = 3))
+            colnames(data.ttest) <- c("diff","A","B")
+            t.in <- reactiveValues(values = data.ttest)
+            output$dt_t <- renderRHandsontable({rhandsontable(t.in$values) %>% 
+                    hot_col("diff", readOnly = TRUE)}) 
+        }else if(input$t_choice == "2 Sample t-Test"){
+            data.ttest <- data.frame(matrix(NA_real_, nrow = 500, ncol = 2))
+            colnames(data.ttest) <- c("A","B")
+            t.in <- reactiveValues(values = data.ttest)
+            output$dt_t <- renderRHandsontable({rhandsontable(t.in$values)}) 
+        }
+    }) #EobserveEvent
+    
+    observeEvent(input$plot_t, {
+        t.in$values <- hot_to_r(input$dt_t)
+        if(input$t_choice == "Paired Data"){
+            t.in$values[,1] <- t.in$values[,2]-t.in$values[,3]
+            output$dt_t <- renderRHandsontable({rhandsontable(t.in$values) %>% 
+                    hot_col("diff", readOnly = TRUE)})
+        }
+        if(sum(!is.na(t.in$values[,1]))>1){
+            t.x <- t.in$values[,1]
+            t.x <- t.x[!is.na(t.x)]
+            t.df <- data.frame(t.x)
+            qqt <- t.df %>% ggplot(mapping = aes(sample = t.x)) +
+                stat_qq_band() +
+                stat_qq_line() +
+                stat_qq_point() +
+                labs(title="A",x = "Theoretical Quantiles", y = "Sample Quantiles")
+            good <- shapiro.test(t.x)
+            output$qqalertt <- renderValueBox({
+                valueBox(round(good$p.value,3), subtitle = "p-value",width = 5,color = if (good$p.value < .05) {"red"} else {"green"})
+            }) #Eoutput$qqalert      
+            sx <- summary(t.x)
+            dss <- matrix(formatC(c(length(t.x),sx[4],sd(t.x),sd(t.x)/sqrt(length(t.x))),
+                                  format="f",digits = 6,drop0trailing = TRUE),ncol=4,nrow=1)
+            colnames(dss) <- c("Count","Mean","Standard Dev","Standard Error")
+            rownames(dss) <- c("A")
+            t_se <- sd(t.x)/sqrt(length(t.x))
+        }#Eif
+        if(input$t_choice == "2 Sample t-Test"){
+            t.x.b <- t.in$values[,2]
+            t.x.b <- t.x.b[!is.na(t.x.b)]
+            t.df.b <- data.frame(t.x.b)
+            qqt.b <- t.df.b %>% ggplot(mapping = aes(sample = t.x.b)) +
+                stat_qq_band() +
+                stat_qq_line() +
+                stat_qq_point() +
+                labs(title="B", x = "Theoretical Quantiles", y = "Sample Quantiles")
+            good.b <- shapiro.test(t.x.b)
+            output$qqalertt.b <- renderValueBox({
+                valueBox(round(good.b$p.value,3), subtitle = "p-value",width = 5,color = if (good.b$p.value < .05) {"red"} else {"green"})
+            }) #Eoutput$qqalert.b      
+            sx.b <- summary(t.x.b)
+            dss.b <- matrix(formatC(c(length(t.x.b),sx.b[4],sd(t.x.b),sd(t.x.b)/sqrt(length(t.x.b))),
+                                    format="f",digits = 6,drop0trailing = TRUE),ncol=4,nrow=1)
+            dmean <- (sx[4]-sx.b[4])
+            t_se <- sqrt(sd(t.x.b)^2/length(t.x.b)+sd(t.x)^2/length(t.x))
+            dss.t <- matrix(formatC(c(NA,dmean,NA,t_se),
+                                    format="f",digits = 6,drop0trailing = TRUE),ncol=4,nrow=1)
+            dss <- rbind(dss,dss.b,dss.t)
+            rownames(dss) <- c("A","B", "Total")
+        }#Eif
+        output$ttst <- renderTable({dss},rownames = TRUE,colnames=TRUE)
+        if(input$t_choice == "Single Data"){output$ttqq <- renderPlot({qqt})
+        }else if (input$t_choice == "2 Sample t-Test"){
+            boxpA <- t.df %>% ggplot(aes(x="", y = t.x)) +
+                geom_boxplot(color="darkblue", fill="lightblue", outlier.colour="red", outlier.shape=8, outlier.size=4) + 
+                geom_jitter(width = .1) + theme_classic() +
+                labs(x="", y="A" ) + ylim(c(min(t.x,t.x.b),max(t.x,t.x.b)))
+            boxpB <- t.df.b %>% ggplot(aes(x="", y = t.x.b)) +
+                geom_boxplot(color="darkblue", fill="lightblue", outlier.colour="red", outlier.shape=8, outlier.size=4) + 
+                geom_jitter(width = .1) + theme_classic() +
+                labs(x="", y="B" ) + ylim(c(min(t.x,t.x.b),max(t.x,t.x.b)))
+            output$ttqq <- renderPlot({grid.arrange(boxpA,boxpB,qqt, qqt.b, ncol =2, nrow =2)})
+        } #Eif
+    }) #EobserveEvent
+    
+    ##################### Run the t-Test ########################  
+    
+    observeEvent(input$t_test_btn, {
+        alpha <- input$t_alpha
+        mu <- input$t_h0
+        tail <- input$t_tail
+        
+        ################## t-Test Data ##########################    
+        
+        if(input$Stat_check == FALSE){
+            t.in$values <- hot_to_r(input$dt_t)
+            if(sum(!is.na(t.in$values[,1]))>1){
+                t.x <- t.in$values[,1]
+                t.x <- t.x[!is.na(t.x)]
+                t_se <- sd(t.x)/sqrt(length(t.x))
+            } #Eif
+            t_xbar <- mean(t.x)
+            if (tail == "less"){
+                cl <- 1 - 2*alpha
+                if(input$t_choice == "2 Sample t-Test"){
+                    t.x.a <- t.in$values[,1]
+                    t.x.a <- t.x.a[!is.na(t.x.a)]
+                    t.x.b <- t.in$values[,2]
+                    t.x.b <- t.x.b[!is.na(t.x.b)]
+                    t_xbar <- mean(t.x.a) - mean(t.x.b)
+                    ttr <- t.test(t.x.a,t.x.b,alternative = tail,mu=mu, var.equal = input$eqvar, conf.level = cl)
+                    t_se <- sqrt(sd(t.x.b)^2/length(t.x.b)+sd(t.x.a)^2/length(t.x.a))
+                }else{
+                    ttr <- t.test(t.x,alternative = tail,mu=mu, conf.level = cl)
+                    
+                }
+                df <- ttr$parameter
+                tcv <- qt(alpha,df)
+                t_score <- ttr$statistic
+                t.pv <- pt(t_score,df)
+                U <- max(abs(tcv),abs(t_se))+1
+                L <- -1*U
+                x <- seq(from = L, to = U, by = .01)
+                st.df <- data.frame(x,y=dt(x,df))
+                tp <- st.df %>% ggplot(aes(x,y))+geom_line()+
+                    geom_area(data=subset(st.df,x<=tcv),aes(y=y), fill ="red", alpha = .5) +
+                    geom_area(data=subset(st.df,x<=t_score),aes(y=y), fill ="blue", alpha = .5)
+            }else if(tail == "greater"){
+                cl <- 1 - 2*alpha
+                if(input$t_choice == "2 Sample t-Test"){
+                    t.x.a <- t.in$values[,1]
+                    t.x.a <- t.x.a[!is.na(t.x.a)]
+                    t.x.b <- t.in$values[,2]
+                    t.x.b <- t.x.b[!is.na(t.x.b)]
+                    ttr <- t.test(t.x.a,t.x.b,alternative = tail,mu=mu, var.equal = input$eqvar, conf.level = cl)
+                    t_se <- sqrt(sd(t.x.b)^2/length(t.x.b)+sd(t.x.a)^2/length(t.x.a))
+                }else{
+                    ttr <- t.test(t.x,alternative = tail,mu=mu, conf.level = cl)
+                }
+                df <- ttr$parameter
+                tcv <- qt(1-alpha,df)
+                t_score <- ttr$statistic
+                t.pv <- 1 - pt(t_score,df)
+                U <- max(abs(tcv),abs(t_se))+1
+                L <- -1*U
+                x <- seq(from = L, to = U, by = .01)
+                st.df <- data.frame(x,y=dt(x,df))
+                tp <- st.df %>% ggplot(aes(x,y))+geom_line()+
+                    geom_area(data=subset(st.df,x>=tcv),aes(y=y), fill ="red", alpha = .5) +
+                    geom_area(data=subset(st.df,x>=t_score),aes(y=y), fill ="blue", alpha = .5)
+            }else{
+                cl <- 1 - alpha
+                if(input$t_choice == "2 Sample t-Test"){
+                    t.x.a <- t.in$values[,1]
+                    t.x.a <- t.x.a[!is.na(t.x.a)]
+                    t.x.b <- t.in$values[,2]
+                    t.x.b <- t.x.b[!is.na(t.x.b)]
+                    ttr <- t.test(t.x.a,t.x.b,alternative = tail,mu=mu, var.equal = input$eqvar, conf.level = cl)
+                    t_se <- sqrt(sd(t.x.b)^2/length(t.x.b)+sd(t.x.a)^2/length(t.x.a))
+                }else{
+                    ttr <- t.test(t.x,alternative = tail,mu=mu, conf.level = cl)
+                }
+                
+                df <- ttr$parameter
+                tcv <- qt(alpha/2,df)
+                t_score <- ttr$statistic
+                t.pv <- 2*(pt(-abs(t_score),df))
+                U <- max(abs(tcv),abs(t_se))+2
+                L <- -1*U
+                x <- seq(from = L, to = U, by = .01)
+                st.df <- data.frame(x,y=dt(x,df))
+                tp <- st.df %>% ggplot(aes(x,y))+geom_line()+
+                    geom_area(data=subset(st.df,x <= -abs(tcv)),aes(y=y), fill ="red", alpha = .5) +
+                    geom_area(data=subset(st.df,x >= abs(tcv)),aes(y=y), fill ="red", alpha = .5) +
+                    geom_area(data=subset(st.df,x <= -abs(t_score)),aes(y=y), fill ="blue", alpha = .5) +
+                    geom_area(data=subset(st.df,x >= abs(t_score)),aes(y=y), fill ="blue", alpha = .5)
+            } #Eif
+            
+            ############ t-Test Statistics Server #############################           
+            
+        }else if(input$Stat_check == TRUE){
+            stoppoint <- 1
+            if(input$t_choice != "2 Sample t-Test"){
+                t_xbar <- input$t_xbar
+                df <- input$t_n - 1
+                t_sd <- input$t_sd
+                t_n <- input$t_n
+                t_se <- t_sd/sqrt(t_n)
+                t_score <- (t_xbar-mu)/t_se
+            }else if(input$t_choice == "2 Sample t-Test" && input$eqvar == TRUE){
+                t_xbar <- input$t_xbar.a - input$t_xbar.b
+                df <- input$t_n.a + input$t_n.b - 2
+                sea <- input$t_sd.a/sqrt(input$t_n.a)
+                seb <- input$t_sd.b/sqrt(input$t_n.b)
+                t_se <- sqrt(sea^2+seb^2)
+                t_score <- (input$t_xbar.a-input$t_xbar.b)/t_se
+            }else if(input$t_choice == "2 Sample t-Test" && input$eqvar == FALSE){
+                sea <- input$t_sd.a/sqrt(input$t_n.a)
+                seb <- input$t_sd.b/sqrt(input$t_n.b)
+                t_se <- sqrt(sea^2+seb^2)
+                df <- t_se^4/(sea^4/(input$t_n.a-1)+seb^4/(input$t_n.b-1))
+                t_score <- (input$t_xbar.a-input$t_xbar.b)/t_se
+                t_xbar <- input$t_xbar.a - input$t_xbar.b
+            }
+            
+            if (tail == "less"){
+                cl <- 1 - 2*alpha
+                tcv <- qt(alpha,df)
+                t.pv <- pt(t_score,df)
+                U <- max(abs(tcv),abs(t_se))+1
+                L <- -1*U
+                x <- seq(from = L, to = U, by = .01)
+                st.df <- data.frame(x,y=dt(x,df))
+                tp <- st.df %>% ggplot(aes(x,y))+geom_line()+
+                    geom_area(data=subset(st.df,x<=tcv),aes(y=y), fill ="red", alpha = .5) +
+                    geom_area(data=subset(st.df,x<=t_score),aes(y=y), fill ="blue", alpha = .5)
+            }else if(tail == "greater"){
+                cl <- 1 - 2*alpha
+                tcv <- qt(1-alpha,df)
+                t.pv <- 1 - pt(t_score,df)
+                U <- max(abs(tcv),abs(t_se))+1
+                L <- -1*U
+                x <- seq(from = L, to = U, by = .01)
+                st.df <- data.frame(x,y=dt(x,df))
+                tp <- st.df %>% ggplot(aes(x,y))+geom_line()+
+                    geom_area(data=subset(st.df,x>=tcv),aes(y=y), fill ="red", alpha = .5) +
+                    geom_area(data=subset(st.df,x>=t_score),aes(y=y), fill ="blue", alpha = .5)
+            }else if(tail == "two.sided"){
+                cl <- 1 - alpha
+                tcv <- qt(alpha/2,df)
+                t.pv <- 2*(pt(-abs(t_score),df))
+                U <- max(abs(tcv),abs(t_score))+2
+                L <- -1*U
+                x <- seq(from = L, to = U, by = .01)
+                st.df <- data.frame(x,y=dt(x,df))
+                tp <- st.df %>% ggplot(aes(x,y))+geom_line()+
+                    geom_area(data=subset(st.df,x <= -abs(tcv)),aes(y=y), fill ="red", alpha = .5) +
+                    geom_area(data=subset(st.df,x >= abs(tcv)),aes(y=y), fill ="red", alpha = .5) +
+                    geom_area(data=subset(st.df,x <= -abs(t_score)),aes(y=y), fill ="blue", alpha = .5) +
+                    geom_area(data=subset(st.df,x >= abs(t_score)),aes(y=y), fill ="blue", alpha = .5)
+            } #Eif
+        } #Eif
+        
+        m.e <- abs(tcv) * t_se
+        ttt <- matrix(formatC(c(df,t_score,t.pv,tcv,t_se,m.e),
+                              format="f",digits = 6,drop0trailing = TRUE),ncol=6,nrow=1)
+        colnames(ttt) <- c("df","t-score","P-Value","CV","SE","ME")
+        
+        tp <- tp + scale_x_continuous(sec.axis = sec_axis(~.*t_se+mu, name = "A")) +
+            theme(axis.title.y = element_blank(),axis.text.y = element_blank(),axis.ticks.y = element_blank()) +
+            labs(x = "t")
+        
+        
+        upper <- t_xbar+m.e
+        lower <- t_xbar-m.e
+        CI.t <- paste(cl*100,"% confidence interval is (",lower,",",upper,")")
+        output$t_test_graph <- renderPlot({grid.arrange(tableGrob(ttt),tp,textGrob(CI.t),ncol=1)})
+    })#EobserveEvent
+    
+    # <<<<<<<<<<<<< End of T-test Tab Server  
+    
+    ####################### Start of ANOVA tab Server
+    
+    ####### Stats or Data Anovoa ########
+    
+    observeEvent(input$anovastat, {
+        if(input$anovastat == FALSE){
+            output$anovat <- renderRHandsontable({rhandsontable(anova.in$values)})
+        }else if(input$anovastat == TRUE){
+            output$anovat <- renderRHandsontable({rhandsontable(anova.s.in$values)})
+        } #Eif
+    }) #EobserveEvent
+    
+    ####### Anova Plot Button ########
+    
+    observeEvent(input$anovaplot, {
+        if(input$anovastat == FALSE){
+            anova.in$values <- hot_to_r(input$anovat)
+            anova.long <- pivot_longer(anova.in$values,cols = 1:6, names_to = "Factor")%>%na.omit()
+            abp <- anova.long %>% ggplot(aes(x=Factor, y=value)) +geom_boxplot(color="darkblue", fill="lightblue", outlier.colour="red", outlier.shape=8, outlier.size=4) + 
+                geom_jitter(width = .1) + theme_classic()
+            output$anovabox <- renderPlot({abp})
+            
+            aqq <- anova.long %>% ggplot(aes(sample = value, fill = Factor)) +
+                stat_qq_band() + stat_qq_line() + stat_qq_point() +
+                facet_wrap(~Factor) + theme(legend.position = "none")   +
+                labs(x = "Theoretical Quantiles", y = "Sample Quantiles") 
+            output$anovaqq <- renderPlot({aqq})
+            
+            anova.int <- anova.long %>% group_by(Factor) %>% summarise(count = length(value),
+                                                                       mean = mean(value),
+                                                                       sd = sd(value),
+                                                                       var = var(value))
+            a.count <- anova.int$count
+            a.mean <- anova.int$mean
+            a.sd <- anova.int$sd
+            a.var <- anova.int$var
+            
+            
+        }else if(input$anovastat == TRUE){
+            
+            anova.stats <- hot_to_r(input$anovat) %>% select_if(~!all(is.na(.)))
+            a.count <- as.numeric(anova.stats[1,])
+            a.mean <- as.numeric(anova.stats[2,])
+            a.sd <- as.numeric(anova.stats[3,])
+            a.var <- a.sd^2
+            
+        } #Eif  
+        
+        all.mean <- sum(a.mean*a.count)/sum(a.count)
+        a.dmb <- a.count*(a.mean-all.mean)^2
+        ave.a.mean <- mean(a.mean)
+        a.vw <- (a.count-1)*a.var
+        
+        anova.r <- rbind(a.count,a.mean,a.sd,a.var,a.dmb,a.vw)
+        colnames(anova.r)<-LETTERS[1:length(a.count)]
+        rownames(anova.r)<-c("count","mean","SD","Variance","Between","Within")
+        
+        anova.ut <- formatC(anova.r,format="f",digits = 6,drop0trailing = TRUE)
+        
+        output$anovaut <- renderTable({anova.ut},rownames = TRUE,colnames=TRUE)
+        
+        sum.between <- sum(a.dmb)
+        sum.within <- sum(a.vw)
+        sum.total <- sum(a.dmb) + sum(a.vw)
+        df.between <- length(a.count) - 1
+        df.within <- sum(a.count)-length(a.count)
+        df.total <- sum(a.count) - 1 
+        ms.between <- sum.between / df.between
+        ms.within <- sum.within / df.within
+        ms.total <- sum.total / df.total
+        F.stat <- ms.between / ms.within
+        F.pvalue <- pf(F.stat, df.between, df.within, lower.tail = FALSE)
+        alpha <- input$F.alpha
+        F.cv <- qf(1-alpha,df.between, df.within)
+        
+        Result.1 <- c(sum.between,df.between,ms.between,F.stat,F.pvalue)
+        Result.2 <- c(sum.within,df.within,ms.within,0,0)
+        Result.3 <- c(sum.total,df.total,ms.total,F.cv,alpha)
+        
+        anova.lt <- rbind(Result.1,Result.2,Result.3)
+        colnames(anova.lt) <- c("Sum of Squares","df","Mean Square","F Stat","P-Value")
+        rownames(anova.lt) <- c("Between (TR)","Within (E)","Total")
+        anova.lt <- formatC(anova.lt,format="f",digits = 6,drop0trailing = TRUE)
+        anova.lt[2,4] <- "F.CV"
+        anova.lt[2,5] <- "alpha"
+        output$anovalt <- renderTable({anova.lt},rownames = TRUE,colnames=TRUE)
+        
+        x <- seq(from = 0, to = max(F.stat,F.cv)+2, by = .01)
+        st.df <- data.frame(x,y=df(x,df.between,df.within))
+        fp <- st.df %>% ggplot(aes(x,y))+geom_line()+
+            geom_area(data=subset(st.df,x>=F.cv),aes(y=y), fill ="red", alpha = .5) +
+            geom_area(data=subset(st.df,x>=F.stat),aes(y=y), fill ="blue", alpha = .5) +
+            theme(axis.title.y = element_blank(),axis.text.y = element_blank(),axis.ticks.y = element_blank()) +
+            labs(x = "F") 
+        output$F.plot <- renderPlot({fp})
+    }) #EobserveEvent
+    
+    ############################# End ANOVA Server #########################
+    ############################# Proportions Server #######################
+    
+    observeEvent(c(input$ptest, input$ptail), {
+        if(input$ptest == 0){return()}
+        alpha <- input$pAlpha
+        ptail <- input$ptail
+        if(ptail != "two.sided"){cl <- 1-2*alpha}else if(ptail == "two.sided"){cl <- 1-alpha}
+        pci.cv <- qnorm(mean(c(1,cl)))
+        x1 <- input$x1
+        n1 <- input$n1
+        phat1 <- x1/n1
+        ph0 <- input$ph0
+        if(input$props == "1 Proportion"){
+            pt_see <- sqrt(ph0*(1-ph0)/n1)
+            pt.ts <- (phat1-ph0)/pt_see
+            pci.se <- sqrt(phat1*(1-phat1)/n1)
+            pci.me <- pci.cv*pci.se
+            high <- phat1 + pci.me
+            low <- phat1 - pci.me
+            dat <- data.frame(set = c("Set 1","Null"),prop = c(phat1,ph0))
+            pplot<- dat %>% ggplot(aes(y=prop))+
+                geom_rect(aes(xmin=-.1, xmax=.1, ymin = 0, ymax = phat1), fill = "deepskyblue4") +
+                geom_rect(aes(xmin=.1, xmax=.3, ymin = 0, ymax = ph0), fill = "deepskyblue2") + 
+                xlim(c(-.15,.35)) +
+                geom_errorbar(aes(x = 0, ymin = low, ymax = high),color="darkorange2") +
+                geom_point(x=0,y=phat1)+ geom_text(aes(x=0,y=phat1/2,label="Set 1")) + geom_text(aes(x=.2,y=ph0/2,label="Null")) +
+                theme(axis.title.x = element_blank(),axis.text.x = element_blank(),axis.ticks.x = element_blank())
+        }else if(input$props == "2 Proportions"){
+            x2 <- input$x2
+            n2 <- input$n2
+            ph0 <- 0
+            phat2 <- x2/n2
+            phatp <- (x1+x2)/(n1+n2)
+            pt_see <- sqrt(phatp*(1-phatp)*(1/n1+1/n2))
+            pt.ts <- (phat1-phat2)/pt_see
+            pci.se <- sqrt(phat1*(1-phat1)/n1+phat2*(1-phat2)/n2)
+            pci.me <- pci.cv*pci.se 
+            phatd <- phat1-phat2
+            high <- phatd + pci.me
+            low <- phatd - pci.me
+            dat <- data.frame(set = c("Set 1","Set 2"),prop = c(phat1,phat2))
+            pplot<- dat %>% ggplot(aes(y=prop))+
+                geom_rect(aes(xmin=-.1, xmax=.1,ymin=0, ymax = phat1), fill = "deepskyblue4") +
+                geom_rect(aes(xmin=-.1, xmax=.1,ymin=-phat2, ymax = 0), fill = "deepskyblue2") +
+                xlim(c(-.15,.15)) +
+                geom_errorbar(aes(x = 0, ymin = low, ymax = high),color="darkorange2") +
+                geom_point(x=0,y=phatd)+ geom_text(aes(x=0,y=phat1/2,label="Set 1")) + geom_text(aes(x=0,y=-phat2/2,label="Set 2")) +
+                scale_fill_brewer(palette="Dark2") +
+                theme(axis.title.x = element_blank(),axis.text.x = element_blank(),axis.ticks.x = element_blank())
+        } #endif
+        output$pplot <- renderPlot({pplot})
+        
+        x <- seq(from = -4, to = 4, by = .01)
+        st.df <- data.frame(x,y=dnorm(x))
+        if(ptail == "less"){
+            pp <- st.df %>% ggplot(aes(x,y))+geom_line()+
+                geom_area(data=subset(st.df,x <= -abs(pci.cv)),aes(y=y), fill ="red", alpha = .5) +
+                geom_area(data=subset(st.df,x <= pt.ts),aes(y=y), fill ="blue", alpha = .5) 
+            pt.pv <- pnorm(pt.ts)
+        }else if(ptail == "greater"){
+            pp <- st.df %>% ggplot(aes(x,y))+geom_line()+
+                geom_area(data=subset(st.df,x >= abs(pci.cv)),aes(y=y), fill ="red", alpha = .5) +
+                geom_area(data=subset(st.df,x >= pt.ts),aes(y=y), fill ="blue", alpha = .5)
+            pt.pv <- 1-pnorm(pt.ts)
+        }else if(ptail == "two.sided"){
+            pp <- st.df %>% ggplot(aes(x,y))+geom_line()+
+                geom_area(data=subset(st.df,x <= -abs(pci.cv)),aes(y=y), fill ="red", alpha = .5) +
+                geom_area(data=subset(st.df,x >= abs(pci.cv)),aes(y=y), fill ="red", alpha = .5) +
+                geom_area(data=subset(st.df,x <= -abs(pt.ts)),aes(y=y), fill ="blue", alpha = .5) +
+                geom_area(data=subset(st.df,x >= abs(pt.ts)),aes(y=y), fill ="blue", alpha = .5)
+            pt.pv <- 2*pnorm(-abs(pt.ts))
+        } #Eif
+        
+        ptt <- matrix(formatC(c(pt.ts,pt.pv,pci.cv,pt_see,pci.se,pci.me),
+                              format="f",digits = 6,drop0trailing = TRUE),ncol=6,nrow=1)
+        colnames(ptt) <- c("z-score","P-Value","CV","Test SE","CI SE","ME")
+        
+        pp <- pp + scale_x_continuous(sec.axis = sec_axis(~.*pt_see+ph0, name = "P")) +
+            theme(axis.title.y = element_blank(),axis.text.y = element_blank(),axis.ticks.y = element_blank()) +
+            labs(x = "Z")
+        
+        CI.p <- paste(cl*100,"% confidence interval is (",low,",",high,")")
+        output$ptgraph <- renderPlot({grid.arrange(tableGrob(ptt),pp,textGrob(CI.p),ncol=1)})
+    }) #EobserveEvent
+    
+    ########################## End Proportions Server ######################
+    ########################## Chi Server ##################################
+    
+    observeEvent(c(input$Chi.r,input$chic),{
+        if(input$chic == "Independence"){
+            output$Chi <- renderRHandsontable({rhandsontable(chi.ti.in$values)}) 
+            output$Chiexptitle <- renderText({""})
+            output$Chiexp <- renderTable({})
+            output$ChiSquares <- renderText({""})
+            output$chicell <- renderTable({})
+        }else if(input$chic == "Goodness of Fit"){
+            output$Chi <- renderRHandsontable({rhandsontable(chi.gof.in$values)})
+            output$Chiexptitle <- renderText({""})
+            output$Chiexp <- renderTable({})
+            output$ChiSquares <- renderText({""})
+            output$chicell <- renderTable({})
+        } #Eif
+    }) #EobserveEvent
+    
+    observeEvent(input$Chitest,{
+        if(input$chic == "Independence"){
+            Chi.ti <- hot_to_r(input$Chi)%>% remove_empty(c("rows","cols"))
+            c<-sum(substring(colnames(Chi.ti), 1, 1)== "X")
+            r<-sum(substring(rownames(Chi.ti), 1, 1)== "Y")
+            Chi.ti <- Chi.ti[1:r,1:c]
+            chi.test <- chisq.test(Chi.ti)
+            Chi.ti <- cbind(Chi.ti, Total = rowSums(Chi.ti, na.rm = TRUE))
+            Chi.ti <- rbind(Chi.ti, Total = colSums(Chi.ti, na.rm = TRUE))
+            Chi.ti <- cbind(Chi.ti,Perc = Chi.ti$Total / Chi.ti[r+1,c+1])
+            Chi.ti <- rbind(Chi.ti,Perc = Chi.ti["Total",] / Chi.ti[r+1,c+1])
+            Chi.ti[r+2,c+2] <- NA
+            output$Chi <- renderRHandsontable({rhandsontable(Chi.ti)%>% hot_cols(format = "0", halign = "htCenter", digits = 5)%>% 
+                    hot_col(c("Total","Perc"), readOnly = TRUE) %>% hot_row(c(r+1,r+2), readOnly = TRUE)}) 
+            output$Chiexptitle <- renderText({"Expected Values"})
+            output$Chiexp <- renderTable({chi.test$expected},rownames = TRUE,colnames=TRUE, digits = 5)
+            output$ChiSquares <- renderText({"Chi-Square Values"})
+            ressq <- (chi.test$residuals)^2
+            output$chicell <- renderTable({ressq},rownames = TRUE,colnames=TRUE, digits = 5)
+            chi.cv <- qchisq(1-input$chi.alpha,chi.test$parameter)
+            chit <- matrix(formatC(c(chi.test$statistic,chi.test$parameter,chi.cv,chi.test$p.value),
+                                   format="f",digits = 6,drop0trailing = TRUE),ncol=4,nrow=1)
+            colnames(chit) <- c("Chi-score","df","Chi-CV","P-Value")
+            output$Chiresult <- renderTable({chit})
+            
+            x <- seq(from = 0, to = max(chi.test$statistic,chi.cv)+5, by = .01)
+            st.df <- data.frame(x,y=dchisq(x,chi.test$parameter))
+            chip <- st.df %>% ggplot(aes(x,y))+geom_line()+
+                geom_area(data=subset(st.df,x>=chi.cv),aes(y=y), fill ="red", alpha = .5) +
+                geom_area(data=subset(st.df,x>=chi.test$statistic),aes(y=y), fill ="blue", alpha = .5) +
+                theme(axis.title.y = element_blank(),axis.text.y = element_blank(),axis.ticks.y = element_blank()) +
+                labs(x = "Chi") 
+            output$Chi.plot <- renderPlot({chip})
+            
+        }else if(input$chic == "Goodness of Fit"){
+            Chi.gof <- hot_to_r(input$Chi)%>% remove_empty(c("cols"))
+            c<-sum(substring(colnames(Chi.gof), 1, 1)== "X")
+            Chi.gof.ob <- as.numeric(Chi.gof[1,1:c])
+            Chi.gof.exp <- as.numeric(Chi.gof[2,1:c])
+            Chi.gof.exp <- Chi.gof.exp*sum(Chi.gof.ob)/sum(Chi.gof.exp)
+            chi.test <- chisq.test(x = Chi.gof.ob, p = Chi.gof.exp/sum(Chi.gof.ob))
+            Chi.gof <- rbind(Obs = Chi.gof.ob,Exp = Chi.gof.exp)
+            Chi.gof <- cbind(Chi.gof, Total = rowSums(Chi.gof, na.rm = TRUE))
+            Chi.gof <- rbind(Chi.gof, Chi = chi.test$residuals^2)
+            Chi.gof[3,c+1]<-NA
+            # output$Chi <- renderRHandsontable({rhandsontable(Chi.gof)%>% hot_cols(format = "0", halign = "htCenter")%>% 
+            #     hot_col(ncol(Chi.gof), readOnly = TRUE) %>% hot_row(nrow(Chi.gof), readOnly = TRUE)}) 
+            output$Chiexptitle <- renderText({""})
+            output$Chiexp <- renderTable({Chi.gof},rownames = TRUE,colnames=TRUE, digits = 3)
+            output$ChiSquares <- renderText({""})
+            output$chicell <- renderTable({})
+            chi.cv <- qchisq(1-input$chi.alpha,chi.test$parameter)
+            chit <- matrix(formatC(c(chi.test$statistic,chi.test$parameter,chi.cv,chi.test$p.value),
+                                   format="f",digits = 6,drop0trailing = TRUE),ncol=4,nrow=1)
+            colnames(chit) <- c("Chi-score","df","Chi-CV","P-Value")
+            output$Chiresult <- renderTable({chit})
+            
+            x <- seq(from = 0, to = max(chi.test$statistic,chi.cv)+5, by = .01)
+            st.df <- data.frame(x,y=dchisq(x,chi.test$parameter))
+            chip <- st.df %>% ggplot(aes(x,y))+geom_line()+
+                geom_area(data=subset(st.df,x>=chi.cv),aes(y=y), fill ="red", alpha = .5) +
+                geom_area(data=subset(st.df,x>=chi.test$statistic),aes(y=y), fill ="blue", alpha = .5) +
+                theme(axis.title.y = element_blank(),axis.text.y = element_blank(),axis.ticks.y = element_blank()) +
+                labs(x = "Chi") 
+            output$Chi.plot <- renderPlot({chip})
+        } #Eif
+    })
+    
+    
+    ########################## End Chi Server ##############################
+    ########################## Linear Regression Server ####################
+    
+    output$lr.data <- renderRHandsontable({rhandsontable(lr.in$values)})
+    
+    observeEvent(input$lr.reset,{
+        output$lr.data <- renderRHandsontable({rhandsontable(lr.in$values)})
+    }) #EobserveEvent
+    
+    observeEvent(input$lr.test,{
+        
+        lr.data <- hot_to_r(input$lr.data)%>% remove_empty("rows")
+        lr.plot <- lr.data %>% ggplot(aes(x=x, y=y)) + 
+            geom_point(shape=18, color="blue")+
+            geom_smooth(method=lm,formula = y ~ x, se=FALSE, color="darkred") +
+            stat_poly_eq(aes(label = paste(..eq.label.., ..rr.label.., sep = "~~~")), 
+                         label.x.npc = "right", label.y.npc = 0.15,
+                         formula = y ~ x, parse = TRUE, size = 3) +
+            labs(title = "Scatterplot")
+        
+        fit <- lm(y~x, data=lr.data)
+        res <- qplot(fitted(fit), resid(fit))+geom_hline(yintercept=0) +
+            labs(title = "Residual Plot")
+        
+        qqres <- lr.data %>% ggplot(mapping = aes(sample = resid(fit))) +
+            stat_qq_band() +
+            stat_qq_line() +
+            stat_qq_point() +
+            labs(title= "Residual QQ Plot",x = "Theoretical Quantiles", y = "Sample Quantiles")
+        output$lr.big3 <- renderPlot({grid.arrange(lr.plot,res,qqres,ncol = 1)})
+        good <- shapiro.test(resid(fit))
+        output$lr.qqplot <-renderValueBox({valueBox(tags$p(round(good$p.value,3), style = "font-size: 50%;"), subtitle = "p-value",width = 5,color = if (good$p.value < .05) {"red"} else {"green"})})
+        
+        lr.stats <- matrix(formatC(c(mean(lr.data$x),sd(lr.data$x),mean(lr.data$y),sd(lr.data$y)),
+                                   format="f",digits = 6,drop0trailing = TRUE),ncol=4,nrow=1)
+        colnames(lr.stats) <- c("Mean x","SD x","Mean y","SD y")
+        output$lr.stats <- renderTable({lr.stats})
+        xxx <- summary(fit)
+        slope <- xxx$coefficients[2,1]
+        yint <- xxx$coefficients[1,1]
+        r <- cor(lr.data$x,lr.data$y)
+        r2 <- r^2
+        see <- xxx$sigma
+        lr.rstats <- matrix(formatC(c(r,r2,see),
+                                    format="f",digits = 6,drop0trailing = TRUE),ncol=3,nrow=1)
+        colnames(lr.rstats) <- c("r","R sq","St Err est")
+        output$lr.rstats <- renderTable({lr.rstats})
+        xxxt <- xxx$coefficients
+        rownames(xxxt) <- c("y-Int","Slope")
+        output$lr.test <- renderTable({xxxt},digits = 6, rownames = TRUE)
+        
+        alpha <- input$lr.alpha
+        lr.x <- input$lr.x
+        cl <- 1 - alpha
+        df <- xxx$df[2]
+        slope.l <- round(slope + qt(alpha/2,df)*xxx$coefficients[2,2],6) 
+        slope.u <- round(slope - qt(alpha/2,df)*xxx$coefficients[2,2],6) 
+        output$ci.slope <- renderText({paste(cl*100,"% confidence interval for slope:(",slope.l,",",slope.u,")")})
+        lr.y <- lr.x*slope + yint
+        output$lr.point <- renderTable({rbind(c("y"),c(lr.y))},colnames = FALSE)
+        semuhat <- see*sqrt(1/(df+2)+(lr.x-mean(lr.data$x))^2/((df+1)*(sd(lr.data$x))^2))
+        cimu.l <- round(lr.y + qt(alpha/2,df)*semuhat,6)
+        cimu.u <- round(lr.y - qt(alpha/2,df)*semuhat,6)
+        output$ci.meany <- renderText({paste(cl*100,"% confidence interval for mean y: (",cimu.l,",",cimu.u,")")})
+        seyhat <- see*sqrt(1+1/(df+2)+(lr.x-mean(lr.data$x))^2/((df+1)*(sd(lr.data$x))^2))
+        piy.l <- round(lr.y + qt(alpha/2,df)*seyhat,6)
+        piy.u <- round(lr.y - qt(alpha/2,df)*seyhat,6)
+        output$pi.y <- renderText({paste(cl*100,"% prediction interval for y: (",piy.l,",",piy.u,")")})
+    }) #EobserveEvent
+    ########################## End Linear Regression Server ################
+    ########################## Discrete Probability Server #################
+    
+    output$disc.data <- renderRHandsontable({rhandsontable(disc.in$values)})
+    
+    observeEvent(input$disc.reset,{
+        output$disc.data <- renderRHandsontable({rhandsontable(disc.in$values)})
+    }) #EobserveEvent
+    
+    observeEvent(input$disc.data,{	
+        disc.data <- hot_to_r(input$disc.data)	
+    }) #EobserveEvent
+    
+    observeEvent(input$disc.add,{
+        disc.data <- hot_to_r(input$disc.data)
+        data.disc <- cbind(disc.data,as.numeric(c(NA,NA)))
+        lc <- ncol(data.disc)
+        colnames(data.disc)[lc]<-paste("X",lc,sep = "")
+        output$disc.data <- renderRHandsontable({rhandsontable(data.disc)})
+    }) #End observeEvent disc.add
+    
+    observeEvent(input$disc.run,{
+        set <- hot_to_r(input$disc.data)
+        set <- set[,colSums(is.na(set)) == 0] #keep column with no NA
+        x <- as.numeric(set[1,])
+        px <- as.numeric(set[2,])
+        m <- sum(x*px)
+        pre <- (x-m)^2*px
+        var <- sum(pre)
+        sd <- sqrt(var)
+        
+        dp <- matrix(formatC(c(m,var,sd),
+                             format="f",digits = 6,drop0trailing = TRUE),ncol=3,nrow=1)
+        colnames(dp) <- c("Mean","Variance","SD")
+        output$disc.results <- renderTable({dp})
+        
+        Prob <- px
+        df <- data.frame(x=x, Prob=Prob)
+        dph <- df %>% ggplot() + geom_histogram(aes(x=x, y=..density..,weight=Prob),
+                                                bins = length(x), color = "blue", fill = "brown")
+        gdph <- ggplotly(dph)
+        
+        output$DPHist <- renderPlotly(gdph) #Eoutput$DPHist
+    })
+    
+    
+    observeEvent(input$bi.run,{
+        bip <- input$bip
+        bih <- input$bih
+        bit <- input$bit
+        bis <- dbinom(bih,bit,bip) 
+        bisl <- pbinom(bih,bit,bip)
+        bisg <- 1 + bis - bisl
+        bimean <- bit*bip
+        bisd <- sqrt(bit*bip*(1-bip))
+        bt <- matrix(formatC(c(bis,bisl,bisg,bimean,bisd),
+                             format="f",digits = 6,drop0trailing = TRUE),ncol=5,nrow=1)
+        colnames(bt) <- c(paste("P=",bih),paste("P≤",bih),paste("P≥",bih),"Mean","SD")
+        output$biout <- renderTable({bt})
+        low <- floor(max(0, bimean - 3*bisd))
+        high <- ceiling(min(bit, bimean + 3*bisd))
+        biplot <- data.frame(hits = low:high, pmf = dbinom(x = low:high, size = bit, prob = bip)) %>%
+            ggplot(aes(x = factor(hits), y = pmf)) + geom_col(fill="skyblue2") +
+            geom_text(aes(label = round(pmf,3), y = pmf + 0.01),
+                      position = position_dodge(0.9), size = 3, vjust = .2, angle = 90) +
+            labs(x = "Successes (x)",y = "probability") 
+        output$biplot <- renderPlot({biplot})
+    }) #EobserveEvent
+    observeEvent(input$ge.run,{
+        gep <- input$gep
+        get <- input$get
+        ges <- (1-gep)^(get-1)*gep 
+        gesl <- 1-(1-gep)^get
+        gesg <- 1 + ges - gesl
+        gemean <- 1/gep
+        gesd <- sqrt(1-gep)/gep
+        gt <- matrix(formatC(c(ges,gesl,gesg,gemean,gesd),
+                             format="f",digits = 6,drop0trailing = TRUE),ncol=5,nrow=1)
+        colnames(gt) <- c(paste("P=",get),paste("P≤",get),paste("P≥",get),"Mean","SD")
+        output$geout <- renderTable({gt})
+        low <- 1
+        high <- ceiling(gemean + 3*gesd)
+        geplot <- data.frame(hits = low:high, pmf = dgeom(x = (low-1):(high-1), prob = gep)) %>%
+            ggplot(aes(x = factor(hits), y = pmf)) + geom_col(fill="skyblue2") +
+            geom_text(aes(label = round(pmf,3), y = pmf + 0.01),position = position_dodge(0.9),
+                      size = 3,vjust = 0.2, angle = 90) +
+            labs(x = "First success (x)",y = "Probability") 
+        output$geplot <- renderPlot({geplot})
+    }) #EobserveEvent
+    observeEvent(input$poi.run,{
+        poil <- input$poil
+        poih <- input$poih
+        pois <- dpois(poih,poil) 
+        poisl <- ppois(poih,poil)
+        poisg <- 1 + pois - poisl
+        poimean <- poil
+        poisd <- sqrt(poil)
+        pt <- matrix(formatC(c(pois,poisl,poisg,poimean,poisd),
+                             format="f",digits = 6,drop0trailing = TRUE),ncol=5,nrow=1)
+        colnames(pt) <- c(paste("P=",poih),paste("P≤",poih),paste("P≥",poih),"Mean","SD")
+        output$poiout <- renderTable({pt})
+        low <- floor(max(0,poimean - 3*poisd))
+        high <- ceiling(poimean + 3*poisd)
+        poiplot <- data.frame(hits = low:high, pmf = dpois(x = low:high, lambda = poil)) %>%
+            ggplot(aes(x = factor(hits), y = pmf)) + geom_col(fill="skyblue2") +
+            geom_text(aes(label = round(pmf,3), y = pmf + 0.01),position = position_dodge(0.9),
+                      size = 3,vjust = 0.2, angle = 90) +
+            labs(x = "Hits (x)",y = "Probability") 
+        output$poiplot <- renderPlot({poiplot})
+    }) #EobserveEvent
+shinyApp(ui = ui, server = server)

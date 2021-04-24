@@ -2,7 +2,7 @@
 #library(shinydashboard)
 #library(tidyverse)
 #library(plotly)
-pacman::p_load(shiny,shinydashboard,tidyverse,plotly,DT)
+pacman::p_load(shiny,shinydashboard,tidyverse,plotly,DT,formattable,magrittr)
 
 AllGames <- read.csv("All Games.csv")
 
@@ -42,9 +42,10 @@ ui <- dashboardPage(
       tabItem("brackets",
               fluidRow(
                 column(width = 12,
-                       box(title = "Brackets since 1985", width = NULL, status = "primary",
-                          tableOutput("tbl_brackets")       
-                       ) ############# End box
+                  box(title = "Brackets since 1985", width = NULL, status = "primary",
+                    sliderInput("sldr_year","Year",2008,2021,2021,step=1,width = 500,ticks = FALSE),
+                    formattableOutput("tbl_brackets")       
+                  ) ############# End box
                 ), ############## End column      
               ) ################# End of fluidrow
       ), ################### End Brackets Tab
@@ -70,7 +71,18 @@ server <- function(input, output, session) {
   output$tbl_all_games <- renderDT(AllGames%>%select(c(2:11)),rownames = FALSE)
 ########################### End of All Games Tab
 ########################### Start of Brackets Tab
-  output$tbl_brackets <- renderTable(table(c(1,2)))
+  observeEvent(input$sldr_year,{
+    year <- input$sldr_year
+    games <- AllGames %>% filter(Year == year) %>% 
+      mutate(top = paste(W.Seed,Winner,sep = " "),bottom = paste(L.Seed,Loser,sep = " "))
+    top <- games %>% select(Game,top,W.Score) %>% set_colnames(c("Game","Team","Score"))
+    bottom <- games %>% select(Game,bottom,L.Score)%>% set_colnames(c("Game","Team","Score"))
+    this_year <- rbind(top,bottom)%>%arrange(Game,desc(Score))%>%mutate(all=paste(Team,Score,sep=" "))
+    col1 <- this_year%>%filter(Game %in% (1:16)) %>%select(all)
+    col2 <- this_year%>%filter(Game %in% (33:40)) %>%select(all)
+    output$tbl_brackets <- renderFormattable(col1)  
+  })
+  
 ########################### End of Brackets Tab
 } ######################## End of the server
 

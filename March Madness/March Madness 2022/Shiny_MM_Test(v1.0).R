@@ -77,10 +77,17 @@ server <- function(input, output, session) {
       mutate(top = paste(W.Seed,Winner,sep = " "),bottom = paste(L.Seed,Loser,sep = " "))
     top <- games %>% select(Game,top,W.Score) %>% set_colnames(c("Game","Team","Score"))
     bottom <- games %>% select(Game,bottom,L.Score)%>% set_colnames(c("Game","Team","Score"))
-    this_year <- rbind(top,bottom)%>%arrange(Game,desc(Score))%>%mutate(all=paste(Team,Score,sep=" "))
+    this_year <- rbind(top,bottom)%>%filter(Game %in% 1:63)%>%arrange(Game,desc(Score))%>%mutate(all=paste(Team,Score,sep=" "))
+    bracket <- data.frame(matrix("", nrow = 32, ncol = 11))
+    colnames(bracket) <- c("W.Round 1","W.Round 2","W.Round 3","W.Round 4","W.Round 5","Round 6","E.Round 5","E.Round 4","E.Round 3","E.Round 2","E.Round 1")
+    for (i in 1:32){
+      bracket[i,1] <- this_year$all[i]
+      bracket[i,11] <- this_year$all[i+32]
+    }
     col1 <- this_year%>%filter(Game %in% (1:16)) %>%select(all)
     col2 <- this_year%>%filter(Game %in% (33:40)) %>%select(all)
-    output$tbl_brackets <- renderFormattable(col1)  
+    bracket <- bracket %>% formattable()
+    output$tbl_brackets <- renderFormattable(bracket)  
   })
   
 ########################### End of Brackets Tab

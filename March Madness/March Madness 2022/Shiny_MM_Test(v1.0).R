@@ -43,7 +43,7 @@ ui <- dashboardPage(
               fluidRow(
                 column(width = 12,
                   box(title = "Brackets since 1985", width = NULL, status = "primary",
-                    sliderInput("sldr_year","Year",2008,2021,2021,step=1,width = 500,ticks = FALSE),
+                    sliderInput("sldr_year","Year",1985,2021,2021,step=1,width = 500,ticks = FALSE),
                     formattableOutput("tbl_brackets")       
                   ) ############# End box
                 ), ############## End column      

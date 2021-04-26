@@ -107,6 +107,7 @@ server <- function(input, output, session) {
     }
     bracket[16,6] <- this_year$all[125]
     bracket[17,6] <- this_year$all[126]
+    bracket[3,6] <- games$Winner[63]
     bracket <- bracket %>% formattable()
     output$tbl_brackets <- renderFormattable(bracket)  
   })

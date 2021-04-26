@@ -75,17 +75,25 @@ server <- function(input, output, session) {
     year <- input$sldr_year
     games <- AllGames %>% filter(Year == year) %>% 
       mutate(top = paste(W.Seed,Winner,sep = " "),bottom = paste(L.Seed,Loser,sep = " "))
-    top <- games %>% select(Game,top,W.Score) %>% set_colnames(c("Game","Team","Score"))
-    bottom <- games %>% select(Game,bottom,L.Score)%>% set_colnames(c("Game","Team","Score"))
-    this_year <- rbind(top,bottom)%>%filter(Game %in% 1:63)%>%arrange(Game,desc(Score))%>%mutate(all=paste(Team,Score,sep=" "))
+    slot <- games %>% filter(Round == 1) %>% mutate(W.Slot = Game + W.Seed/100, L.Slot = Game + L.Seed/100)
+    slotsort <- left_join(slot %>% select(top,W.Slot), slot %>% select(bottom,L.Slot), by = c("top"="bottom","W.Slot"="L.Slot"))
+    top <- games %>% select(Game,W.Seed,top,W.Score,W.Slot) %>% set_colnames(c("Game","Seed","Team","Score","Slot"))
+    bottom <- games %>% select(Game,L.Seed,bottom,L.Score,L.Slot)%>% set_colnames(c("Game","Seed","Team","Score","Slot"))
+    this_year <- rbind(top,bottom)%>%filter(Game %in% 1:63)%>%mutate(all=paste(Team,Score,sep=" "))
     bracket <- data.frame(matrix("", nrow = 32, ncol = 11))
     colnames(bracket) <- c("W.Round 1","W.Round 2","W.Round 3","W.Round 4","W.Round 5","Round 6","E.Round 5","E.Round 4","E.Round 3","E.Round 2","E.Round 1")
     for (i in 1:32){
       bracket[i,1] <- this_year$all[i]
       bracket[i,11] <- this_year$all[i+32]
     }
-    col1 <- this_year%>%filter(Game %in% (1:16)) %>%select(all)
-    col2 <- this_year%>%filter(Game %in% (33:40)) %>%select(all)
+    for (i in 1:16){
+      bracket[2*i-1,2] <- this_year$all[64+i]
+      bracket[2*i-1,10] <- this_year$all[80+i]
+    }
+    for (i in 1:8){
+      bracket[4*i-2,3] <- this_year$all[96+i]
+      bracket[4*i-2,9] <- this_year$all[104+i]
+    }
     bracket <- bracket %>% formattable()
     output$tbl_brackets <- renderFormattable(bracket)  
   })

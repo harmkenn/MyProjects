@@ -2,7 +2,10 @@
 #library(shinydashboard)
 #library(tidyverse)
 #library(plotly)
-pacman::p_load(shiny,shinydashboard,tidyverse,plotly,DT,formattable,magrittr)
+#library(DT)
+#library(formattable)
+#library(magrittr)
+#pacman::p_load(shiny,shinydashboard,tidyverse,plotly,DT,formattable,magrittr)
 
 AllGames <- read.csv("All Games.csv")
 

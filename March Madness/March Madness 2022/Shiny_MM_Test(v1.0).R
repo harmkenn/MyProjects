@@ -2,7 +2,14 @@
 #library(shinydashboard)
 #library(tidyverse)
 #library(plotly)
+<<<<<<< HEAD
 pacman::p_load(shiny,shinydashboard,tidyverse,plotly,DT,formattable,magrittr,gt)
+=======
+#library(DT)
+#library(formattable)
+#library(magrittr)
+#pacman::p_load(shiny,shinydashboard,tidyverse,plotly,DT,formattable,magrittr)
+>>>>>>> 92747ecb6b6ba99f691fec5cc11a66223f42b4ad
 
 AllGames <- read.csv("All Games.csv")
 seed.history <- data.frame(rbind(table(AllGames$W.Seed,AllGames$Round)))%>%select(1:6)

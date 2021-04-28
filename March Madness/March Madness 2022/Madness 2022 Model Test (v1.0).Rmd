@@ -57,9 +57,6 @@ losers <- losers %>% add_rownames()
 winners <- data.frame(rbind(table(AllGames$Winner,AllGames$Year)))
 winners[winners > 0] <- winners[winners > 0] + 1
 winners <- winners %>% add_rownames()
-
-
-
 b2b <- left_join(losers,winners,by=c("rowname"="rowname"))
 b2b[is.na(b2b)] <- 0
 team.history <- cbind(b2b$rowname,b2b[,2:37]+b2b[,38:73])

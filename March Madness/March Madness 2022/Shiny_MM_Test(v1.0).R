@@ -2,9 +2,19 @@
 #library(shinydashboard)
 #library(tidyverse)
 #library(plotly)
-pacman::p_load(shiny,shinydashboard,tidyverse,plotly,DT,formattable,magrittr)
+pacman::p_load(shiny,shinydashboard,tidyverse,plotly,DT,formattable,magrittr,gt)
 
 AllGames <- read.csv("All Games.csv")
+seed.history <- data.frame(rbind(table(AllGames$W.Seed,AllGames$Round)))%>%select(1:6)
+seed.history$exp_wins <- rowSums(seed.history)/144
+SeedSum <- gt(seed.history,,,TRUE)%>% 
+  data_color(
+    columns = 2:8, 
+    colors = scales::col_numeric(
+      palette = c("white","blue") %>% as.character(),
+      domain = NULL
+    )
+  ) 
 
 ########################### Start of UI
 
@@ -54,7 +64,7 @@ ui <- dashboardPage(
         fluidRow(
           column(width = 12,
              box(title = "Seed History since 1985", width = NULL, status = "primary",
-                 DTOutput("tbl_seed_history")       
+                gt_output("tbl_seed_history")       
              ) ############# End box
           ), ############## End column      
         ) ################# End of fluidrow
@@ -113,6 +123,9 @@ server <- function(input, output, session) {
   })
   
 ########################### End of Brackets Tab
+########################### Start of Seed History  
+  output$tbl_seed_history <- render_gt(SeedSum)
+########################### End of Seed History   
 } ######################## End of the server
 
 ########################## Run the application 

@@ -2,15 +2,10 @@
 #library(shinydashboard)
 #library(tidyverse)
 #library(plotly)
-<<<<<<< HEAD
-pacman::p_load(shiny,shinydashboard,tidyverse,plotly,DT,formattable,magrittr,gt)
-=======
-#library(DT)
-#library(formattable)
-#library(magrittr)
-#pacman::p_load(shiny,shinydashboard,tidyverse,plotly,DT,formattable,magrittr)
->>>>>>> 92747ecb6b6ba99f691fec5cc11a66223f42b4ad
 
+pacman::p_load(shiny,shinydashboard,tidyverse,plotly,DT,formattable,magrittr,gt)
+
+# For Seed History
 AllGames <- read.csv("All Games.csv")
 seed.history <- data.frame(rbind(table(AllGames$W.Seed,AllGames$Round)))%>%select(1:6)
 seed.history$exp_wins <- rowSums(seed.history)/144
@@ -22,7 +17,22 @@ SeedSum <- gt(seed.history,,,TRUE)%>%
       domain = NULL
     )
   ) 
-
+# For Team Wins
+losers <- data.frame(rbind(table(AllGames$Loser,AllGames$Year)))
+losers <- losers %>% add_rownames()
+winners <- data.frame(rbind(table(AllGames$Winner,AllGames$Year)))
+winners[winners > 0] <- winners[winners > 0] + 1
+winners <- winners %>% add_rownames()
+b2b <- left_join(losers,winners,by=c("rowname"="rowname"))
+b2b[is.na(b2b)] <- 0
+team.history <- cbind(b2b$rowname,b2b[,2:37]+b2b[,38:73])
+colnames(team.history) <- c("team",seq(1985,2019,1),2021)
+rownames(team.history) <- team.history$team
+team.history <- team.history[-1,-1]
+scale.v <- seq(.5,1,.5/35)
+team.history$Exp <- colSums(t(team.history) * scale.v)
+team.history[,1:36] <- team.history[,1:36] - 1
+team.history[team.history == -1] <- NA
 ########################### Start of UI
 
 ui <- dashboardPage(

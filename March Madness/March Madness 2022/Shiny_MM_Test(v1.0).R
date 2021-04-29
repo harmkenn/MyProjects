@@ -18,21 +18,27 @@ SeedSum <- gt(seed.history,,,TRUE)%>%
     )
   ) 
 # For Team Wins
-losers <- data.frame(rbind(table(AllGames$Loser,AllGames$Year)))
-losers <- losers %>% add_rownames()
-winners <- data.frame(rbind(table(AllGames$Winner,AllGames$Year)))
-winners[winners > 0] <- winners[winners > 0] + 1
-winners <- winners %>% add_rownames()
-b2b <- left_join(losers,winners,by=c("rowname"="rowname"))
-b2b[is.na(b2b)] <- 0
-team.history <- cbind(b2b$rowname,b2b[,2:37]+b2b[,38:73])
-colnames(team.history) <- c("team",seq(1985,2019,1),2021)
-rownames(team.history) <- team.history$team
-team.history <- team.history[-1,-1]
-scale.v <- seq(.5,1,.5/35)
-team.history$Exp <- colSums(t(team.history) * scale.v)
-team.history[,1:36] <- team.history[,1:36] - 1
-team.history[team.history == -1] <- NA
+R1 <- AllGames %>% filter(Round == 1)
+R1L <- data.frame(rbind(table(R1$Loser,R1$Year)))%>% add_rownames()
+R2 <- AllGames %>% filter(Round == 2)
+R2L <- data.frame(rbind(2*table(R2$Loser,R2$Year)))%>% add_rownames()
+R3 <- AllGames %>% filter(Round == 3)
+R3L <- data.frame(rbind(3*table(R3$Loser,R3$Year)))%>% add_rownames()
+R4 <- AllGames %>% filter(Round == 4)
+R4L <- data.frame(rbind(4*table(R4$Loser,R4$Year)))%>% add_rownames()
+R5 <- AllGames %>% filter(Round == 5)
+R5L <- data.frame(rbind(5*table(R5$Loser,R5$Year)))%>% add_rownames()
+R6 <- AllGames %>% filter(Round == 6)
+R6L <- data.frame(rbind(6*table(R6$Loser,R6$Year)))%>% add_rownames()
+R6W <- data.frame(rbind(7*table(R6$Winner,R6$Year)))%>% add_rownames()
+team.wins <- rbind(R1L,R2L,R3L,R4L,R5L,R6L,R6W)
+team.wins <- team.wins %>% group_by(rowname) %>% summarise_all(sum)
+colnames(team.wins) <- c("Team",seq(1985,2019,1),2021)
+team.wins[,2:37] <- team.wins[,2:37] - 1
+team.wins[team.wins == -1] <- NA
+#team.wins <- team.wins[,order(ncol(team.wins):1)]
+
+
 ########################### Start of UI
 
 ui <- dashboardPage(
@@ -46,7 +52,8 @@ ui <- dashboardPage(
      sidebarMenu(
        menuItem("All Games", tabName = "all_games"),
        menuItem("Brackets", tabName = "brackets"),
-       menuItem("Seed History", tabName = "seed_history")
+       menuItem("Seed History", tabName = "seed_history"),
+       menuItem("Team Wins", tabName = "team_wins")
      ) #################### End sidebarMenu
   ), ###################### End dashboardSidebar
   
@@ -85,7 +92,17 @@ ui <- dashboardPage(
              ) ############# End box
           ), ############## End column      
         ) ################# End of fluidrow
-      ) ################### End Seed History Tab     
+      ), ################## End Seed History Tab  
+########################### Start Seed History Tab
+tabItem("team_wins",
+        fluidRow(
+          column(width = 12,
+                 box(title = "Team Wins since 1985", width = NULL, status = "primary",
+                     DTOutput("tbl_team_wins")       
+                 ) ############# End box
+          ), ############## End column      
+        ) ################# End of fluidrow
+) ################### End Team Wins Tab  
     ) ##################### End tabItems
   ) ####################### End dashboard Body
 ) ######################### End dashboard Page
@@ -142,7 +159,14 @@ server <- function(input, output, session) {
 ########################### End of Brackets Tab
 ########################### Start of Seed History  
   output$tbl_seed_history <- render_gt(SeedSum)
-########################### End of Seed History   
+########################### End of Seed History 
+########################### Start of Team Wins  
+  output$tbl_team_wins <- renderDT(team.wins,options = list(scrollX = TRUE,
+                                                            fixedColumns = list(leftColumns = 1),
+                                                            autoWidth = TRUE,
+                                                            columnDefs = list(list(width = '130px', targets = c(0)))
+                                                            ),extensions = 'FixedColumns', rownames = FALSE)
+########################### End of Team Wins
 } ######################## End of the server
 
 ########################## Run the application 

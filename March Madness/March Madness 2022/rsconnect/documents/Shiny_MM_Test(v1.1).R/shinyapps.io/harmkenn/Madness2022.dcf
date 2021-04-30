@@ -1,0 +1,13 @@
+name: Madness2022
+title: Madness2022
+username:
+account: harmkenn
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 4035455
+bundleId: 4540658
+url: https://harmkenn.shinyapps.io/Madness2022/
+when: 1619802517.46486
+asMultiple: FALSE
+asStatic: FALSE
+ignoredFiles: 2022 Bracket Picker.csv|2022 Bracket Picker.xlsx|All Games.csv|BasRef.csv|ESPN_BPI.csv|KenPom.csv|KenPom02-21.csv|KenPom02-21.xlsx|Madness-2022-Model-Test--v1.0-.html|Madness-2022-Model-Test--v1.0-.md|Madness 2022 Model Test (v1.0).Rmd|ResultsAndRankings.xlsx|ResultsAndRankings01.xlsx|ResultsAndRankings03.xlsx|ResultsAndRankings05.xlsx|ResultsAndRankings07.xlsx|ResultsAndRankings10.xlsx|ResultsAndRankings14.xlsx|ResultsAndRankings18.xlsx|ResultsAndRankings21.xlsx|ResultsAndRankings97.xlsx|ResultsAndRankings99.xlsx|Scraping-Data--v1.0-.html|Scraping-Data--v1.0-.md|Scraping Data (v1.0).Rmd|Shiny_MM_Test(v1.0).R|Shiny_MM_Test.R|Tresults.csv

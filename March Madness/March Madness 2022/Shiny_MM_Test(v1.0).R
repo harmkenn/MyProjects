@@ -5,8 +5,12 @@
 
 pacman::p_load(shiny,shinydashboard,tidyverse,plotly,DT,formattable,magrittr,gt)
 
+
+#AllGames <- read.csv("All Games.csv")
+#save(AllGames, file="AllGames.rda")
+load("AllGames.rda")
+
 # For Seed History
-AllGames <- read.csv("All Games.csv")
 seed.history <- data.frame(rbind(table(AllGames$W.Seed,AllGames$Round)))%>%select(1:6)
 seed.history$exp_wins <- rowSums(seed.history)/144
 SeedSum <- gt(seed.history,,,TRUE)%>% 

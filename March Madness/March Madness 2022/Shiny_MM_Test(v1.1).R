@@ -2,7 +2,7 @@
 #library(shinydashboard)
 #library(tidyverse)
 #library(plotly)
-library(pacman)
+#library(pacman)
 pacman::p_load(shiny,shinydashboard,tidyverse,plotly,DT,formattable,magrittr,gt)
 
 

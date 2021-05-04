@@ -10,6 +10,7 @@ output:
     fig_width: 12
     fig_align: 'center'
 editor_options: 
+  chunk_output_type: console
 ---
 
 # {.tabset .tabset-fade}
@@ -20,7 +21,7 @@ knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
 
 ```{r load_libraries, include=FALSE}
 # Use this R-Chunk to load all your libraries!
-pacman::p_load(tidyverse, DT, rvest)
+pacman::p_load(tidyverse, DT, rvest, DataCombine)
 ```
 
 ```{r swd, eval=FALSE, echo=FALSE}
@@ -121,6 +122,7 @@ write.csv(BasRef,"BasRef.csv")
 # Pull in
 
 ```{r}
+load("AllGames.rda")
 KenPom <- read.csv("KenPom.csv")
 ESPN_BPI <- read.csv("ESPN_BPI.csv")
 BasRaf <- read.csv("BasRef.csv")

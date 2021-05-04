@@ -1,0 +1,49 @@
+---
+title: "Scraping Data"
+author: "Ken Harmon"
+date: "4/20/2021"
+output: html_document 
+---
+
+# {.tabset .tabset-fade}
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## BPI
+https://www.espn.com/mens-college-basketball/bpi
+
+```{r}
+library(pacman)
+pacman::p_load(tidyverse, rvest, DT, plotly)
+```
+
+https://www.espn.com/mens-college-basketball/bpi/_/view/bpi/season/2018/page/5
+
+```{r}
+ESPN_BPI <- data.frame()
+for(year in seq(from = 2009, to = 2021)){
+  for(page_thing in seq(from = 1, to = 7)){
+  link <- paste0("https://www.espn.com/mens-college-basketball/bpi/_/view/bpi/season/",year,"/page/",page_thing)
+
+rank <- page %>% html_nodes(".bpi__table td:nth-child(1)") %>% html_text()
+team <- page %>% html_nodes(".team-names") %>% html_text()
+Conf <- page %>% html_nodes(".align-left+ td.align-left") %>% html_text()
+BPI <- page %>% html_nodes("td:nth-child(7)") %>% html_text()
+ESPN_BPI <- rbind(ESPN_BPI,data.frame(year,rank,team,Conf,BPI))
+ESPN_BPI$rank <- as.numeric(ESPN_BPI$rank)
+ESPN_BPI$BPI <- as.numeric(ESPN_BPI$BPI)
+page <- read_html(link)  
+print (page)
+}
+}
+```
+
+## Data
+
+```{r}
+datatable(ESPN_BPI)
+```
+
+

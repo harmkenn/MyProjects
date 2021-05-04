@@ -117,3 +117,25 @@ for (each_year in seq(from = 2008, to = 2020)){
 datatable(BasRef)
 write.csv(BasRef,"BasRef.csv")
 ```
+
+# Pull in
+
+```{r}
+KenPom <- read.csv("KenPom.csv")
+ESPN_BPI <- read.csv("ESPN_BPI.csv")
+BasRaf <- read.csv("BasRef.csv")
+```
+
+# Standard Team Name
+
+```{r}
+team_names <- sort(unique(KenPom$Team))
+KPfix <- read.csv("KenPomFix.csv")
+KenPom <- FindReplace(data = KenPom, Var = "Team", replaceData = KPfix,
+                     from = "From", to = "To", exact = TRUE)
+team_names <- sort(unique(KenPom$Team))
+write.csv(data.frame(team_names),"teamnames.csv")
+
+espn_Wrong <- sort(setdiff(ESPN_BPI$Team,team_names))
+write.csv(data.frame(espn_Wrong),"espnwrong.csv")
+```

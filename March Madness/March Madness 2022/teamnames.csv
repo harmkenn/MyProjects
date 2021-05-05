@@ -1,367 +1,367 @@
-"","team_names"
-"1","Abilene Christian"
-"2","Air Force"
-"3","Akron"
-"4","Alabama"
-"5","Alabama A&M"
-"6","Alabama St."
-"7","Albany"
-"8","Alcorn St."
-"9","American"
-"10","Appalachian St."
-"11","Arizona"
-"12","Arizona St."
-"13","Arkansas"
-"14","Arkansas Little Rock"
-"15","Arkansas Pine Bluff"
-"16","Arkansas St."
-"17","Army"
-"18","Auburn"
-"19","Austin Peay"
-"20","Ball St."
-"21","Baylor"
-"22","Bellarmine"
-"23","Belmont"
-"24","Bethune Cookman"
-"25","Binghamton"
-"26","Boise St."
-"27","Boston College"
-"28","Boston University"
-"29","Bowling Green"
-"30","Bradley"
-"31","Brown"
-"32","Bryant"
-"33","Bucknell"
-"34","Buffalo"
-"35","Butler"
-"36","BYU"
-"37","Cal Baptist"
-"38","Cal Poly"
-"39","Cal St. Bakersfield"
-"40","Cal St. Fullerton"
-"41","Cal St. Northridge"
-"42","California"
-"43","Campbell"
-"44","Canisius"
-"45","Centenary"
-"46","Central Arkansas"
-"47","Central Connecticut"
-"48","Central Michigan"
-"49","Charleston"
-"50","Charleston Southern"
-"51","Charlotte"
-"52","Chattanooga"
-"53","Chicago St."
-"54","Cincinnati"
-"55","Clemson"
-"56","Cleveland St."
-"57","Coastal Carolina"
-"58","Colgate"
-"59","Colorado"
-"60","Colorado St."
-"61","Columbia"
-"62","Connecticut"
-"63","Coppin St."
-"64","Cornell"
-"65","Creighton"
-"66","Dartmouth"
-"67","Davidson"
-"68","Dayton"
-"69","Delaware"
-"70","Delaware St."
-"71","Denver"
-"72","DePaul"
-"73","Detroit"
-"74","Dixie St."
-"75","Drake"
-"76","Drexel"
-"77","Duke"
-"78","Duquesne"
-"79","East Carolina"
-"80","East Tennessee St."
-"81","Eastern Illinois"
-"82","Eastern Kentucky"
-"83","Eastern Michigan"
-"84","Eastern Washington"
-"85","Elon"
-"86","Evansville"
-"87","Fairfield"
-"88","Fairleigh Dickinson"
-"89","FIU"
-"90","Florida"
-"91","Florida A&M"
-"92","Florida Atlantic"
-"93","Florida Gulf Coast"
-"94","Florida St."
-"95","Fordham"
-"96","Fort Wayne"
-"97","Fresno St."
-"98","Furman"
-"99","Gardner Webb"
-"100","George Mason"
-"101","George Washington"
-"102","Georgetown"
-"103","Georgia"
-"104","Georgia Southern"
-"105","Georgia St."
-"106","Georgia Tech"
-"107","Gonzaga"
-"108","Grambling St."
-"109","Grand Canyon"
-"110","Green Bay"
-"111","Hampton"
-"112","Hartford"
-"113","Harvard"
-"114","Hawaii"
-"115","High Point"
-"116","Hofstra"
-"117","Holy Cross"
-"118","Houston"
-"119","Houston Baptist"
-"120","Howard"
-"121","Idaho"
-"122","Idaho St."
-"123","Illinois"
-"124","Illinois Chicago"
-"125","Illinois St."
-"126","Incarnate Word"
-"127","Indiana"
-"128","Indiana St."
-"129","Iona"
-"130","Iowa"
-"131","Iowa St."
-"132","IPFW"
-"133","IUPUI"
-"134","Jackson St."
-"135","Jacksonville"
-"136","Jacksonville St."
-"137","James Madison"
-"138","Kansas"
-"139","Kansas St."
-"140","Kennesaw St."
-"141","Kent St."
-"142","Kentucky"
-"143","La Salle"
-"144","Lafayette"
-"145","Lamar"
-"146","Lehigh"
-"147","Liberty"
-"148","Lipscomb"
-"149","Little Rock"
-"150","LIU"
-"151","Long Beach St."
-"152","Longwood"
-"153","Louisiana"
-"154","Louisiana Lafayette"
-"155","Louisiana Monroe"
-"156","Louisiana Tech"
-"157","Louisville"
-"158","Loyola Chicago"
-"159","Loyola Marymount"
-"160","Loyola MD"
-"161","LSU"
-"162","Maine"
-"163","Manhattan"
-"164","Marist"
-"165","Marquette"
-"166","Marshall"
-"167","Maryland"
-"168","Maryland Eastern Shore"
-"169","Massachusetts"
-"170","McNeese St."
-"171","Memphis"
-"172","Mercer"
-"173","Merrimack"
-"174","Miami FL"
-"175","Miami OH"
-"176","Michigan"
-"177","Michigan St."
-"178","Middle Tennessee"
-"179","Milwaukee"
-"180","Minnesota"
-"181","Mississippi"
-"182","Mississippi St."
-"183","Mississippi Valley St."
-"184","Missouri"
-"185","Missouri St."
-"186","Monmouth"
-"187","Montana"
-"188","Montana St."
-"189","Morehead St."
-"190","Morgan St."
-"191","Mount St. Mary's"
-"192","Murray St."
-"193","Navy"
-"194","Nebraska"
-"195","Nebraska Omaha"
-"196","Nevada"
-"197","New Hampshire"
-"198","New Mexico"
-"199","New Mexico St."
-"200","New Orleans"
-"201","Niagara"
-"202","Nicholls St."
-"203","NJIT"
-"204","Norfolk St."
-"205","North Alabama"
-"206","North Carolina"
-"207","North Carolina A&T"
-"208","North Carolina Central"
-"209","North Carolina St."
-"210","North Dakota"
-"211","North Dakota St."
-"212","North Florida"
-"213","North Texas"
-"214","Northeastern"
-"215","Northern Arizona"
-"216","Northern Colorado"
-"217","Northern Illinois"
-"218","Northern Iowa"
-"219","Northern Kentucky"
-"220","Northwestern"
-"221","Northwestern St."
-"222","Notre Dame"
-"223","Oakland"
-"224","Ohio"
-"225","Ohio St."
-"226","Oklahoma"
-"227","Oklahoma St."
-"228","Old Dominion"
-"229","Oral Roberts"
-"230","Oregon"
-"231","Oregon St."
-"232","Pacific"
-"233","Penn"
-"234","Penn St."
-"235","Pepperdine"
-"236","Pittsburgh"
-"237","Portland"
-"238","Portland St."
-"239","Prairie View A&M"
-"240","Presbyterian"
-"241","Princeton"
-"242","Providence"
-"243","Purdue"
-"244","Purdue Fort Wayne"
-"245","Quinnipiac"
-"246","Radford"
-"247","Rhode Island"
-"248","Rice"
-"249","Richmond"
-"250","Rider"
-"251","Robert Morris"
-"252","Rutgers"
-"253","Sacramento St."
-"254","Sacred Heart"
-"255","Saint Joseph's"
-"256","Saint Louis"
-"257","Saint Mary's"
-"258","Saint Peter's"
-"259","Sam Houston St."
-"260","Samford"
-"261","San Diego"
-"262","San Diego St."
-"263","San Francisco"
-"264","San Jose St."
-"265","Santa Clara"
-"266","Savannah St."
-"267","Seattle"
-"268","Seton Hall"
-"269","Siena"
-"270","SIU Edwardsville"
-"271","SMU"
-"272","South Alabama"
-"273","South Carolina"
-"274","South Carolina St."
-"275","South Dakota"
-"276","South Dakota St."
-"277","South Florida"
-"278","Southeast Missouri St."
-"279","Southeastern Louisiana"
-"280","Southern"
-"281","Southern Illinois"
-"282","Southern Miss"
-"283","Southern Utah"
-"284","St. Bonaventure"
-"285","St. Francis NY"
-"286","St. Francis PA"
-"287","St. John's"
-"288","Stanford"
-"289","Stephen F. Austin"
-"290","Stetson"
-"291","Stony Brook"
-"292","Syracuse"
-"293","Tarleton St."
-"294","TCU"
-"295","Temple"
-"296","Tennessee"
-"297","Tennessee Martin"
-"298","Tennessee St."
-"299","Tennessee Tech"
-"300","Texas"
-"301","Texas A&M"
-"302","Texas A&M Corpus Chris"
-"303","Texas Pan American"
-"304","Texas Southern"
-"305","Texas St."
-"306","Texas Tech"
-"307","The Citadel"
-"308","Toledo"
-"309","Towson"
-"310","Troy"
-"311","Tulane"
-"312","Tulsa"
-"313","UAB"
-"314","UC Davis"
-"315","UC Irvine"
-"316","UC Riverside"
-"317","UC San Diego"
-"318","UC Santa Barbara"
-"319","UCF"
-"320","UCLA"
-"321","UMass Lowell"
-"322","UMBC"
-"323","UMKC"
-"324","UNC Asheville"
-"325","UNC Greensboro"
-"326","UNC Wilmington"
-"327","UNLV"
-"328","USC"
-"329","USC Upstate"
-"330","UT Arlington"
-"331","UT Rio Grande Valley"
-"332","Utah"
-"333","Utah St."
-"334","Utah Valley"
-"335","Utah Valley St."
-"336","UTEP"
-"337","UTSA"
-"338","Valparaiso"
-"339","Vanderbilt"
-"340","VCU"
-"341","Vermont"
-"342","Villanova"
-"343","Virginia"
-"344","Virginia Tech"
-"345","VMI"
-"346","Wagner"
-"347","Wake Forest"
-"348","Washington"
-"349","Washington St."
-"350","Weber St."
-"351","West Virginia"
-"352","Western Carolina"
-"353","Western Illinois"
-"354","Western Kentucky"
-"355","Western Michigan"
-"356","Wichita St."
-"357","William & Mary"
-"358","Winston Salem St."
-"359","Winthrop"
-"360","Wisconsin"
-"361","Wofford"
-"362","Wright St."
-"363","Wyoming"
-"364","Xavier"
-"365","Yale"
-"366","Youngstown St."
+,team_names
+1,Abilene Christian
+2,Air Force
+3,Akron
+4,Alabama
+5,Alabama A&M
+6,Alabama St.
+7,Albany
+8,Alcorn St.
+9,American
+10,Appalachian St.
+11,Arizona
+12,Arizona St.
+13,Arkansas
+14,Arkansas Little Rock
+15,Arkansas Pine Bluff
+16,Arkansas St.
+17,Army
+18,Auburn
+19,Austin Peay
+20,Ball St.
+21,Baylor
+22,Bellarmine
+23,Belmont
+24,Bethune Cookman
+25,Binghamton
+26,Boise St.
+27,Boston College
+28,Boston University
+29,Bowling Green
+30,Bradley
+31,Brown
+32,Bryant
+33,Bucknell
+34,Buffalo
+35,Butler
+36,BYU
+37,Cal Baptist
+38,Cal Poly
+39,Cal St. Bakersfield
+40,Cal St. Fullerton
+41,Cal St. Northridge
+42,California
+43,Campbell
+44,Canisius
+45,Centenary
+46,Central Arkansas
+47,Central Connecticut
+48,Central Michigan
+49,Charleston
+50,Charleston Southern
+51,Charlotte
+52,Chattanooga
+53,Chicago St.
+54,Cincinnati
+55,Clemson
+56,Cleveland St.
+57,Coastal Carolina
+58,Colgate
+59,Colorado
+60,Colorado St.
+61,Columbia
+62,Connecticut
+63,Coppin St.
+64,Cornell
+65,Creighton
+66,Dartmouth
+67,Davidson
+68,Dayton
+69,Delaware
+70,Delaware St.
+71,Denver
+72,DePaul
+73,Detroit
+74,Dixie St.
+75,Drake
+76,Drexel
+77,Duke
+78,Duquesne
+79,East Carolina
+80,East Tennessee St.
+81,Eastern Illinois
+82,Eastern Kentucky
+83,Eastern Michigan
+84,Eastern Washington
+85,Elon
+86,Evansville
+87,Fairfield
+88,Fairleigh Dickinson
+89,FIU
+90,Florida
+91,Florida A&M
+92,Florida Atlantic
+93,Florida Gulf Coast
+94,Florida St.
+95,Fordham
+96,Fort Wayne
+97,Fresno St.
+98,Furman
+99,Gardner Webb
+100,George Mason
+101,George Washington
+102,Georgetown
+103,Georgia
+104,Georgia Southern
+105,Georgia St.
+106,Georgia Tech
+107,Gonzaga
+108,Grambling St.
+109,Grand Canyon
+110,Green Bay
+111,Hampton
+112,Hartford
+113,Harvard
+114,Hawaii
+115,High Point
+116,Hofstra
+117,Holy Cross
+118,Houston
+119,Houston Baptist
+120,Howard
+121,Idaho
+122,Idaho St.
+123,Illinois
+124,Illinois Chicago
+125,Illinois St.
+126,Incarnate Word
+127,Indiana
+128,Indiana St.
+129,Iona
+130,Iowa
+131,Iowa St.
+132,IPFW
+133,IUPUI
+134,Jackson St.
+135,Jacksonville
+136,Jacksonville St.
+137,James Madison
+138,Kansas
+139,Kansas St.
+140,Kennesaw St.
+141,Kent St.
+142,Kentucky
+143,La Salle
+144,Lafayette
+145,Lamar
+146,Lehigh
+147,Liberty
+148,Lipscomb
+149,Little Rock
+150,LIU
+151,Long Beach St.
+152,Longwood
+153,Louisiana
+154,Louisiana Lafayette
+155,Louisiana Monroe
+156,Louisiana Tech
+157,Louisville
+158,Loyola Chicago
+159,Loyola Marymount
+160,Loyola MD
+161,LSU
+162,Maine
+163,Manhattan
+164,Marist
+165,Marquette
+166,Marshall
+167,Maryland
+168,Maryland Eastern Shore
+169,Massachusetts
+170,McNeese St.
+171,Memphis
+172,Mercer
+173,Merrimack
+174,Miami FL
+175,Miami OH
+176,Michigan
+177,Michigan St.
+178,Middle Tennessee
+179,Milwaukee
+180,Minnesota
+181,Mississippi
+182,Mississippi St.
+183,Mississippi Valley St.
+184,Missouri
+185,Missouri St.
+186,Monmouth
+187,Montana
+188,Montana St.
+189,Morehead St.
+190,Morgan St.
+191,Mount St. Mary's
+192,Murray St.
+193,Navy
+194,Nebraska
+195,Nebraska Omaha
+196,Nevada
+197,New Hampshire
+198,New Mexico
+199,New Mexico St.
+200,New Orleans
+201,Niagara
+202,Nicholls St.
+203,NJIT
+204,Norfolk St.
+205,North Alabama
+206,North Carolina
+207,North Carolina A&T
+208,North Carolina Central
+209,North Carolina St.
+210,North Dakota
+211,North Dakota St.
+212,North Florida
+213,North Texas
+214,Northeastern
+215,Northern Arizona
+216,Northern Colorado
+217,Northern Illinois
+218,Northern Iowa
+219,Northern Kentucky
+220,Northwestern
+221,Northwestern St.
+222,Notre Dame
+223,Oakland
+224,Ohio
+225,Ohio St.
+226,Oklahoma
+227,Oklahoma St.
+228,Old Dominion
+229,Oral Roberts
+230,Oregon
+231,Oregon St.
+232,Pacific
+233,Penn
+234,Penn St.
+235,Pepperdine
+236,Pittsburgh
+237,Portland
+238,Portland St.
+239,Prairie View A&M
+240,Presbyterian
+241,Princeton
+242,Providence
+243,Purdue
+244,Purdue Fort Wayne
+245,Quinnipiac
+246,Radford
+247,Rhode Island
+248,Rice
+249,Richmond
+250,Rider
+251,Robert Morris
+252,Rutgers
+253,Sacramento St.
+254,Sacred Heart
+255,Saint Joseph's
+256,Saint Louis
+257,Saint Mary's
+258,Saint Peter's
+259,Sam Houston St.
+260,Samford
+261,San Diego
+262,San Diego St.
+263,San Francisco
+264,San Jose St.
+265,Santa Clara
+266,Savannah St.
+267,Seattle
+268,Seton Hall
+269,Siena
+270,SIU Edwardsville
+271,SMU
+272,South Alabama
+273,South Carolina
+274,South Carolina St.
+275,South Dakota
+276,South Dakota St.
+277,South Florida
+278,Southeast Missouri St.
+279,Southeastern Louisiana
+280,Southern
+281,Southern Illinois
+282,Southern Miss
+283,Southern Utah
+284,St. Bonaventure
+285,St. Francis NY
+286,St. Francis PA
+287,St. John's
+288,Stanford
+289,Stephen F. Austin
+290,Stetson
+291,Stony Brook
+292,Syracuse
+293,Tarleton St.
+294,TCU
+295,Temple
+296,Tennessee
+297,Tennessee Martin
+298,Tennessee St.
+299,Tennessee Tech
+300,Texas
+301,Texas A&M
+302,Texas A&M Corpus Chris
+303,Texas Pan American
+304,Texas Southern
+305,Texas St.
+306,Texas Tech
+307,The Citadel
+308,Toledo
+309,Towson
+310,Troy
+311,Tulane
+312,Tulsa
+313,UAB
+314,UC Davis
+315,UC Irvine
+316,UC Riverside
+317,UC San Diego
+318,UC Santa Barbara
+319,UCF
+320,UCLA
+321,UMass Lowell
+322,UMBC
+323,UMKC
+324,UNC Asheville
+325,UNC Greensboro
+326,UNC Wilmington
+327,UNLV
+328,USC
+329,USC Upstate
+330,UT Arlington
+331,UT Rio Grande Valley
+332,Utah
+333,Utah St.
+334,Utah Valley
+335,Utah Valley St.
+336,UTEP
+337,UTSA
+338,Valparaiso
+339,Vanderbilt
+340,VCU
+341,Vermont
+342,Villanova
+343,Virginia
+344,Virginia Tech
+345,VMI
+346,Wagner
+347,Wake Forest
+348,Washington
+349,Washington St.
+350,Weber St.
+351,West Virginia
+352,Western Carolina
+353,Western Illinois
+354,Western Kentucky
+355,Western Michigan
+356,Wichita St.
+357,William & Mary
+358,Winston Salem St.
+359,Winthrop
+360,Wisconsin
+361,Wofford
+362,Wright St.
+363,Wyoming
+364,Xavier
+365,Yale
+366,Youngstown St.

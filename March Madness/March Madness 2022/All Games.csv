@@ -774,7 +774,7 @@ Date,Year,Round,Region,Game,W.Seed,Winner,W.Score,L.Seed,Loser,L.Score
 3/13/1997,1997,1,NE,17,1,North Carolina,82,16,Fairfield,74
 3/13/1997,1997,1,NE,18,9,Colorado,80,8,Indiana,62
 3/13/1997,1997,1,NE,19,5,California,55,12,Princeton,52
-3/13/1997,1997,1,NE,20,4,Villanova,101,13,LIU Brooklyn,91
+3/13/1997,1997,1,NE,20,4,Villanova,101,13,LIU,91
 3/14/1997,1997,1,NE,21,6,Louisville,65,11,Massachusetts,57
 3/14/1997,1997,1,NE,22,3,New Mexico,59,14,Old Dominion,55
 3/14/1997,1997,1,NE,23,10,Texas,71,7,Wisconsin,58
@@ -1658,7 +1658,7 @@ Date,Year,Round,Region,Game,W.Seed,Winner,W.Score,L.Seed,Loser,L.Score
 3/18/2011,2011,1,NW,5,11,Marquette,66,6,Xavier,55
 3/18/2011,2011,1,NW,6,3,Syracuse,77,14,Indiana St.,60
 3/18/2011,2011,1,NW,7,7,Washington,68,10,Georgia,65
-3/18/2011,2011,1,NW,8,2,North Carolina,102,15,LIU Brooklyn,87
+3/18/2011,2011,1,NW,8,2,North Carolina,102,15,LIU,87
 3/18/2011,2011,1,SW,9,1,Duke,87,16,Hampton,45
 3/18/2011,2011,1,SW,10,8,Michigan,75,9,Tennessee,45
 3/18/2011,2011,1,SW,11,5,Arizona,77,12,Memphis,75
@@ -1726,7 +1726,7 @@ Date,Year,Round,Region,Game,W.Seed,Winner,W.Score,L.Seed,Loser,L.Score
 3/15/2012,2012,1,NW,6,3,Baylor,68,14,South Dakota St.,60
 3/16/2012,2012,1,NW,7,10,Xavier,67,7,Notre Dame,63
 3/16/2012,2012,1,NW,8,15,Lehigh,75,2,Duke,70
-3/16/2012,2012,1,SW,9,1,Michigan St.,89,16,LIU Brooklyn,67
+3/16/2012,2012,1,SW,9,1,Michigan St.,89,16,LIU,67
 3/16/2012,2012,1,SW,10,9,Saint Louis,61,8,Memphis,54
 3/15/2012,2012,1,SW,11,5,New Mexico,75,12,Long Beach St.,68
 3/15/2012,2012,1,SW,12,4,Louisville,69,13,Davidson,62
@@ -1783,7 +1783,7 @@ Date,Year,Round,Region,Game,W.Seed,Winner,W.Score,L.Seed,Loser,L.Score
 4/2/2012,2012,6,Champ,63,1,Kentucky,67,2,Kansas,59
 3/19/2013,2013,PI,PI,-4,16,North Carolina A&T,73,16,Liberty,72
 3/19/2013,2013,PI,PI,-3,11,Saint Mary's,67,11,Middle Tennessee,54
-3/20/2013,2013,PI,PI,-2,16,James Madison,68,16,LIU Brooklyn,55
+3/20/2013,2013,PI,PI,-2,16,James Madison,68,16,LIU,55
 3/20/2013,2013,PI,PI,-1,13,La Salle,80,13,Boise St.,71
 3/21/2013,2013,1,NW,1,1,Louisville,79,16,North Carolina A&T,48
 3/21/2013,2013,1,NW,2,8,Colorado St.,84,9,Missouri,72
@@ -2116,7 +2116,7 @@ Date,Year,Round,Region,Game,W.Seed,Winner,W.Score,L.Seed,Loser,L.Score
 4/1/2017,2017,5,F4,61,1,Gonzaga,77,7,South Carolina,73
 4/1/2017,2017,5,F4,62,1,North Carolina,77,3,Oregon,76
 4/3/2017,2017,6,Champ,63,1,North Carolina,71,1,Gonzaga,65
-3/13/2018,2018,PI,PI,-4,16,Radford,71,16,LIU Brooklyn,61
+3/13/2018,2018,PI,PI,-4,16,Radford,71,16,LIU,61
 3/13/2018,2018,PI,PI,-3,11,St. Bonaventure,65,11,UCLA,58
 3/14/2018,2018,PI,PI,-2,16,Texas Southern,64,16,North Carolina Central,46
 3/14/2018,2018,PI,PI,-1,11,Syracuse,60,11,Arizona St.,56

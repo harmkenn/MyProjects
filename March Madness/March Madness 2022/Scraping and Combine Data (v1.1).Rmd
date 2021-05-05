@@ -122,10 +122,12 @@ write.csv(BasRef,"BasRef.csv")
 # Pull in
 
 ```{r}
+AllGames <- read.csv("All Games.csv")
+save(AllGames, file="AllGames.rda")
 load("AllGames.rda")
 KenPom <- read.csv("KenPom.csv")
 ESPN_BPI <- read.csv("ESPN_BPI.csv")
-BasRaf <- read.csv("BasRef.csv")
+BasRef <- read.csv("BasRef.csv")
 ```
 
 # Standard Team Name
@@ -140,4 +142,11 @@ write.csv(data.frame(team_names),"teamnames.csv")
 
 espn_Wrong <- sort(setdiff(ESPN_BPI$Team,team_names))
 write.csv(data.frame(espn_Wrong),"espnwrong.csv")
+espnfix <- read.csv("espnfix.csv")
+ESPN_BPI <- FindReplace(data = ESPN_BPI, Var = "Team", replaceData = espnfix,
+                     from = "From", to = "To", exact = TRUE)
+ESPN_BPI$Team <- gsub("\\)","",ESPN_BPI$Team)
+
+BR_Wrong <- sort(setdiff(BasRef$Team,team_names))
+
 ```

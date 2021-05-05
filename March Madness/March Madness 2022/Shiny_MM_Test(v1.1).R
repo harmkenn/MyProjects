@@ -6,8 +6,7 @@
 pacman::p_load(shiny,shinydashboard,tidyverse,plotly,DT,formattable,magrittr,gt)
 
 
-#AllGames <- read.csv("All Games.csv")
-#save(AllGames, file="AllGames.rda")
+
 load("AllGames.rda")
 
 # For Seed History

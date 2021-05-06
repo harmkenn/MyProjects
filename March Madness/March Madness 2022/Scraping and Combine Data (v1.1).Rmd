@@ -150,6 +150,12 @@ ESPN_BPI$Team <- gsub("\\(","",ESPN_BPI$Team)
 BR_Wrong <- sort(setdiff(BasRef$Team,team_names))
 write.csv(data.frame(BR_Wrong),"BRwrong.csv")
 
+BRfix <- read.csv("BRfix.csv")
+BasRef <- FindReplace(data = BasRef, Var = "Team", replaceData = BRfix,
+                     from = "From", to = "To", exact = TRUE)
+BasRef$Team <- gsub("\\)","",BasRef$Team)
+
+
 ```
 
 # Save
@@ -157,5 +163,6 @@ write.csv(data.frame(BR_Wrong),"BRwrong.csv")
 ```{r}
 save(KenPom, file="KenPom.rda")
 save(ESPN_BPI, file="ESPN_BPI.rda")
+save(BasRef, file="BasRef.rda")
 ```
 

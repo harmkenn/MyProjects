@@ -37,7 +37,7 @@ setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
 AllGames <- read.csv("All Games.csv")
 AllGames <- AllGames %>% filter(Round != "PI")
 #Build Seed History
-seed.history <- data.frame(rbind(table(AllGames$Winning.Seed,AllGames$Round)))%>%select(2:7)
+seed.history <- data.frame(rbind(table(AllGames$W.Seed,AllGames$Round)))
 seed.history$exp <- rowSums(seed.history)/144
 gt(seed.history,,,TRUE)%>% 
    data_color(
@@ -73,7 +73,7 @@ datatable(team.history)
 ## Team Seeds
 
 ```{r}
-team.seed.w <- AllGames %>% filter(Round == 1) %>% select(c(2,5,6))
+team.seed.w <- AllGames %>% filter(Round == 1) %>% select(c(2,6,7))
 colnames(team.seed.w) <- c("Year","Seed","Team")
 team.seed.l <- AllGames %>% filter(Round == 1) %>% select(c(2,9,10))
 colnames(team.seed.l) <- c("Year","Seed","Team")

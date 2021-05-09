@@ -166,27 +166,59 @@ save(ESPN_BPI, file="ESPN_BPI.rda")
 save(BasRef, file="BasRef.rda")
 ```
 
-# Now Combine
+# Get PASE
 
 ```{r}
 load("AllGames.rda")
-load("BasRef.rda")
-load("ESPN_BPI.rda")
-load("KenPom.rda")
-AllGames08 <- AllGames %>% filter(Year >= 2008) %>% select(c(-1,-4))
-BasRef08 <- BasRef %>% select(c(-1,-3))
-ESPN_BPI08 <- ESPN_BPI %>% select(c(-1,-3,-5,-6))
-KenPom08 <- KenPom %>% select(c(-1,-3,-5,-6))
-stage1 <- left_join(AllGames08,BasRef08,by=c("Year"="Year","Winner"="Team"))
-stage2 <- left_join(stage1,ESPN_BPI08,by=c("Year"="Year","Winner"="Team"))
-stage3 <- left_join(stage2,KenPom08,by=c("Year"="Year","Winner"="Team"))
-stage4 <- left_join(stage3,BasRef08,by=c("Year"="Year","Loser"="Team"),suffix = c("_W","_L"))
-stage5 <- left_join(stage4,ESPN_BPI08,by=c("Year"="Year","Loser"="Team"),suffix = c("_W","_L"))
-stage6 <- left_join(stage5,KenPom08,by=c("Year"="Year","Loser"="Team"),suffix = c("_W","_L"))
-stage6$amv <- stage6$W.Score-stage6$L.Score
-AllCombine <- stage6
-save(AllCombine, file="AllCombine.rda")
+seed.history <- data.frame(rbind(table(AllGames$W.Seed,AllGames$Round)))%>%select(1:6)
+seed.history$exp_wins <- rowSums(seed.history)/144
+
+R1 <- AllGames %>% filter(Round == 1)
+R1L <- data.frame(rbind(table(R1$Loser,R1$Year)))%>% rownames_to_column()
+R2 <- AllGames %>% filter(Round == 2)
+R2L <- data.frame(rbind(2*table(R2$Loser,R2$Year)))%>% rownames_to_column()
+R3 <- AllGames %>% filter(Round == 3)
+R3L <- data.frame(rbind(3*table(R3$Loser,R3$Year)))%>% rownames_to_column()
+R4 <- AllGames %>% filter(Round == 4)
+R4L <- data.frame(rbind(4*table(R4$Loser,R4$Year)))%>% rownames_to_column()
+R5 <- AllGames %>% filter(Round == 5)
+R5L <- data.frame(rbind(5*table(R5$Loser,R5$Year)))%>% rownames_to_column()
+R6 <- AllGames %>% filter(Round == 6)
+R6L <- data.frame(rbind(6*table(R6$Loser,R6$Year)))%>% rownames_to_column()
+R6W <- data.frame(rbind(7*table(R6$Winner,R6$Year)))%>% rownames_to_column()
+team.wins <- rbind(R1L,R2L,R3L,R4L,R5L,R6L,R6W)
+team.wins <- team.wins %>% group_by(rowname) %>% summarise_all(sum)
+colnames(team.wins) <- c("Team",seq(1985,2019,1),2021)
+team.wins[,2:37] <- team.wins[,2:37] - 1
+team.wins[team.wins == -1] <- NA
+
+team.seed.w <- AllGames %>% filter(Round == 1) %>% select(c(2,6,7))
+colnames(team.seed.w) <- c("Year","Seed","Team")
+team.seed.l <- AllGames %>% filter(Round == 1) %>% select(c(2,9,10))
+colnames(team.seed.l) <- c("Year","Seed","Team")
+team.seed.long <- rbind(team.seed.w,team.seed.l)
+team.seed.wide <- spread(team.seed.long, Year, Seed)
+datatable(team.seed.wide)
+
+x <- team.seed.wide
+old <- 1:16
+new <- seed.history$exp
+for (i in old) {
+x[x == i] <- new[i]
+}
+
+#setdiff(x$Team,rownames(team.history))
+
+team.exp.wide <- x 
+team.pase.wide <- cbind(team.wins[,2:37]-x[,2:37])
+npase <- rowMeans(team.pase.wide, na.rm=TRUE)
+team.pase <- data.frame(cbind("Team" = team.wins$Team,"PASE"=npase))
+team.pase$PASE <- as.numeric(team.pase$PASE)
+save(team.pase,file="PASE.rda")
+datatable(team.pase)
 ```
+
+
 # Now Combine
 
 ```{r}
@@ -194,6 +226,7 @@ FUGames <- read.csv("FUAllGames.csv")
 load("BasRef.rda")
 load("ESPN_BPI.rda")
 load("KenPom.rda")
+load("PASE.rda")
 AllGames08 <- FUGames %>% filter(Year >= 2008) %>% select(c(-3))
 BasRef08 <- BasRef %>% select(c(-1,-3))
 ESPN_BPI08 <- ESPN_BPI %>% select(c(-1,-3,-5,-6))
@@ -201,24 +234,33 @@ KenPom08 <- KenPom %>% select(c(-1,-3,-5,-6))
 stage1 <- left_join(AllGames08,BasRef08,by=c("Year"="Year","F.Team"="Team"))
 stage2 <- left_join(stage1,ESPN_BPI08,by=c("Year"="Year","F.Team"="Team"))
 stage3 <- left_join(stage2,KenPom08,by=c("Year"="Year","F.Team"="Team"))
-stage4 <- left_join(stage3,BasRef08,by=c("Year"="Year","U.Team"="Team"),suffix = c("_F","_U"))
-stage5 <- left_join(stage4,ESPN_BPI08,by=c("Year"="Year","U.Team"="Team"),suffix = c("_F","_U"))
-stage6 <- left_join(stage5,KenPom08,by=c("Year"="Year","U.Team"="Team"),suffix = c("_F","_U"))
-stage6$amv <- stage6$F.Score-stage6$U.Score
-AllCombine <- stage6
+stage4 <- left_join(stage3,team.pase,by=c("F.Team"="Team"))
+stage5 <- left_join(stage4,BasRef08,by=c("Year"="Year","U.Team"="Team"),suffix = c("_F","_U"))
+stage6 <- left_join(stage5,ESPN_BPI08,by=c("Year"="Year","U.Team"="Team"),suffix = c("_F","_U"))
+stage7 <- left_join(stage6,KenPom08,by=c("Year"="Year","U.Team"="Team"),suffix = c("_F","_U"))
+stage8 <- left_join(stage7,team.pase,by=c("F.Team"="Team"),suffix = c("_F","_U"))
+stage8$amv <- stage8$F.Score-stage8$U.Score
+AllCombine <- stage8
 save(AllCombine, file="AllCombine.rda")
 ```
 
 
 
 # Practice Model
+```{r}
+load("AllCombine.rda")
+years <- c(2008:2019,2021)
+pyear <-2007
+```
+
+
 
 ```{r}
-years <- c(2008:2019,2021)
-pyear <- sample(years,1)
+
+pyear <- pyear + 1
 model_games <- AllCombine %>% filter(Year != pyear)
 test_games <- AllCombine %>% filter(Year == pyear)
-model <- lm(amv ~ .,data =model_games[,c(-5,-6,-8,-9,-10,-29)])
+model <- lm(amv ~ .,data =model_games[,c(-5,-6,-8,-9,-10,-30)])
 test_games$pmv <- predict(model, test_games, type = "response")
 plot.new()
 test_games %>% ggplot(aes(x=pmv,y=amv)) + geom_point() + 

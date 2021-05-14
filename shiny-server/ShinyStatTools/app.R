@@ -41,7 +41,7 @@ binwidth <- 1
 # >>>>>>>>>>>>>>>Start of UI
 
 ui <- dashboardPage(
-  dashboardHeader(title = "Shiny Stat Tools v2.1",titleWidth = "450px",
+  dashboardHeader(title = "Shiny Stat Tools v2.2",titleWidth = "450px",
                   tags$li(class = "dropdown",tags$a("by Ken Harmon")),
                   dropdownMenuOutput(outputId = "notifications")),
   
@@ -55,9 +55,9 @@ ui <- dashboardPage(
                      menuItem("Proportions", tabName = "props"),
                      menuItem("Student's t", tabName = "student"),
                      menuItem("All t-Tests", tabName = "t_test_tab"),
-                     menuItem("ANOVA", tabName = "anova"),
                      menuItem("Chi-Square", tabName = "Chi"),
                      menuItem("Linear Regression", tabName = "LR"),
+                     menuItem("ANOVA", tabName = "anova"),
                      menuItem("Data Sets", tabName = "datasets")
                    ) #End sidebarMenu
   ), #End dashboardSidebar
@@ -255,38 +255,6 @@ ui <- dashboardPage(
       ), #EtabItem tTest
       
       ######################## End t-test TAB UI #######################
-      ######################## ANOVA Tab UI #############################
-      
-      tabItem("anova",
-              fluidRow(
-                column(width = 4, 
-                       box(title = "Data Input", width = 12, 
-                           checkboxInput("anovastat","Statistics"),
-                           actionButton("anovatc", "Clear"),
-                           actionButton("anovaplot", "Plot"),
-                           rHandsontableOutput("anovat")
-                       ), #Ebox
-                ), #Ecolumn left
-                conditionalPanel(condition = "input.anovastat == 0",
-                                 column(width = 3, 
-                                        box(title = "graphs",width = 12, background = "blue", 
-                                            plotOutput("anovabox"),
-                                            plotOutput("anovaqq")
-                                        ), #Ebox
-                                 ), #Ecolumn middle
-                ), #EconditionalPanel
-                column(width = 5, 
-                       box(title = "Results", width = 12, 
-                           tableOutput("anovaut"),
-                           tableOutput("anovalt"),
-                           numericInput("F.alpha","Alpha:",.05),
-                           plotOutput("F.plot")
-                       ), #Ebox
-                ), #Ecolumn right
-              ) #EfluidRow
-      ), #EtabItem ANOVA
-      
-      ######################## End ANOVA Tab UI #########################
       ######################## Proportions UI ##############################
       
       tabItem("props",
@@ -394,6 +362,38 @@ ui <- dashboardPage(
       ), #EtabItem LR
       
       ######################## End Linear Rergression UI #####################
+      ######################## ANOVA Tab UI #############################
+      
+      tabItem("anova",
+              fluidRow(
+                column(width = 4, 
+                       box(title = "Data Input", width = 12, 
+                           checkboxInput("anovastat","Statistics"),
+                           actionButton("anovatc", "Clear"),
+                           actionButton("anovaplot", "Test"),
+                           rHandsontableOutput("anovat")
+                       ), #Ebox
+                ), #Ecolumn left
+                conditionalPanel(condition = "input.anovastat == 0",
+                                 column(width = 3, 
+                                        box(title = "graphs",width = 12, background = "blue", 
+                                            plotOutput("anovabox"),
+                                            plotOutput("anovaqq")
+                                        ), #Ebox
+                                 ), #Ecolumn middle
+                ), #EconditionalPanel
+                column(width = 5, 
+                       box(title = "Results", width = 12, 
+                           tableOutput("anovaut"),
+                           tableOutput("anovalt"),
+                           numericInput("F.alpha","Alpha:",.05),
+                           plotOutput("F.plot")
+                       ), #Ebox
+                ), #Ecolumn right
+              ) #EfluidRow
+      ), #EtabItem ANOVA
+      
+      ######################## End ANOVA Tab UI #########################
       ########################## Discrete Probability UI #######################
       
       tabItem("disc",
@@ -964,6 +964,23 @@ server <- function(input, output, session) {
       output$anovat <- renderRHandsontable({rhandsontable(anova.s.in$values)})
     } #Eif
   }) #EobserveEvent
+  
+  ########## Anova Clear
+  observeEvent(eventExpr = input$anovatc, {
+    if(input$anovastat == FALSE){
+      data.anova <- data.frame(matrix(numeric(), nrow=300, ncol=6))
+      colnames(data.anova) <- c("A","B","C","D","E","F")
+      anova.in <- reactiveValues(values = data.anova)
+      output$anovat <- renderRHandsontable({rhandsontable(anova.in$values)})
+    }else if(input$anovastat == TRUE){
+      data.anova.s <- data.frame(matrix(numeric(), nrow=3, ncol=6))
+      colnames(data.anova.s) <- c("A","B","C","D","E","F")
+      rownames(data.anova.s) <- c("Count","Mean","SD")
+      anova.s.in <- reactiveValues(values = data.anova.s)
+      output$anovat <- renderRHandsontable({rhandsontable(anova.s.in$values)})
+    } #Eif
+  }) #EobserveEvent
+  ############# end ANOVA Clear
   
   ####### Anova Plot Button ########
   

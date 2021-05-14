@@ -8,6 +8,8 @@ pacman::p_load(shiny,shinydashboard,tidyverse,plotly,DT,formattable,magrittr,gt)
 
 
 load("AllGames.rda")
+load("TeamRank.rda")
+load("AllCombine.rda")
 
 # For Seed History
 seed.history <- data.frame(rbind(table(AllGames$W.Seed,AllGames$Round)))%>%select(1:6)
@@ -56,7 +58,8 @@ ui <- dashboardPage(
                          menuItem("All Games", tabName = "all_games"),
                          menuItem("Brackets", tabName = "brackets"),
                          menuItem("Seed History", tabName = "seed_history"),
-                         menuItem("Team Wins", tabName = "team_wins")
+                         menuItem("Team Wins", tabName = "team_wins"),
+                         menuItem("Team Rank", tabName = "team_rank")
                      ) #################### End sidebarMenu
     ), ###################### End dashboardSidebar
     
@@ -96,7 +99,7 @@ ui <- dashboardPage(
                         ), ############## End column      
                     ) ################# End of fluidrow
             ), ################## End Seed History Tab  
-            ########################### Start Seed History Tab
+            ########################### Start Team Wins Tab
             tabItem("team_wins",
                     fluidRow(
                         column(width = 12,
@@ -105,7 +108,17 @@ ui <- dashboardPage(
                                ) ############# End box
                         ), ############## End column      
                     ) ################# End of fluidrow
-            ) ################### End Team Wins Tab  
+            ), ################### End Team Wins Tab
+            ########################### Start Team Wins Tab
+            tabItem("team_rank",
+                    fluidRow(
+                        column(width = 12,
+                               box(title = "Team Rank since 2008", width = NULL, status = "primary",
+                                   DTOutput("tbl_team_rank")       
+                               ) ############# End box
+                        ), ############## End column      
+                    ) ################# End of fluidrow
+            ) ################### End Team Wins Tab
         ) ##################### End tabItems
     ) ####################### End dashboard Body
 ) ######################### End dashboard Page
@@ -168,6 +181,13 @@ server <- function(input, output, session) {
                                                               fixedColumns = list(leftColumns = 1),
                                                               autoWidth = TRUE,
                                                               columnDefs = list(list(width = '130px', targets = c(0)))
+    ),extensions = 'FixedColumns', rownames = FALSE)
+    ########################### End of Team Wins
+    ########################### Start of Team Rank  
+    output$tbl_team_rank <- renderDT(TeamRank,options = list(scrollX = TRUE,
+                                                              fixedColumns = list(leftColumns = 2),
+                                                              autoWidth = TRUE,
+                                                              columnDefs = list(list(width = '130px', targets = c(1)))
     ),extensions = 'FixedColumns', rownames = FALSE)
     ########################### End of Team Wins
 } ######################## End of the server

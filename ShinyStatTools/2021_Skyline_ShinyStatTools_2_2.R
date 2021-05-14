@@ -967,14 +967,20 @@ server <- function(input, output, session) {
   
   ########## Anova Clear
   observeEvent(eventExpr = input$anovatc, {
-    data.anova <- data.frame(matrix(numeric(), nrow=300, ncol=6))
-    colnames(data.anova) <- c("A","B","C","D","E","F")
-    data.anova.s <- data.frame(matrix(numeric(), nrow=3, ncol=6))
-    colnames(data.anova.s) <- c("A","B","C","D","E","F")
-    rownames(data.anova.s) <- c("Count","Mean","SD")
-
+    if(input$anovastat == FALSE){
+      data.anova <- data.frame(matrix(numeric(), nrow=300, ncol=6))
+      colnames(data.anova) <- c("A","B","C","D","E","F")
+      anova.in <- reactiveValues(values = data.anova)
+      output$anovat <- renderRHandsontable({rhandsontable(anova.in$values)})
+    }else if(input$anovastat == TRUE){
+      data.anova.s <- data.frame(matrix(numeric(), nrow=3, ncol=6))
+      colnames(data.anova.s) <- c("A","B","C","D","E","F")
+      rownames(data.anova.s) <- c("Count","Mean","SD")
+      anova.s.in <- reactiveValues(values = data.anova.s)
+      output$anovat <- renderRHandsontable({rhandsontable(anova.s.in$values)})
+    } #Eif
   }) #EobserveEvent
-  #############
+  ############# end ANOVA Clear
   
   ####### Anova Plot Button ########
   

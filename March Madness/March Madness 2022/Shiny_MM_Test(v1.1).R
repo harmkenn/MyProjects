@@ -59,7 +59,8 @@ ui <- dashboardPage(
                          menuItem("Brackets", tabName = "brackets"),
                          menuItem("Seed History", tabName = "seed_history"),
                          menuItem("Team Wins", tabName = "team_wins"),
-                         menuItem("Team Rank", tabName = "team_rank")
+                         menuItem("Team Rank", tabName = "team_rank"),
+                         menuItem("Back Predict", tabName = "back_predict")
                      ) #################### End sidebarMenu
     ), ###################### End dashboardSidebar
     
@@ -118,7 +119,18 @@ ui <- dashboardPage(
                                ) ############# End box
                         ), ############## End column      
                     ) ################# End of fluidrow
-            ) ################### End Team Wins Tab
+            ), ################### End Team Rank Tab
+            ########################### Start Back Predict Tab
+            tabItem("back_predict",
+                    fluidRow(
+                        column(width = 12,
+                            box(title = "Predicting Back", width = NULL, status = "primary",
+                                sliderInput("sldr_year_p","Year",2008,2021,2021,step=1,width = 500,ticks = FALSE),
+                                formattableOutput("tbl_back_predict")     
+                        ) ############# End box
+                        ), ############## End column      
+                    ) ################# End of fluidrow
+            ) ################### End Back Predict Tab
         ) ##################### End tabItems
     ) ####################### End dashboard Body
 ) ######################### End dashboard Page

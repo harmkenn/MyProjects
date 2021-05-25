@@ -1190,9 +1190,10 @@ server <- function(input, output, session) {
       output$Chiexp <- renderTable({chi.test$expected},rownames = TRUE,colnames=TRUE, digits = 5)
       output$ChiSquares <- renderText({"Chi-Square Values"})
       ressq <- (chi.test$residuals)^2
+      chi.test.stat <- sum((chi.test$observed-chi.test$expected)^2/chi.test$expected)
       output$chicell <- renderTable({ressq},rownames = TRUE,colnames=TRUE, digits = 5)
       chi.cv <- qchisq(1-input$chi.alpha,chi.test$parameter)
-      chit <- matrix(formatC(c(sum(ressq),chi.test$parameter,chi.cv,chi.test$p.value),
+      chit <- matrix(formatC(c(chi.test.stat,chi.test$parameter,chi.cv,chi.test$p.value),
                              format="f",digits = 6,drop0trailing = TRUE),ncol=4,nrow=1)
       colnames(chit) <- c("Chi-score","df","Chi-CV","P-Value")
       output$Chiresult <- renderTable({chit})
@@ -1214,8 +1215,9 @@ server <- function(input, output, session) {
       Chi.gof.exp <- Chi.gof.exp*sum(Chi.gof.ob)/sum(Chi.gof.exp)
       chi.test <- chisq.test(x = Chi.gof.ob, p = Chi.gof.exp/sum(Chi.gof.ob))
       Chi.gof <- rbind(Obs = Chi.gof.ob,Exp = Chi.gof.exp)
+      Chi.gof <- rbind(Chi.gof, Chi = (chi.test$observed-chi.test$expected)^2/chi.test$expected)
       Chi.gof <- cbind(Chi.gof, Total = rowSums(Chi.gof, na.rm = TRUE))
-      Chi.gof <- rbind(Chi.gof, Chi = chi.test$residuals^2)
+      
       Chi.gof[3,c+1]<-NA
      # output$Chi <- renderRHandsontable({rhandsontable(Chi.gof)%>% hot_cols(format = "0", halign = "htCenter")%>% 
      #     hot_col(ncol(Chi.gof), readOnly = TRUE) %>% hot_row(nrow(Chi.gof), readOnly = TRUE)}) 
@@ -1224,7 +1226,8 @@ server <- function(input, output, session) {
       output$ChiSquares <- renderText({""})
       output$chicell <- renderTable({})
       chi.cv <- qchisq(1-input$chi.alpha,chi.test$parameter)
-      chit <- matrix(formatC(c(sum(ressq),chi.test$parameter,chi.cv,chi.test$p.value),
+      chi.test.stat <- sum((chi.test$observed-chi.test$expected)^2/chi.test$expected)
+      chit <- matrix(formatC(c(chi.test.stat,chi.test$parameter,chi.cv,chi.test$p.value),
                              format="f",digits = 6,drop0trailing = TRUE),ncol=4,nrow=1)
       colnames(chit) <- c("Chi-score","df","Chi-CV","P-Value")
       output$Chiresult <- renderTable({chit})

@@ -47,7 +47,7 @@ team.wins[team.wins == -1] <- NA
 ########################### Start of UI
 
 ui <- dashboardPage(
-    dashboardHeader(title = "Shiny March Madness Test v1.1",titleWidth = "450px",
+    dashboardHeader(title = "Shiny March Madness Test v1.2",titleWidth = "450px",
                     tags$li(class = "dropdown",tags$a("by Ken Harmon")),
                     dropdownMenuOutput(outputId = "notifications")),
     

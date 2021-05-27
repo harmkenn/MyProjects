@@ -153,7 +153,7 @@ write.csv(data.frame(BR_Wrong),"BRwrong.csv")
 BRfix <- read.csv("BRfix.csv")
 BasRef <- FindReplace(data = BasRef, Var = "Team", replaceData = BRfix,
                      from = "From", to = "To", exact = TRUE)
-BasRef$Team <- gsub("\\)","",BasRef$Team)
+BasRef$Team <- gsub("\\(","",BasRef$Team)
 
 
 ```

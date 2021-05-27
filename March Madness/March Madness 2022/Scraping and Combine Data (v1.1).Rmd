@@ -264,39 +264,3 @@ TeamRank <- left_join(stage2,team.pase,by=c("Team"="Team"))
 save(TeamRank, file="TeamRank.rda")
 ```
 
-# Practice Model
-```{r}
-load("AllCombine.rda")
-years <- c(2008:2019,2021)
-pyear <-2007 
-```
-
-
-
-```{r}
-
-pyear <- pyear + 1
-model_games <- AllCombine %>% filter(Year != pyear)
-test_games <- AllCombine %>% filter(Year == pyear)
-model <- lm(amv ~ .,data =model_games[,c(-5,-6,-8,-9,-10,-30)])
-test_games$pmv <- predict(model, test_games, type = "response")
-plot.new()
-test_games %>% ggplot(aes(x=pmv,y=amv)) + geom_point() + 
-  abline(c(0,min(test_games$amv)),c(0,max(test_games$amv)))
-
-actual.P <- test_games$amv>0
-p.P <- test_games$pmv>0
-
-rp <- confusionMatrix(table(actual.P,p.P))
-acc <- c(acc,rp$overall[1])
-accy <- c(accy,pyear)
-plot(accy,acc)
-rp$overall[1]
-pyear
-```
-
-
-
-
-
-

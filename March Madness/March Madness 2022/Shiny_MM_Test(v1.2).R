@@ -3,7 +3,7 @@
 #library(tidyverse)
 #library(plotly)
 #library(pacman)
-pacman::p_load(shiny,shinydashboard,tidyverse,plotly,DT,formattable,magrittr,gt)
+pacman::p_load(shiny,shinydashboard,tidyverse,plotly,DT,formattable,magrittr,gt,caret, e1071)
 
 
 
@@ -201,7 +201,24 @@ server <- function(input, output, session) {
                                                               autoWidth = TRUE,
                                                               columnDefs = list(list(width = '130px', targets = c(1)))
     ),extensions = 'FixedColumns', rownames = FALSE)
-    ########################### End of Team Wins
+    ########################### End of Team Rank
+    ########################### Start of Back Predict Tab
+    observeEvent(input$sldr_year_p,{
+        pyear <- input$sldr_year_p
+        model_games <- AllCombine %>% filter(Year != pyear)
+        test_games <- AllCombine %>% filter(Year == pyear)
+        model <- lm(amv ~ .,data =model_games[,c(-5,-6,-8,-9,-10,-30)])
+        test_games$pmv <- predict(model, test_games, type = "response")
+        show_predict <- test_games %>% mutate(Favored = paste(F.Seed,F.Team,sep = " "),
+                                              Underdog = paste(U.Seed,U.Team,sep = " ")) %>%
+            select (c(3,50:53)) %>% filter(Game >= 0)
+        show_predict$Actual_Winner <- ifelse(show_predict$amv >= 0, show_predict$Favored,show_predict$Underdog)
+        show_predict$Predicted_Winner <- ifelse(show_predict$pmv >= 0, show_predict$Favored,show_predict$Underdog)
+        show_predict$ESPN_Points <- ifelse(show_predict$Actual_Winner == show_predict$Predicted_Winner,10,0)
+        output$tbl_back_predict <- renderFormattable(show_predict %>% formattable())  
+    })
+    
+    ########################### End of Brackets Tab
 } ######################## End of the server
 
 ########################## Run the application 

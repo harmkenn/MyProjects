@@ -126,6 +126,7 @@ ui <- dashboardPage(
                         column(width = 12,
                             box(title = "Predicting Back", width = NULL, status = "primary",
                                 sliderInput("sldr_year_p","Year",2008,2021,2021,step=1,width = 500,ticks = FALSE),
+                                textOutput("txt_ESPN"),
                                 formattableOutput("tbl_back_predict")     
                         ) ############# End box
                         ), ############## End column      
@@ -211,11 +212,12 @@ server <- function(input, output, session) {
         test_games$pmv <- predict(model, test_games, type = "response")
         show_predict <- test_games %>% mutate(Favored = paste(F.Seed,F.Team,sep = " "),
                                               Underdog = paste(U.Seed,U.Team,sep = " ")) %>%
-            select (c(3,50:53)) %>% filter(Game >= 0)
+            select (c(2,3,50:53)) %>% filter(Game >= 0)
         show_predict$Actual_Winner <- ifelse(show_predict$amv >= 0, show_predict$Favored,show_predict$Underdog)
         show_predict$Predicted_Winner <- ifelse(show_predict$pmv >= 0, show_predict$Favored,show_predict$Underdog)
-        show_predict$ESPN_Points <- ifelse(show_predict$Actual_Winner == show_predict$Predicted_Winner,10,0)
+        show_predict$ESPN_Points <- ifelse(show_predict$Actual_Winner == show_predict$Predicted_Winner,10*2^(as.integer(show_predict$Round)-1),0)
         output$tbl_back_predict <- renderFormattable(show_predict %>% formattable())  
+        output$txt_ESPN <- renderText(sum(show_predict$ESPN_Points))
     })
     
     ########################### End of Brackets Tab

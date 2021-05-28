@@ -10,6 +10,7 @@ pacman::p_load(shiny,shinydashboard,tidyverse,plotly,DT,formattable,magrittr,gt,
 load("AllGames.rda")
 load("TeamRank.rda")
 load("AllCombine.rda")
+load("JTCombine.rda")
 
  # For Seed History
 seed.history <- data.frame(rbind(table(AllGames$W.Seed,AllGames$Round)))%>%select(1:6)
@@ -237,24 +238,7 @@ server <- function(input, output, session) {
     ########################### Start of Full Back Predict Tab
     observeEvent(input$sldr_year_f_p,{
         pyear <- input$sldr_year_f_p
-        model_games <- AllCombine %>% filter(Year != pyear)
-        # Predict Round 1
-        test_games_1 <- AllCombine %>% filter(Year == pyear,Round == 1)
-        model <- lm(amv ~ .,data =model_games[,c(-5,-6,-8,-9,-10,-30)])
-        show_predict <- test_games_1 %>% mutate(A.Favored = paste(F.Seed,F.Team,sep = " "),
-                                              A.Underdog = paste(U.Seed,U.Team,sep = " ")) %>% select (c(2,3,50:52))
-        show_predict$A.Winner <- ifelse(show_predict$amv >= 0, show_predict$A.Favored,show_predict$A.Underdog)
-        show_predict$pmv <- predict(model, test_games_1, type = "response")
-        show_predict$P.Favored <- show_predict$A.Favored
-        show_predict$P.Underdog <- show_predict$A.Underdog
-        show_predict$P.Winner <- ifelse(show_predict$pmv >= 0, show_predict$P.Favored,show_predict$P.Underdog)
-        show_predict$ESPN_Points <- ifelse(show_predict$A.Winner == show_predict$P.Winner,10*2^(as.integer(show_predict$Round)-1),0)
-        # Predict Round 2
-        
-        test_games_2 <- AllCombine %>% filter(Year == pyear,Round == 2) %>% select(c(1:3))
-        show_predict_2 <- test_games_2 %>% mutate(A.Favored = paste(F.Seed,F.Team,sep = " "),
-                                                A.Underdog = paste(U.Seed,U.Team,sep = " ")) %>% select (c(2,3,50:52))
-        show_predict_2$A.Winner <- ifelse(show_predict_2$amv >= 0, show_predict_2$A.Favored,show_predict_2$A.Underdog)
+        All_Model <- 
         
         output$tbl_full_predict <- renderFormattable(show_predict %>% formattable())  
         output$txt_ESPN_f <- renderText(sum(show_predict$ESPN_Points))

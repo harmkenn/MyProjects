@@ -1,0 +1,267 @@
+---
+title: "Madness 2022 Model Test"
+author: "Ken Harmon"
+date: "`r format(Sys.time(), '%Y %B %d')`"
+output:
+  html_document:  
+    keep_md: true
+    code_folding: hide
+    fig_height: 6
+    fig_width: 12
+    fig_align: 'center'
+editor_options: 
+  chunk_output_type: console
+---
+
+# {.tabset .tabset-fade}
+
+```{r, echo=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
+```
+
+```{r load_libraries, include=FALSE}
+# Use this R-Chunk to load all your libraries!
+pacman::p_load(tidyverse, DT, rvest, DataCombine,caret)
+```
+
+```{r swd, eval=FALSE, echo=FALSE}
+# this is set to not run during the knit process
+# this sets the working directory to the file location
+setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
+```
+
+## BPI
+
+```{r}
+ESPN_BPI <- data.frame()
+for (each_year in seq(from = 2008, to = 2021)){
+  for (each_page in seq(from = 1, to = 7)) {
+      link = paste0("https://www.espn.com/mens-college-basketball/bpi/_/view/bpi/season/",each_year,"/page/",each_page)
+      page <- read_html(link)
+      Year <- each_year
+      RK <- page %>% html_nodes(".bpi__table td:nth-child(1)") %>% html_text()
+      Team <- page %>% html_nodes(".team-names") %>% html_text()
+      Conf <- page %>% html_nodes(".align-left+ td.align-left") %>% html_text()
+      WL <- page %>% html_nodes(".align-left~ .align-left+ td") %>% html_text()
+      BPI_OFF <- page %>% html_nodes("td:nth-child(5)") %>% html_text()
+      BPI_DEF <- page %>% html_nodes("td:nth-child(6)") %>% html_text()
+      BPI <- page %>% html_nodes("td:nth-child(7)") %>% html_text()
+      ESPN_BPI <- rbind(ESPN_BPI,data.frame(Year,RK,Team,Conf,WL,BPI_DEF,BPI_OFF,BPI,stringsAsFactors = FALSE))
+  }
+}
+datatable(ESPN_BPI)
+write.csv(ESPN_BPI,"ESPN_BPI.csv")
+```
+
+## KenPom
+
+```{r}
+KenPom <- data.frame()
+for (each_year in seq(from = 2008, to = 2021)){
+      link = paste0("https://kenpom.com/index.php?y=",each_year)
+      page <- read_html(link)
+      Year <- each_year
+      RK <- page %>% html_nodes("td.hard_left") %>% html_text()
+      Team <- page %>% html_nodes("td.next_left a") %>% html_text()
+      Conf <- page %>% html_nodes(".conf a") %>% html_text()
+      WL <- page %>% html_nodes("td.wl") %>% html_text()
+      AdjEM <- page %>% html_nodes(".wl+ td") %>% html_text()
+      AdjO <- page %>% html_nodes(".td-left:nth-child(6)") %>% html_text()
+      AdjD <- page %>% html_nodes(".td-left:nth-child(8)") %>% html_text()
+      SOSEM <- page %>% html_nodes(".divide:nth-child(14)") %>% html_text()
+      SOSO <- page %>% html_nodes(".td-left:nth-child(16)") %>% html_text()
+      SOSD <- page %>% html_nodes(".td-left:nth-child(18)") %>% html_text()
+      KenPom <- rbind(KenPom,data.frame(Year,RK,Team,Conf,WL,AdjEM,AdjO,AdjD,SOSEM,SOSO,SOSD,stringsAsFactors = FALSE))
+}
+datatable(KenPom)
+write.csv(KenPom,"KenPom.csv")
+```
+
+## BasRef
+
+```{r}
+BasRef <- data.frame()
+for (each_year in seq(from = 2008, to = 2019)){
+      link = paste0("https://www.sports-reference.com/cbb/seasons/",each_year,"-ratings.html")
+      page <- read_html(link)
+      Year <- each_year
+      RK <- page %>% html_nodes("th.right") %>% html_text()
+      Team <- page %>% html_nodes(".right+ .left a") %>% html_text()
+      Conf <- page %>% html_nodes(".left+ .left a") %>% html_text()
+      W <- page %>% html_nodes(".right:nth-child(5)") %>% html_text()
+      L <- page %>% html_nodes(".right:nth-child(6)") %>% html_text()
+      Pts <- page %>% html_nodes(".right:nth-child(7)") %>% html_text()
+      Opp <- page %>% html_nodes(".right:nth-child(8)") %>% html_text()
+      Mov <- page %>% html_nodes(".right:nth-child(9)") %>% html_text()
+      SOS <- page %>% html_nodes(".right:nth-child(11)") %>% html_text()
+      OSRS <- page %>% html_nodes(".right:nth-child(13)") %>% html_text()
+      DSRS <- page %>% html_nodes(".right:nth-child(14)") %>% html_text()
+      SRS <- page %>% html_nodes(".right:nth-child(15)") %>% html_text()
+      BasRef <- rbind(BasRef,data.frame(Year,RK,Team,Conf,W,L,Pts,Opp,Mov,SOS,OSRS,DSRS,SRS,stringsAsFactors = FALSE))
+}
+      link = paste0("https://www.sports-reference.com/cbb/seasons/2021-ratings.html")
+      page <- read_html(link)
+      Year <- 2021
+      RK <- page %>% html_nodes("th.right") %>% html_text()
+      Team <- page %>% html_nodes(".right+ .left a") %>% html_text()
+      Conf <- page %>% html_nodes(".left+ .left a") %>% html_text()
+      W <- page %>% html_nodes(".center+ .right") %>% html_text()
+      L <- page %>% html_nodes(".right:nth-child(7)") %>% html_text()
+      Pts <- page %>% html_nodes(".right:nth-child(8)") %>% html_text()
+      Opp <- page %>% html_nodes(".right:nth-child(9)") %>% html_text()
+      Mov <- page %>% html_nodes(".right:nth-child(10)") %>% html_text()
+      SOS <- page %>% html_nodes(".right:nth-child(12)") %>% html_text()
+      OSRS <- page %>% html_nodes(".right:nth-child(14)") %>% html_text()
+      DSRS <- page %>% html_nodes(".right:nth-child(15)") %>% html_text()
+      SRS <- page %>% html_nodes(".right:nth-child(16)") %>% html_text()
+      BasRef <- rbind(BasRef,data.frame(Year,RK,Team,Conf,W,L,Pts,Opp,Mov,SOS,OSRS,DSRS,SRS,stringsAsFactors = FALSE))
+datatable(BasRef)
+write.csv(BasRef,"BasRef.csv")
+```
+
+# Pull in
+
+```{r}
+AllGames <- read.csv("All Games.csv")
+save(AllGames, file="AllGames.rda")
+load("AllGames.rda")
+KenPom <- read.csv("KenPom.csv")
+ESPN_BPI <- read.csv("ESPN_BPI.csv")
+BasRef <- read.csv("BasRef.csv")
+```
+
+# Standard Team Name
+
+```{r}
+team_names <- sort(unique(KenPom$Team))
+KPfix <- read.csv("KenPomFix.csv")
+KenPom <- FindReplace(data = KenPom, Var = "Team", replaceData = KPfix,
+                     from = "From", to = "To", exact = TRUE)
+team_names <- sort(unique(KenPom$Team))
+write.csv(data.frame(team_names),"teamnames.csv")
+
+espn_Wrong <- sort(setdiff(ESPN_BPI$Team,team_names))
+write.csv(data.frame(espn_Wrong),"espnwrong.csv")
+espnfix <- read.csv("espnfix.csv")
+ESPN_BPI <- FindReplace(data = ESPN_BPI, Var = "Team", replaceData = espnfix,
+                     from = "From", to = "To", exact = TRUE)
+ESPN_BPI$Team <- gsub("\\(","",ESPN_BPI$Team)
+ESPN_BPI$Team <- gsub("\\)","",ESPN_BPI$Team)
+
+BR_Wrong <- sort(setdiff(BasRef$Team,team_names))
+write.csv(data.frame(BR_Wrong),"BRwrong.csv")
+
+BRfix <- read.csv("BRfix.csv")
+BasRef <- FindReplace(data = BasRef, Var = "Team", replaceData = BRfix,
+                     from = "From", to = "To", exact = TRUE)
+BasRef$Team <- gsub("\\(","",BasRef$Team)
+
+
+```
+
+# Save
+
+```{r}
+save(KenPom, file="KenPom.rda")
+save(ESPN_BPI, file="ESPN_BPI.rda")
+save(BasRef, file="BasRef.rda")
+```
+
+# Get PASE
+
+```{r}
+load("AllGames.rda")
+seed.history <- data.frame(rbind(table(AllGames$W.Seed,AllGames$Round)))%>%select(1:6)
+seed.history$exp_wins <- rowSums(seed.history)/144
+
+R1 <- AllGames %>% filter(Round == 1)
+R1L <- data.frame(rbind(table(R1$Loser,R1$Year)))%>% rownames_to_column()
+R2 <- AllGames %>% filter(Round == 2)
+R2L <- data.frame(rbind(2*table(R2$Loser,R2$Year)))%>% rownames_to_column()
+R3 <- AllGames %>% filter(Round == 3)
+R3L <- data.frame(rbind(3*table(R3$Loser,R3$Year)))%>% rownames_to_column()
+R4 <- AllGames %>% filter(Round == 4)
+R4L <- data.frame(rbind(4*table(R4$Loser,R4$Year)))%>% rownames_to_column()
+R5 <- AllGames %>% filter(Round == 5)
+R5L <- data.frame(rbind(5*table(R5$Loser,R5$Year)))%>% rownames_to_column()
+R6 <- AllGames %>% filter(Round == 6)
+R6L <- data.frame(rbind(6*table(R6$Loser,R6$Year)))%>% rownames_to_column()
+R6W <- data.frame(rbind(7*table(R6$Winner,R6$Year)))%>% rownames_to_column()
+team.wins <- rbind(R1L,R2L,R3L,R4L,R5L,R6L,R6W)
+team.wins <- team.wins %>% group_by(rowname) %>% summarise_all(sum)
+colnames(team.wins) <- c("Team",seq(1985,2019,1),2021)
+team.wins[,2:37] <- team.wins[,2:37] - 1
+team.wins[team.wins == -1] <- NA
+
+team.seed.w <- AllGames %>% filter(Round == 1) %>% select(c(2,6,7))
+colnames(team.seed.w) <- c("Year","Seed","Team")
+team.seed.l <- AllGames %>% filter(Round == 1) %>% select(c(2,9,10))
+colnames(team.seed.l) <- c("Year","Seed","Team")
+team.seed.long <- rbind(team.seed.w,team.seed.l)
+team.seed.wide <- spread(team.seed.long, Year, Seed)
+datatable(team.seed.wide)
+
+x <- team.seed.wide
+old <- 1:16
+new <- seed.history$exp
+for (i in old) {
+x[x == i] <- new[i]
+}
+
+#setdiff(x$Team,rownames(team.history))
+
+team.exp.wide <- x 
+team.pase.wide <- cbind(team.wins[,2:37]-x[,2:37])
+npase <- rowMeans(team.pase.wide, na.rm=TRUE)
+team.pase <- data.frame(cbind("Team" = team.wins$Team,"PASE"=npase))
+team.pase$PASE <- as.numeric(team.pase$PASE)
+save(team.pase,file="PASE.rda")
+datatable(team.pase)
+```
+
+
+# Now Combine
+
+```{r}
+FUGames <- read.csv("FUAllGames.csv")
+load("BasRef.rda")
+load("ESPN_BPI.rda")
+load("KenPom.rda")
+load("PASE.rda")
+AllGames08 <- FUGames %>% filter(Year >= 2008) %>% select(c(-3))
+BasRef08 <- BasRef %>% select(c(-1,-3))
+ESPN_BPI08 <- ESPN_BPI %>% select(c(-1,-3,-5,-6))
+KenPom08 <- KenPom %>% select(c(-1,-3,-5,-6))
+stage1 <- left_join(AllGames08,BasRef08,by=c("Year"="Year","F.Team"="Team"))
+stage2 <- left_join(stage1,ESPN_BPI08,by=c("Year"="Year","F.Team"="Team"))
+stage3 <- left_join(stage2,KenPom08,by=c("Year"="Year","F.Team"="Team"))
+stage4 <- left_join(stage3,team.pase,by=c("F.Team"="Team"))
+stage5 <- left_join(stage4,BasRef08,by=c("Year"="Year","U.Team"="Team"),suffix = c("_F","_U"))
+stage6 <- left_join(stage5,ESPN_BPI08,by=c("Year"="Year","U.Team"="Team"),suffix = c("_F","_U"))
+stage7 <- left_join(stage6,KenPom08,by=c("Year"="Year","U.Team"="Team"),suffix = c("_F","_U"))
+stage8 <- left_join(stage7,team.pase,by=c("F.Team"="Team"),suffix = c("_F","_U"))
+stage8$amv <- stage8$F.Score-stage8$U.Score
+AllCombine <- stage8
+save(AllCombine, file="AllCombine.rda")
+```
+
+# Team Rank
+
+```{r}
+
+load("BasRef.rda")
+load("ESPN_BPI.rda")
+load("KenPom.rda")
+load("PASE.rda")
+BasRef08 <- BasRef %>% select(c(-1,-3))
+ESPN_BPI08 <- ESPN_BPI %>% select(c(-1,-3,-5,-6))
+KenPom08 <- KenPom %>% select(c(-1,-3,-5,-6))
+
+stage1 <- left_join(BasRef08,ESPN_BPI08,by=c("Year"="Year","Team"="Team"))
+stage2 <- left_join(stage1,KenPom08,by=c("Year"="Year","Team"="Team"))
+TeamRank <- left_join(stage2,team.pase,by=c("Team"="Team"))
+
+
+save(TeamRank, file="TeamRank.rda")
+```
+

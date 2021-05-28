@@ -60,7 +60,8 @@ ui <- dashboardPage(
                          menuItem("Seed History", tabName = "seed_history"),
                          menuItem("Team Wins", tabName = "team_wins"),
                          menuItem("Team Rank", tabName = "team_rank"),
-                         menuItem("Back Predict", tabName = "back_predict")
+                         menuItem("Back Predict", tabName = "back_predict"),
+                         menuItem("Full Predict", tabName = "full_predict")
                      ) #################### End sidebarMenu
     ), ###################### End dashboardSidebar
     
@@ -124,14 +125,26 @@ ui <- dashboardPage(
             tabItem("back_predict",
                     fluidRow(
                         column(width = 12,
-                            box(title = "Predicting Back", width = NULL, status = "primary",
+                            box(title = "Predicting Back Per Game", width = NULL, status = "primary",
                                 sliderInput("sldr_year_p","Year",2008,2021,2021,step=1,width = 500,ticks = FALSE),
                                 textOutput("txt_ESPN"),
                                 formattableOutput("tbl_back_predict")     
                         ) ############# End box
                         ), ############## End column      
                     ) ################# End of fluidrow
-            ) ################### End Back Predict Tab
+            ), ################### End Back Predict Tab
+            ########################### Start Full Back Predict Tab
+            tabItem("full_predict",
+                    fluidRow(
+                        column(width = 12,
+                               box(title = "Predicting Back Full Bracket", width = NULL, status = "primary",
+                                   sliderInput("sldr_year_f_p","Year",2008,2021,2021,step=1,width = 500,ticks = FALSE),
+                                   textOutput("txt_ESPN_f"),
+                                   formattableOutput("tbl_full_predict")     
+                               ) ############# End box
+                        ), ############## End column      
+                    ) ################# End of fluidrow
+            ) ################### End Full Back Predict Tab
         ) ##################### End tabItems
     ) ####################### End dashboard Body
 ) ######################### End dashboard Page
@@ -221,6 +234,24 @@ server <- function(input, output, session) {
     })
     
     ########################### End of Brackets Tab
+    ########################### Start of Full Back Predict Tab
+    observeEvent(input$sldr_year_f_p,{
+        pyear <- input$sldr_year_f_p
+        model_games <- AllCombine %>% filter(Year != pyear)
+        test_games <- AllCombine %>% filter(Year == pyear)
+        model <- lm(amv ~ .,data =model_games[,c(-5,-6,-8,-9,-10,-30)])
+        test_games$pmv <- predict(model, test_games, type = "response")
+        show_predict <- test_games %>% mutate(Favored = paste(F.Seed,F.Team,sep = " "),
+                                              Underdog = paste(U.Seed,U.Team,sep = " ")) %>%
+            select (c(2,3,50:53)) %>% filter(Game >= 0)
+        show_predict$Actual_Winner <- ifelse(show_predict$amv >= 0, show_predict$Favored,show_predict$Underdog)
+        show_predict$Predicted_Winner <- ifelse(show_predict$pmv >= 0, show_predict$Favored,show_predict$Underdog)
+        show_predict$ESPN_Points <- ifelse(show_predict$Actual_Winner == show_predict$Predicted_Winner,10*2^(as.integer(show_predict$Round)-1),0)
+        output$tbl_full_predict <- renderFormattable(show_predict %>% formattable())  
+        output$txt_ESPN_f <- renderText(sum(show_predict$ESPN_Points))
+    })
+    
+    ########################### End of Full Brackets Tab
 } ######################## End of the server
 
 ########################## Run the application 

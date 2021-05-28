@@ -245,6 +245,25 @@ AllCombine <- stage8
 save(AllCombine, file="AllCombine.rda")
 ```
 
+# Combine for Predict
+
+```{r}
+JTTeams <- read.csv("Just_T_Teams.csv")
+load("BasRef.rda")
+load("ESPN_BPI.rda")
+load("KenPom.rda")
+load("PASE.rda")
+JTTeams08 <- JTTeams %>% filter(Year >= 2008) 
+BasRef08 <- BasRef %>% select(c(-1,-3))
+ESPN_BPI08 <- ESPN_BPI %>% select(c(-1,-3,-5,-6))
+KenPom08 <- KenPom %>% select(c(-1,-3,-5,-6))
+stage1 <- left_join(JTTeams08,BasRef08,by=c("Year"="Year","Team"="Team"))
+stage2 <- left_join(stage1,ESPN_BPI08,by=c("Year"="Year","Team"="Team"))
+stage3 <- left_join(stage2,KenPom08,by=c("Year"="Year","Team"="Team"))
+JTCombine <- left_join(stage3,team.pase,by=c("Team"="Team"))
+save(JTCombine, file="JTCombine.rda")
+```
+
 # Team Rank
 
 ```{r}

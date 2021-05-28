@@ -250,7 +250,8 @@ server <- function(input, output, session) {
         show_predict$P.Winner <- ifelse(show_predict$pmv >= 0, show_predict$P.Favored,show_predict$P.Underdog)
         show_predict$ESPN_Points <- ifelse(show_predict$A.Winner == show_predict$P.Winner,10*2^(as.integer(show_predict$Round)-1),0)
         # Predict Round 2
-        test_games_2 <- AllCombine %>% filter(Year == pyear,Round == 2)
+        
+        test_games_2 <- AllCombine %>% filter(Year == pyear,Round == 2) %>% select(c(1:3))
         show_predict_2 <- test_games_2 %>% mutate(A.Favored = paste(F.Seed,F.Team,sep = " "),
                                                 A.Underdog = paste(U.Seed,U.Team,sep = " ")) %>% select (c(2,3,50:52))
         show_predict_2$A.Winner <- ifelse(show_predict_2$amv >= 0, show_predict_2$A.Favored,show_predict_2$A.Underdog)

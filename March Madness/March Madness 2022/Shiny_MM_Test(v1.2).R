@@ -11,7 +11,7 @@ load("AllGames.rda")
 load("TeamRank.rda")
 load("AllCombine.rda")
 
-# For Seed History
+ # For Seed History
 seed.history <- data.frame(rbind(table(AllGames$W.Seed,AllGames$Round)))%>%select(1:6)
 seed.history$exp_wins <- rowSums(seed.history)/144
 SeedSum <- gt(seed.history,,,TRUE)%>% 

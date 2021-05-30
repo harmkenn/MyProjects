@@ -235,13 +235,141 @@ server <- function(input, output, session) {
     })
     
     ########################### End of Brackets Tab
-    ########################### Start of Full Back Predict Tab
+    ########################### Start of Full Predict Tab
     observeEvent(input$sldr_year_f_p,{
         pyear <- input$sldr_year_f_p
-        All_Model <- 
+        if (pyear == 2020) {pyear <- 2021}
+        FUGames <- read.csv("FUAllGames.csv")
+        stage1 <- FUGames %>% filter(Year >= 2008) %>% select(c(-3))
+        stage1$amv <- stage1$A.F.Score - stage1$A.U.Score
+        stage2 <- left_join(stage1, JTCombine, by = c("Year"="Year","Round"="Round","Game"="Game","A.F.Seed"="Seed","A.F.Team"="Team"))
+        stage3 <- left_join(stage2, JTCombine, by = c("Year"="Year","Round"="Round","Game"="Game","A.U.Seed"="Seed","A.U.Team"="Team"),suffix = c("_F","_U")) 
+        model.years <- stage3 %>% filter(Year != pyear)
+        p_model <- lm(amv ~ .,data =model.years[,c(4,7,10,12:30,32:50)])
         
-        output$tbl_full_predict <- renderFormattable(show_predict %>% formattable())  
-        output$txt_ESPN_f <- renderText(sum(show_predict$ESPN_Points))
+        # Round 1
+        
+        R1 <- stage3 %>% filter(Year == pyear, Round == 1)
+        R1$pmv <- predict(p_model, R1, type = "response")
+        R1$A.W.Seed <- ifelse(R1$amv >=0, R1$A.F.Seed, R1$A.U.Seed)
+        R1$A.W.Team <- ifelse(R1$amv >=0, R1$A.F.Team, R1$A.U.Team)
+        R1$P.W.Seed <- ifelse(R1$pmv >=0, R1$A.F.Seed, R1$A.U.Seed)
+        R1$P.W.Team <- ifelse(R1$pmv >=0, R1$A.F.Team, R1$A.U.Team)
+        p_show <- R1 %>% mutate (A.Favored = paste(A.F.Seed,A.F.Team,sep = " "),
+                                 A.Underdog = paste(A.U.Seed,A.U.Team,sep = " "),
+                                 A.Winner = paste(A.W.Seed,A.W.Team,sep = " "),
+                                 P.Favored = A.Favored,
+                                 P.Underdog = A.Underdog,
+                                 P.Winner = paste(P.W.Seed,P.W.Team,sep = " ")) %>% select(1,2,3,56,57,59,60,10,51,58,61)
+        p_show$ESPN_Points <- ifelse(p_show$A.Winner == p_show$P.Winner,10,0)
+        
+        # Round 2
+        
+        R2 <- stage3 %>% filter(Year == pyear, Round == 2) %>% select(1:10)
+        for (i in 1:16){
+            R2$P.F.Seed[i] <- min(R1$P.W.Seed[2*i-1],R1$P.W.Seed[2*i])
+            R2$P.F.Team[i] <- ifelse(R2$P.F.Seed[i]==R1$P.W.Seed[2*i-1],R1$P.W.Team[2*i-1],R1$P.W.Team[2*i])
+            R2$P.U.Seed[i] <- max(R1$P.W.Seed[2*i-1],R1$P.W.Seed[2*i])
+            R2$P.U.Team[i] <- ifelse(R2$P.U.Seed[i]==R1$P.W.Seed[2*i-1],R1$P.W.Team[2*i-1],R1$P.W.Team[2*i])
+        }
+        R2B <- left_join(R2, JTCombine %>% select(c(-2,-3,-4)), by = c("Year"="Year","P.F.Team"="Team"))
+        R2C <- left_join(R2B, JTCombine %>% select(c(-2,-3,-4)), by = c("Year"="Year","P.U.Team"="Team"),suffix = c("_F","_U")) 
+        R2C <- unique(R2C)
+        R2C$pmv <- predict(p_model, R2C, type = "response")
+        R2C$A.W.Seed <- ifelse(R2C$amv >=0, R2C$A.F.Seed, R2C$A.U.Seed)
+        R2C$A.W.Team <- ifelse(R2C$amv >=0, R2C$A.F.Team, R2C$A.U.Team)
+        R2C$P.W.Seed <- ifelse(R2C$pmv >=0, R2C$P.F.Seed, R2C$P.U.Seed)
+        R2C$P.W.Team <- ifelse(R2C$pmv >=0, R2C$P.F.Team, R2C$P.U.Team)
+        p_show_2 <- R2C %>% mutate (A.Favored = paste(A.F.Seed,A.F.Team,sep = " "),
+                                    A.Underdog = paste(A.U.Seed,A.U.Team,sep = " "),
+                                    A.Winner = paste(A.W.Seed,A.W.Team,sep = " "),
+                                    P.Favored = paste(P.F.Seed,P.F.Team,sep = " "),
+                                    P.Underdog = paste(P.U.Seed,P.U.Team,sep = " "),
+                                    P.Winner = paste(P.W.Seed,P.W.Team,sep = " "))
+        p_show_2 $ESPN_Points <- ifelse(p_show_2$A.Winner == p_show_2$P.Winner,20,0)
+        p_show_2 <- p_show_2 %>% select(colnames(p_show))
+        p_show <- rbind(p_show,p_show_2)
+        
+        # Round 3
+        
+        R3 <- stage3 %>% filter(Year == pyear, Round == 3) %>% select(1:10)
+        for (i in 1:8){
+            R3$P.F.Seed[i] <- min(R2C$P.W.Seed[2*i-1],R2C$P.W.Seed[2*i])
+            R3$P.F.Team[i] <- ifelse(R3$P.F.Seed[i]==R2C$P.W.Seed[2*i-1],R2C$P.W.Team[2*i-1],R2C$P.W.Team[2*i])
+            R3$P.U.Seed[i] <- max(R2C$P.W.Seed[2*i-1],R2C$P.W.Seed[2*i])
+            R3$P.U.Team[i] <- ifelse(R3$P.U.Seed[i]==R2C$P.W.Seed[2*i-1],R2C$P.W.Team[2*i-1],R2C$P.W.Team[2*i])
+        }
+        R3B <- unique(left_join(R3, JTCombine %>% select(c(-2,-3,-4)), by = c("Year"="Year","P.F.Team"="Team")))
+        R3C <- unique(left_join(R3B, JTCombine %>% select(c(-2,-3,-4)), by = c("Year"="Year","P.U.Team"="Team"),suffix = c("_F","_U"))) 
+        R3C$pmv <- predict(p_model, R3C, type = "response")
+        R3C$A.W.Seed <- ifelse(R3C$amv >=0, R3C$A.F.Seed, R3C$A.U.Seed)
+        R3C$A.W.Team <- ifelse(R3C$amv >=0, R3C$A.F.Team, R3C$A.U.Team)
+        R3C$P.W.Seed <- ifelse(R3C$pmv >=0, R3C$P.F.Seed, R3C$P.U.Seed)
+        R3C$P.W.Team <- ifelse(R3C$pmv >=0, R3C$P.F.Team, R3C$P.U.Team)
+        p_show_3 <- R3C %>% mutate (A.Favored = paste(A.F.Seed,A.F.Team,sep = " "),
+                                    A.Underdog = paste(A.U.Seed,A.U.Team,sep = " "),
+                                    A.Winner = paste(A.W.Seed,A.W.Team,sep = " "),
+                                    P.Favored = paste(P.F.Seed,P.F.Team,sep = " "),
+                                    P.Underdog = paste(P.U.Seed,P.U.Team,sep = " "),
+                                    P.Winner = paste(P.W.Seed,P.W.Team,sep = " "))
+        p_show_3 $ESPN_Points <- ifelse(p_show_3$A.Winner == p_show_3$P.Winner,40,0)
+        p_show_3 <- p_show_3 %>% select(colnames(p_show))
+        p_show <- rbind(p_show,p_show_3)
+        
+        # Round 4
+        
+        R4 <- stage3 %>% filter(Year == pyear, Round == 4) %>% select(1:10)
+        for (i in 1:4){
+            R4$P.F.Seed[i] <- min(R3C$P.W.Seed[2*i-1],R3C$P.W.Seed[2*i])
+            R4$P.F.Team[i] <- ifelse(R4$P.F.Seed[i]==R3C$P.W.Seed[2*i-1],R3C$P.W.Team[2*i-1],R3C$P.W.Team[2*i])
+            R4$P.U.Seed[i] <- max(R3C$P.W.Seed[2*i-1],R3C$P.W.Seed[2*i])
+            R4$P.U.Team[i] <- ifelse(R4$P.U.Seed[i]==R3C$P.W.Seed[2*i-1],R3C$P.W.Team[2*i-1],R3C$P.W.Team[2*i])
+        }
+        R4B <- unique(left_join(R4, JTCombine %>% select(c(-2,-3,-4)), by = c("Year"="Year","P.F.Team"="Team")))
+        R4C <- unique(left_join(R4B, JTCombine %>% select(c(-2,-3,-4)), by = c("Year"="Year","P.U.Team"="Team"),suffix = c("_F","_U"))) 
+        R4C$pmv <- predict(p_model, R4C, type = "response")
+        R4C$A.W.Seed <- ifelse(R4C$amv >=0, R4C$A.F.Seed, R4C$A.U.Seed)
+        R4C$A.W.Team <- ifelse(R4C$amv >=0, R4C$A.F.Team, R4C$A.U.Team)
+        R4C$P.W.Seed <- ifelse(R4C$pmv >=0, R4C$P.F.Seed, R4C$P.U.Seed)
+        R4C$P.W.Team <- ifelse(R4C$pmv >=0, R4C$P.F.Team, R4C$P.U.Team)
+        p_show_4 <- R4C %>% mutate (A.Favored = paste(A.F.Seed,A.F.Team,sep = " "),
+                                    A.Underdog = paste(A.U.Seed,A.U.Team,sep = " "),
+                                    A.Winner = paste(A.W.Seed,A.W.Team,sep = " "),
+                                    P.Favored = paste(P.F.Seed,P.F.Team,sep = " "),
+                                    P.Underdog = paste(P.U.Seed,P.U.Team,sep = " "),
+                                    P.Winner = paste(P.W.Seed,P.W.Team,sep = " "))
+        p_show_4 $ESPN_Points <- ifelse(p_show_4$A.Winner == p_show_4$P.Winner,80,0)
+        p_show_4 <- p_show_4 %>% select(colnames(p_show))
+        p_show <- rbind(p_show,p_show_4)
+        
+        # Round 5
+        
+        R5 <- stage3 %>% filter(Year == pyear, Round == 5) %>% select(1:10)
+        for (i in 1:2){
+            R5$P.F.Seed[i] <- min(R4C$P.W.Seed[2*i-1],R4C$P.W.Seed[2*i])
+            R5$P.F.Team[i] <- ifelse(R5$P.F.Seed[i]==R4C$P.W.Seed[2*i-1],R4C$P.W.Team[2*i-1],R4C$P.W.Team[2*i])
+            R5$P.U.Seed[i] <- max(R4C$P.W.Seed[2*i-1],R4C$P.W.Seed[2*i])
+            R5$P.U.Team[i] <- ifelse(R5$P.U.Seed[i]==R4C$P.W.Seed[2*i-1],R4C$P.W.Team[2*i-1],R4C$P.W.Team[2*i])
+        }
+        R5B <- unique(left_join(R5, JTCombine %>% select(c(-2,-3,-4)), by = c("Year"="Year","P.F.Team"="Team")))
+        R5C <- unique(left_join(R5B, JTCombine %>% select(c(-2,-3,-4)), by = c("Year"="Year","P.U.Team"="Team"),suffix = c("_F","_U"))) 
+        R5C$pmv <- predict(p_model, R5C, type = "response")
+        R5C$A.W.Seed <- ifelse(R5C$amv >=0, R5C$A.F.Seed, R5C$A.U.Seed)
+        R5C$A.W.Team <- ifelse(R5C$amv >=0, R5C$A.F.Team, R5C$A.U.Team)
+        R5C$P.W.Seed <- ifelse(R5C$pmv >=0, R5C$P.F.Seed, R5C$P.U.Seed)
+        R5C$P.W.Team <- ifelse(R5C$pmv >=0, R5C$P.F.Team, R5C$P.U.Team)
+        p_show_5 <- R5C %>% mutate (A.Favored = paste(A.F.Seed,A.F.Team,sep = " "),
+                                    A.Underdog = paste(A.U.Seed,A.U.Team,sep = " "),
+                                    A.Winner = paste(A.W.Seed,A.W.Team,sep = " "),
+                                    P.Favored = paste(P.F.Seed,P.F.Team,sep = " "),
+                                    P.Underdog = paste(P.U.Seed,P.U.Team,sep = " "),
+                                    P.Winner = paste(P.W.Seed,P.W.Team,sep = " "))
+        p_show_5 $ESPN_Points <- ifelse(p_show_5$A.Winner == p_show_5$P.Winner,160,0)
+        p_show_5 <- p_show_5 %>% select(colnames(p_show))
+        p_show <- rbind(p_show,p_show_5)
+        
+        output$tbl_full_predict <- renderFormattable(p_show %>% formattable())  
+        output$txt_ESPN_f <- renderText(sum(p_show$ESPN_Points))
     })
     
     ########################### End of Full Brackets Tab

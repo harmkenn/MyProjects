@@ -1,4 +1,4 @@
-Year,Round,Region,Game,F.Seed,F.Team,F.Score,U.Seed,U.Team,U.Score
+Year,Round,Region,Game,A.F.Seed,A.F.Team,A.F.Score,A.U.Seed,A.U.Team,A.U.Score
 1985,1,NW,1,1,St. John's,83,16,Southern,59
 1985,1,NW,2,8,Iowa,54,9,Arkansas,63
 1985,1,NW,3,5,Washington,58,12,Kentucky,66
@@ -2296,7 +2296,7 @@ Year,Round,Region,Game,F.Seed,F.Team,F.Score,U.Seed,U.Team,U.Score
 2021,2,SW,40,2,Alabama,96,10,Maryland,77
 2021,2,NE,41,1,Baylor,76,9,Wisconsin,63
 2021,2,NE,42,5,Villanova,84,13,North Texas,61
-2021,2,NE,43,3,Arkansas,68,6,Texas Tech,66
+2021,2,NE,43,3,Arkansas,68,4,Texas Tech,66
 2021,2,NE,44,7,Florida,78,15,Oral Roberts,81
 2021,2,SE,45,1,Illinois,58,8,Loyola Chicago,71
 2021,2,SE,46,4,Oklahoma St.,70,12,Oregon St.,80

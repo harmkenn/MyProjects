@@ -349,7 +349,7 @@ server <- function(input, output, session) {
             R5$P.F.Seed[i] <- min(R4C$P.W.Seed[2*i-1],R4C$P.W.Seed[2*i])
             R5$P.F.Team[i] <- ifelse(R5$P.F.Seed[i]==R4C$P.W.Seed[2*i-1],R4C$P.W.Team[2*i-1],R4C$P.W.Team[2*i])
             R5$P.U.Seed[i] <- max(R4C$P.W.Seed[2*i-1],R4C$P.W.Seed[2*i])
-            R5$P.U.Team[i] <- ifelse(R5$P.U.Seed[i]==R4C$P.W.Seed[2*i-1],R4C$P.W.Team[2*i-1],R4C$P.W.Team[2*i])
+            R5$P.U.Team[i] <- ifelse(R5$P.F.Team[i]==R4C$P.W.Team[2*i-1],R4C$P.W.Team[2*i],R4C$P.W.Team[2*i-1])
         }
         R5B <- unique(left_join(R5, JTCombine %>% select(c(-2,-3,-4)), by = c("Year"="Year","P.F.Team"="Team")))
         R5C <- unique(left_join(R5B, JTCombine %>% select(c(-2,-3,-4)), by = c("Year"="Year","P.U.Team"="Team"),suffix = c("_F","_U"))) 
@@ -367,6 +367,32 @@ server <- function(input, output, session) {
         p_show_5 $ESPN_Points <- ifelse(p_show_5$A.Winner == p_show_5$P.Winner,160,0)
         p_show_5 <- p_show_5 %>% select(colnames(p_show))
         p_show <- rbind(p_show,p_show_5)
+        
+        # Round 6
+        
+        R6 <- stage3 %>% filter(Year == pyear, Round == 6) %>% select(1:10)
+        for (i in 1:1){
+            R6$P.F.Seed[i] <- min(R5C$P.W.Seed[2*i-1],R5C$P.W.Seed[2*i])
+            R6$P.F.Team[i] <- ifelse(R6$P.F.Seed[i]==R5C$P.W.Seed[2*i-1],R5C$P.W.Team[2*i-1],R5C$P.W.Team[2*i])
+            R6$P.U.Seed[i] <- max(R5C$P.W.Seed[2*i-1],R5C$P.W.Seed[2*i])
+            R6$P.U.Team[i] <- ifelse(R6$P.F.Team[i]==R5C$P.W.Team[2*i-1],R5C$P.W.Team[2*i],R5C$P.W.Team[2*i-1])
+        }
+        R6B <- unique(left_join(R6, JTCombine %>% select(c(-2,-3,-4)), by = c("Year"="Year","P.F.Team"="Team")))
+        R6C <- unique(left_join(R6B, JTCombine %>% select(c(-2,-3,-4)), by = c("Year"="Year","P.U.Team"="Team"),suffix = c("_F","_U"))) 
+        R6C$pmv <- predict(p_model, R6C, type = "response")
+        R6C$A.W.Seed <- ifelse(R6C$amv >=0, R6C$A.F.Seed, R6C$A.U.Seed)
+        R6C$A.W.Team <- ifelse(R6C$amv >=0, R6C$A.F.Team, R6C$A.U.Team)
+        R6C$P.W.Seed <- ifelse(R6C$pmv >=0, R6C$P.F.Seed, R6C$P.U.Seed)
+        R6C$P.W.Team <- ifelse(R6C$pmv >=0, R6C$P.F.Team, R6C$P.U.Team)
+        p_show_6 <- R6C %>% mutate (A.Favored = paste(A.F.Seed,A.F.Team,sep = " "),
+                                    A.Underdog = paste(A.U.Seed,A.U.Team,sep = " "),
+                                    A.Winner = paste(A.W.Seed,A.W.Team,sep = " "),
+                                    P.Favored = paste(P.F.Seed,P.F.Team,sep = " "),
+                                    P.Underdog = paste(P.U.Seed,P.U.Team,sep = " "),
+                                    P.Winner = paste(P.W.Seed,P.W.Team,sep = " "))
+        p_show_6 $ESPN_Points <- ifelse(p_show_6$A.Winner == p_show_6$P.Winner,320,0)
+        p_show_6 <- p_show_6 %>% select(colnames(p_show))
+        p_show <- rbind(p_show,p_show_6)
         
         output$tbl_full_predict <- renderFormattable(p_show %>% formattable())  
         output$txt_ESPN_f <- renderText(sum(p_show$ESPN_Points))

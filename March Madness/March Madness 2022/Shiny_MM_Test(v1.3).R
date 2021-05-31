@@ -3,7 +3,7 @@
 #library(tidyverse)
 #library(plotly)
 #library(pacman)
-pacman::p_load(shiny,shinydashboard,tidyverse,plotly,DT,formattable,magrittr,gt,caret, e1071)
+pacman::p_load(shiny,shinydashboard,tidyverse,plotly,DT,formattable,magrittr,gt,caret, e1071,glmnet)
 
 
 
@@ -48,7 +48,7 @@ team.wins[team.wins == -1] <- NA
 ########################### Start of UI
 
 ui <- dashboardPage(
-    dashboardHeader(title = "Shiny March Madness Test v1.2",titleWidth = "450px",
+    dashboardHeader(title = "Shiny March Madness Test v1.3",titleWidth = "450px",
                     tags$li(class = "dropdown",tags$a("by Ken Harmon")),
                     dropdownMenuOutput(outputId = "notifications")),
     
@@ -223,7 +223,10 @@ server <- function(input, output, session) {
         model_games <- AllCombine %>% filter(Year != pyear)
         test_games <- AllCombine %>% filter(Year == pyear)
         model <- lm(amv ~ .,data =model_games[,c(-5,-6,-8,-9,-10,-30)])
-        test_games$pmv <- predict(model, test_games, type = "response")
+        model <- train(amv ~., data = model_games[,c(-5,-6,-8,-9,-10,-30)], method = "glmnet",
+                       trControl = trainControl("cv", number = 10),tuneLength = 10)
+        test_games$pmv <- predict(model, test_games, type = "raw")
+
         show_predict <- test_games %>% mutate(Favored = paste(F.Seed,F.Team,sep = " "),
                                               Underdog = paste(U.Seed,U.Team,sep = " ")) %>%
             select (c(2,3,50:53)) %>% filter(Game >= 0)
@@ -244,13 +247,16 @@ server <- function(input, output, session) {
         stage1$amv <- stage1$A.F.Score - stage1$A.U.Score
         stage2 <- left_join(stage1, JTCombine, by = c("Year"="Year","Round"="Round","Game"="Game","A.F.Seed"="Seed","A.F.Team"="Team"))
         stage3 <- left_join(stage2, JTCombine, by = c("Year"="Year","Round"="Round","Game"="Game","A.U.Seed"="Seed","A.U.Team"="Team"),suffix = c("_F","_U")) 
-        model.years <- stage3 %>% filter(Year != pyear)
-        p_model <- lm(amv ~ .,data =model.years[,c(4,7,10,12:30,32:50)])
+        model.years <- stage3 %>% filter(Year != pyear,Round != 'PI')
+        #p_model <- lm(amv ~ .,data =model.years[,c(4,7,10,12:30,32:50)])
+        p_model <- train(amv ~., data = model.years[,c(4,7,10,12:30,32:50)], method = "glmnet",
+                       trControl = trainControl("cv", number = 10),tuneLength = 10)
+   
         
         # Round 1
         
         R1 <- stage3 %>% filter(Year == pyear, Round == 1)
-        R1$pmv <- predict(p_model, R1, type = "response")
+        R1$pmv <- predict(p_model, R1, type = "raw")
         R1$A.W.Seed <- ifelse(R1$amv >=0, R1$A.F.Seed, R1$A.U.Seed)
         R1$A.W.Team <- ifelse(R1$amv >=0, R1$A.F.Team, R1$A.U.Team)
         R1$P.W.Seed <- ifelse(R1$pmv >=0, R1$A.F.Seed, R1$A.U.Seed)
@@ -275,7 +281,7 @@ server <- function(input, output, session) {
         R2B <- left_join(R2, JTCombine %>% select(c(-2,-3,-4)), by = c("Year"="Year","P.F.Team"="Team"))
         R2C <- left_join(R2B, JTCombine %>% select(c(-2,-3,-4)), by = c("Year"="Year","P.U.Team"="Team"),suffix = c("_F","_U")) 
         R2C <- unique(R2C)
-        R2C$pmv <- predict(p_model, R2C, type = "response")
+        R2C$pmv <- predict(p_model, R2C, type = "raw")
         R2C$A.W.Seed <- ifelse(R2C$amv >=0, R2C$A.F.Seed, R2C$A.U.Seed)
         R2C$A.W.Team <- ifelse(R2C$amv >=0, R2C$A.F.Team, R2C$A.U.Team)
         R2C$P.W.Seed <- ifelse(R2C$pmv >=0, R2C$P.F.Seed, R2C$P.U.Seed)
@@ -301,7 +307,7 @@ server <- function(input, output, session) {
         }
         R3B <- unique(left_join(R3, JTCombine %>% select(c(-2,-3,-4)), by = c("Year"="Year","P.F.Team"="Team")))
         R3C <- unique(left_join(R3B, JTCombine %>% select(c(-2,-3,-4)), by = c("Year"="Year","P.U.Team"="Team"),suffix = c("_F","_U"))) 
-        R3C$pmv <- predict(p_model, R3C, type = "response")
+        R3C$pmv <- predict(p_model, R3C, type = "raw")
         R3C$A.W.Seed <- ifelse(R3C$amv >=0, R3C$A.F.Seed, R3C$A.U.Seed)
         R3C$A.W.Team <- ifelse(R3C$amv >=0, R3C$A.F.Team, R3C$A.U.Team)
         R3C$P.W.Seed <- ifelse(R3C$pmv >=0, R3C$P.F.Seed, R3C$P.U.Seed)
@@ -327,7 +333,7 @@ server <- function(input, output, session) {
         }
         R4B <- unique(left_join(R4, JTCombine %>% select(c(-2,-3,-4)), by = c("Year"="Year","P.F.Team"="Team")))
         R4C <- unique(left_join(R4B, JTCombine %>% select(c(-2,-3,-4)), by = c("Year"="Year","P.U.Team"="Team"),suffix = c("_F","_U"))) 
-        R4C$pmv <- predict(p_model, R4C, type = "response")
+        R4C$pmv <- predict(p_model, R4C, type = "raw")
         R4C$A.W.Seed <- ifelse(R4C$amv >=0, R4C$A.F.Seed, R4C$A.U.Seed)
         R4C$A.W.Team <- ifelse(R4C$amv >=0, R4C$A.F.Team, R4C$A.U.Team)
         R4C$P.W.Seed <- ifelse(R4C$pmv >=0, R4C$P.F.Seed, R4C$P.U.Seed)
@@ -353,7 +359,7 @@ server <- function(input, output, session) {
         }
         R5B <- unique(left_join(R5, JTCombine %>% select(c(-2,-3,-4)), by = c("Year"="Year","P.F.Team"="Team")))
         R5C <- unique(left_join(R5B, JTCombine %>% select(c(-2,-3,-4)), by = c("Year"="Year","P.U.Team"="Team"),suffix = c("_F","_U"))) 
-        R5C$pmv <- predict(p_model, R5C, type = "response")
+        R5C$pmv <- predict(p_model, R5C, type = "raw")
         R5C$A.W.Seed <- ifelse(R5C$amv >=0, R5C$A.F.Seed, R5C$A.U.Seed)
         R5C$A.W.Team <- ifelse(R5C$amv >=0, R5C$A.F.Team, R5C$A.U.Team)
         R5C$P.W.Seed <- ifelse(R5C$pmv >=0, R5C$P.F.Seed, R5C$P.U.Seed)
@@ -379,7 +385,7 @@ server <- function(input, output, session) {
         }
         R6B <- unique(left_join(R6, JTCombine %>% select(c(-2,-3,-4)), by = c("Year"="Year","P.F.Team"="Team")))
         R6C <- unique(left_join(R6B, JTCombine %>% select(c(-2,-3,-4)), by = c("Year"="Year","P.U.Team"="Team"),suffix = c("_F","_U"))) 
-        R6C$pmv <- predict(p_model, R6C, type = "response")
+        R6C$pmv <- predict(p_model, R6C, type = "raw")
         R6C$A.W.Seed <- ifelse(R6C$amv >=0, R6C$A.F.Seed, R6C$A.U.Seed)
         R6C$A.W.Team <- ifelse(R6C$amv >=0, R6C$A.F.Team, R6C$A.U.Team)
         R6C$P.W.Seed <- ifelse(R6C$pmv >=0, R6C$P.F.Seed, R6C$P.U.Seed)

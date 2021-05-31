@@ -1,0 +1,130 @@
+---
+title: "Madness 2022 Model Test"
+author: "Ken Harmon"
+date: "`r format(Sys.time(), '%Y %B %d')`"
+output:
+  html_document:  
+    keep_md: true
+    code_folding: hide
+    fig_height: 6
+    fig_width: 12
+    fig_align: 'center'
+editor_options: 
+  chunk_output_type: console
+---
+
+# {.tabset .tabset-fade}
+
+```{r, echo=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
+```
+
+```{r load_libraries, include=FALSE}
+# Use this R-Chunk to load all your libraries!
+pacman::p_load(tidyverse,caret,glmnet)
+```
+
+```{r swd, eval=FALSE, echo=FALSE}
+# this is set to not run during the knit process
+# this sets the working directory to the file location
+setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
+```
+
+Preparing the data
+We’ll use the Boston data set [in MASS package], introduced in Chapter @ref(regression-analysis), for predicting the median house value (mdev), in Boston Suburbs, based on multiple predictor variables.
+
+We’ll randomly split the data into training set (80% for building a predictive model) and test set (20% for evaluating the model). Make sure to set seed for reproducibility.
+
+```{r}
+# Load the data
+data("Boston", package = "MASS")
+# Split the data into training and test set
+set.seed(123)
+training.samples <- Boston$medv %>%
+  createDataPartition(p = 0.8, list = FALSE)
+train.data  <- Boston[training.samples, ]
+test.data <- Boston[-training.samples, ]
+```
+
+Computing penalized linear regression
+Additional data preparation
+You need to create two objects:
+
+y for storing the outcome variable
+x for holding the predictor variables. This should be created using the function model.matrix() allowing to automatically transform any qualitative variables (if any) into dummy variables (Chapter @ref(regression-with-categorical-variables)), which is important because glmnet() can only take numerical, quantitative inputs. After creating the model matrix, we remove the intercept component at index = 1.
+
+```{r}
+# Predictor variables
+x <- model.matrix(medv~., train.data)[,-1]
+# Outcome variable
+y <- train.data$medv
+```
+
+R functions
+We’ll use the R function glmnet() [glmnet package] for computing penalized linear regression models.
+
+The simplified format is as follow:
+
+```{r}
+glmnet(x, y, alpha = 1, lambda = NULL)
+```
+
+x: matrix of predictor variables
+y: the response or outcome variable, which is a binary variable.
+alpha: the elasticnet mixing parameter. Allowed values include:
+“1”: for lasso regression
+“0”: for ridge regression
+a value between 0 and 1 (say 0.3) for elastic net regression.
+lamba: a numeric value defining the amount of shrinkage. Should be specify by analyst.
+In penalized regression, you need to specify a constant lambda to adjust the amount of the coefficient shrinkage. The best lambda for your data, can be defined as the lambda that minimize the cross-validation prediction error rate. This can be determined automatically using the function cv.glmnet().
+
+```{r}
+# Build the model using the training set
+set.seed(123)
+model <- train(
+  medv ~., data = train.data, method = "glmnet",
+  trControl = trainControl("cv", number = 10),
+  tuneLength = 10
+)
+# Best tuning parameter
+model$bestTune
+```
+
+```{r}
+# Coefficient of the final model. You need
+# to specify the best lambda
+coef(model$finalModel, model$bestTune$lambda)
+```
+
+```{r}
+# Make predictions on the test data
+x.test <- model.matrix(medv ~., test.data)[,-1]
+predictions <- model %>% predict(x.test)
+# Model performance metrics
+data.frame(
+  RMSE = RMSE(predictions, test.data$medv),
+  Rsquare = R2(predictions, test.data$medv)
+)
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -250,7 +250,7 @@ server <- function(input, output, session) {
         model.years <- stage3 %>% filter(Year != pyear,Round != 'PI')
         #p_model <- lm(amv ~ .,data =model.years[,c(4,7,10,12:30,32:50)])
         p_model <- train(amv ~., data = model.years[,c(4,7,10,12:30,32:50)], method = "glmnet",
-                       trControl = trainControl("cv", number = 10),tuneLength = 10)
+                       trControl = trainControl("cv", number = 2),tuneLength = 2)
    
         
         # Round 1

@@ -1,11 +1,15 @@
-#library(shiny)
-#library(shinydashboard)
-#library(tidyverse)
-#library(plotly)
-#library(pacman)
-pacman::p_load(shiny,shinydashboard,tidyverse,plotly,DT,formattable,magrittr,gt,caret, e1071,glmnet)
-
-
+#pacman::p_load(shiny,shinydashboard,tidyverse,plotly,DT,formattable,magrittr,gt,caret, e1071,glmnet)
+require(shiny)
+require(shinydashboard)
+require(tidyverse)
+require(plotly)
+require(DT)
+require(formattable)
+require(magrittr)
+require(gt)
+require(caret)
+require(e1071)
+require(glmnet)
 
 load("AllGames.rda")
 load("TeamRank.rda")
@@ -15,7 +19,7 @@ load("JTCombine.rda")
  # For Seed History
 seed.history <- data.frame(rbind(table(AllGames$W.Seed,AllGames$Round)))%>%select(1:6)
 seed.history$exp_wins <- rowSums(seed.history)/144
-SeedSum <- gt(seed.history,,,TRUE)%>% 
+SeedSum <- gt(seed.history,TRUE)%>% 
     data_color(
         columns = 1:7, 
         colors = scales::col_numeric(

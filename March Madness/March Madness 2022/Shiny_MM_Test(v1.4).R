@@ -411,7 +411,7 @@ server <- function(input, output, session) {
         p_show_6 $ESPN_Points <- ifelse(p_show_6$A.Winner == p_show_6$P.Winner,320,0)
         p_show_6 <- p_show_6 %>% select(colnames(p_show))
         p_show <- rbind(p_show,p_show_6)
-        
+        rownames(p_show) <- c()
         output$tbl_full_predict <- renderFormattable(p_show %>% formattable())  
         output$txt_ESPN_f <- renderText(sum(p_show$ESPN_Points))
     })
@@ -578,7 +578,7 @@ server <- function(input, output, session) {
         p_show_6 $ESPN_Points <- ifelse(p_show_6$A.Winner == p_show_6$P.Winner,320,0)
         p_show_6 <- p_show_6 %>% select(colnames(p_show))
         p_show <- rbind(p_show,p_show_6)
-        
+        rownames(p_show) <- c()
         output$tbl_elastic_predict <- renderFormattable(p_show %>% formattable())  
         output$txt_ESPN_e <- renderText(sum(p_show$ESPN_Points))
     })

@@ -1,5 +1,5 @@
 ---
-title: "Top 1000 IMDB"
+title: "Top IMDB Movies"
 author: "Ken Harmon"
 date: "`r format(Sys.time(), '%Y %B %d')`"
 output:
@@ -34,7 +34,7 @@ setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
 
 https://www.imdb.com/search/title
 
-https://www.imdb.com/search/title/?title_type=feature&user_rating=6.0,10.0&num_votes=20000,&languages=en&sort=user_rating,desc
+https://www.imdb.com/search/title/?title_type=feature&user_rating=6.0,10.0&num_votes=20000,&certificates=US%3AG,US%3APG,US%3APG-13,US%3AR,US%3ANC-17&countries=us&languages=en&sort=user_rating,desc
 
 ## Scrape
 
@@ -42,37 +42,34 @@ https://rpubs.com/uky994/578161
 
 https://rstudio-pubs-static.s3.amazonaws.com/299685_5ce4f9fb6fa3476e98fad355623a5f1e.html
 
+### Ratings 6.0 to 10.0
+
 ```{r}
 IMDB <- data.frame()
 
-# https://www.imdb.com/search/title/?title_type=feature&user_rating=6.0,10.0&num_votes=20000,&languages=en&sort=user_rating,desc&start=1&ref_=adv_nxt 
+# https://www.imdb.com/search/title/?title_type=feature&user_rating=6.0,10.0&num_votes=20000,&certificates=US%3AG,US%3APG,US%3APG-13,US%3AR,US%3ANC-17&countries=us&languages=en&sort=user_rating,desc&start=1&ref_=adv_nxt 
 
-  for (each_page in seq(from = 1, to = 500, by=50)) {
-      link = paste0("https://www.imdb.com/search/title/?title_type=feature&user_rating=6.0,10.0&num_votes=20000,&languages=en&sort=user_rating,desc&start=",each_page,"&ref_=adv_nxt")
+  for (each_page in seq(from = 1, to = 100, by=50)) {
+      link = paste0("https://www.imdb.com/search/title/?title_type=feature&user_rating=6.0,10.0&num_votes=20000,&certificates=US%3AG,US%3APG,US%3APG-13,US%3AR,US%3ANC-17&countries=us&languages=en&sort=user_rating,desc&start=",each_page,"&ref_=adv_nxt")
       page <- read_html(link)
       RK <- page %>% html_nodes(".text-primary") %>% html_text()
       Title <- page %>% html_nodes(".lister-item-header a") %>% html_text()
       Year <- page %>% html_nodes(".text-muted.unbold") %>% html_text()
       Cert <- html_node(html_nodes(page,".lister-item-content"), ".certificate") %>% html_text()
-      Runtime <- page %>% html_nodes(".runtime") %>% html_text()
-      Genre <- page %>% html_nodes(".genre") %>% html_text()
-      Rating <- page %>% html_nodes(".ratings-imdb-rating strong") %>% html_text()
+      Runtime <- html_node(html_nodes(page,".lister-item-content"), ".runtime") %>% html_text()
+      Genre <- html_node(html_nodes(page,".lister-item-content"), ".genre") %>% html_text()
+      Rating <- html_node(html_nodes(page,".lister-item-content"), ".ratings-imdb-rating strong") %>% html_text()
       Meta <- html_node(html_nodes(page,".lister-item-content"), ".favorable") %>% html_text()
       Votes <- html_node(html_nodes(page,".lister-item-content"), ".sort-num_votes-visible span:nth-child(2)") %>% html_text()
       Gross <- html_node(html_nodes(page,".lister-item-content"), ".ghost~ .text-muted+ span") %>% html_text()
+      Summary <- html_node(html_nodes(page,".lister-item-content"), ".ratings-bar+ .text-muted") %>% html_text()
+      Director <- html_node(html_nodes(page,".lister-item-content"), ".text-muted+ p a:nth-child(1)") %>% html_text()
+      Star1 <- html_node(html_nodes(page,".lister-item-content"), ".ghost+ a") %>% html_text()
       print(each_page)
-      IMDB <- rbind(IMDB,data.frame(RK,Title,Year,Runtime,Cert,Genre,Rating,Meta,Votes,Gross))
+      IMDB <- rbind(IMDB,data.frame(RK,Title,Year,Runtime,Cert,Genre,Rating,Meta,Votes,Gross,Summary,Director,Star1))
   }
 
-datatable(IMDB, rownames = FALSE)
+datatable(IMDB, rownames = FALSE, extensions = 'Responsive')
 save(IMDB,file = "IMDB.rda")
 #write.csv(ESPN_BPI,"ESPN_BPI.csv")
 ```
-
-```{r}
-imdb <- read_html("http://www.imdb.com/search/title?genres=horror&genres=mystery&sort=moviemeter,asc&view=advanced")
-title <- imdb %>% html_nodes('.lister-item-header a') %>% html_text()
-metascore <- html_node(html_nodes(imdb, '.lister-item-content'), '.ratings-metascore span') %>% html_text()
-df <- data.frame(Title = title, Metascore = metascore)
-```
-

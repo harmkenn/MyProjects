@@ -58,8 +58,10 @@ IMDB <- data.frame()
       Genre <- page %>% html_nodes(".genre") %>% html_text()
       Rating <- page %>% html_nodes(".ratings-imdb-rating strong") %>% html_text()
       Meta <- html_node(html_nodes(page,".lister-item-content"), ".favorable") %>% html_text()
+      Votes <- html_node(html_nodes(page,".lister-item-content"), ".sort-num_votes-visible span:nth-child(2)") %>% html_text()
+      Gross <- html_node(html_nodes(page,".lister-item-content"), ".ghost~ .text-muted+ span") %>% html_text()
       print(each_page)
-      IMDB <- rbind(IMDB,data.frame(RK,Title,Year,Runtime,Cert,Genre,Rating,Meta))
+      IMDB <- rbind(IMDB,data.frame(RK,Title,Year,Runtime,Cert,Genre,Rating,Meta,Votes,Gross))
   }
 
 datatable(IMDB, rownames = FALSE)

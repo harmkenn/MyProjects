@@ -49,7 +49,7 @@ IMDB <- data.frame()
 
 # https://www.imdb.com/search/title/?title_type=feature&user_rating=6.0,10.0&num_votes=20000,&certificates=US%3AG,US%3APG,US%3APG-13,US%3AR,US%3ANC-17&countries=us&languages=en&sort=user_rating,desc&start=1&ref_=adv_nxt 
 
-  for (each_page in seq(from = 1, to = 100, by=50)) {
+  for (each_page in seq(from = 1, to = 3625, by=50)) {
       link = paste0("https://www.imdb.com/search/title/?title_type=feature&user_rating=6.0,10.0&num_votes=20000,&certificates=US%3AG,US%3APG,US%3APG-13,US%3AR,US%3ANC-17&countries=us&languages=en&sort=user_rating,desc&start=",each_page,"&ref_=adv_nxt")
       page <- read_html(link)
       RK <- page %>% html_nodes(".text-primary") %>% html_text()
@@ -73,3 +73,34 @@ datatable(IMDB, rownames = FALSE, extensions = 'Responsive')
 save(IMDB,file = "IMDB.rda")
 #write.csv(ESPN_BPI,"ESPN_BPI.csv")
 ```
+
+## Clean up
+
+```{r}
+# Get the dot off the rank
+IMDB$RK <- as.integer(rownames(IMDB))
+
+# Get rid of the parentheses of the year
+IMDB$Year <- gsub("\\(I)","",IMDB$Year)
+IMDB$Year <- gsub("\\(","",IMDB$Year)
+IMDB$Year <- gsub("\\)","",IMDB$Year)
+IMDB$Year <- as.integer(IMDB$Year)
+
+# Drop min off of runtime
+
+IMDB$Runtime <- gsub(" min","",IMDB$Runtime)
+IMDB$Runtime <- as.integer(IMDB$Runtime)
+
+IMDB$Rating <- as.numeric(IMDB$Rating)
+IMDB$Meta <- as.numeric(IMDB$Meta)
+
+IMDB$Votes <- as.integer(gsub("\\,","",IMDB$Votes))
+
+IMDB$Gross <- gsub("\\$","",IMDB$Gross)
+IMDB$Gross <- gsub("M","",IMDB$Gross)
+IMDB$Gross <- as.numeric(IMDB$Gross)*1000000
+save(IMDB,file = "IMDB3.rda")
+```
+
+
+

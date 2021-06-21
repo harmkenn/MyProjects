@@ -102,5 +102,17 @@ IMDB$Gross <- as.numeric(IMDB$Gross)*1000000
 save(IMDB,file = "IMDB3.rda")
 ```
 
+```{r}
+boxplot(IMDB$Rating)
+```
 
+```{r}
+pacman::p_load(plotly)
+load("IMDB3625.rda")
+p <- IMDB %>% filter(Rating>=8) %>%
+  ggplot( aes(Gross, Meta, size = Rating, color=Cert,text=Title)) +
+  geom_point() + theme_bw() 
+
+ggplotly(p)
+```
 

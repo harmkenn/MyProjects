@@ -78,7 +78,7 @@ https://api.census.gov/data/key_signup.html
 api.key.install("793ff6b5dd433d27298863e6bda0d62e2ff4ab8e")
 
 
-state_demo_2010 <- get_state_demographics(endyear = 2010)
+state_demo_2020 <- get_state_demographics(endyear = 2020)
 state_demo_2015 <- get_state_demographics(endyear = 2015)
 
 state_demo_2015$value <- state_demo_2015$per_capita_income

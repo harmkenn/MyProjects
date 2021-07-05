@@ -1,0 +1,214 @@
+---
+title: "NBA Players"
+author: "Ken Harmon"
+date: "`r format(Sys.time(), '%Y %B %d')`"
+output:
+  html_document:  
+    keep_md: true
+    code_folding: hide
+    fig_height: 6
+    fig_width: 12
+    fig_align: 'center'
+editor_options: 
+  chunk_output_type: console
+---
+
+# {.tabset .tabset-fade}
+
+```{r, echo=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
+```
+
+```{r load_libraries, include=FALSE}
+# Use this R-Chunk to load all your libraries!
+pacman::p_load(tidyverse, rvest, DT, stringi,DataCombine)
+```
+
+```{r swd, eval=FALSE, echo=FALSE}
+# this is set to not run during the knit process
+# this sets the working directory to the file location
+setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
+```
+
+## NBA Salaries
+
+https://hoopshype.com/salaries/players/1990-1991/
+
+https://www.imdb.com/search/title/?title_type=feature&user_rating=6.0,10.0&num_votes=20000,&certificates=US%3AG,US%3APG,US%3APG-13,US%3AR,US%3ANC-17&countries=us&languages=en&sort=user_rating,desc
+
+## Scrape
+
+https://rpubs.com/uky994/578161
+
+https://rstudio-pubs-static.s3.amazonaws.com/299685_5ce4f9fb6fa3476e98fad355623a5f1e.html
+
+### Salaries
+
+```{r}
+salaries <- data.frame()
+
+# https://hoopshype.com/salaries/players/1990-1991/ 
+
+for (season in seq(from = 1990, to = 2019)){
+      link <- paste0("https://hoopshype.com/salaries/players/",season,"-",season+1,"/")
+      page <- read_html(link)
+      table_page <- page %>% html_table()
+      salary <- table_page[[1]]
+      salary <- data.frame(cbind(season,season+1,salary[-1,])) 
+      salaries <- rbind(salaries,salary)
+}
+      link <- paste0("https://hoopshype.com/salaries/players/")
+      page <- read_html(link)
+      table_page <- page %>% html_table()
+      salary <- table_page[[1]]
+      
+      
+      colnames(salaries) <- c("From","To","Salary Rank", "Player", "Actual", "Adjusted")
+      
+      temp <- data.frame(cbind(2020,2021,salary[-1,c(1:3,3)]))
+      colnames(temp) <- c("From","To","Salary Rank", "Player", "Actual", "Adjusted")
+      salaries <- rbind(salaries,temp)
+      
+      temp <- data.frame(cbind(2021,2022,salary[-1,c(1,2,4,4)]))
+      colnames(temp) <- c("From","To","Salary Rank", "Player", "Actual", "Adjusted")
+      salaries <- rbind(salaries,temp)
+      
+      salaries$Actual <- as.numeric(gsub('[$,]', '', salaries$Actual))
+      salaries$Adjusted <- as.numeric(gsub('[$,]', '', salaries$Adjusted))
+salaries$Player <- gsub("\\.","",salaries$Player) 
+
+datatable(salaries, rownames = FALSE, extensions = 'Responsive')
+save(salaries,file = "salaries.rda")
+
+```
+
+## Stats
+
+```{r}
+
+#https://www.basketball-reference.com/leagues/NBA_1991_advanced.html
+
+stats <- data.frame()
+for (season in seq(from = 1991, to = 2021)){
+      link <- paste0("https://www.basketball-reference.com/leagues/NBA_",season,"_advanced.html")
+      page <- read_html(link)
+      table_page <- page %>% html_table()
+      stat <- table_page[[1]]
+      hand <- data.frame(cbind(from = season-1,to = season,stat)) 
+      stats <- rbind(stats,hand)
+}
+colnames(stats) <- c("From","To",stats[24,3:31])
+NBA_stats <- stats %>% subset(Player != "Player") %>% subset(select = -c(Rk))
+save(NBA_stats,file = "NBA_stats.rda")
+```
+
+## match and Combine
+
+```{r}
+NBA_stats$Player <- gsub("\\(","",ESPN_BPI$Team)
+player_names <- sort(unique(NBA_stats$Player))
+salary_names <- sort(unique(salaries$Player))
+salaries_wrong <- sort(setdiff(salary_names,player_names))
+
+write.csv(data.frame(player_names),"player_names.csv")
+NBA_Salaries <- left_join(NBA_stats,salaries)
+```
+
+## Match Names
+
+```{r}
+best <- salaries 
+NBA_stats$Player <- stri_trans_general (NBA_stats$Player,id = "Latin-ASCII")
+NBA_stats$Player <- gsub("\\.","",NBA_stats$Player)
+NBA_stats$Player <- gsub("\\'","",NBA_stats$Player)
+best$Player <- gsub("\\.","",best$Player)
+best$Player <- gsub("\\'","",best$Player)
+NBA_stats$Player <- gsub("\\*","",NBA_stats$Player)
+
+player_names <- sort(unique(NBA_stats$Player))
+salary_names <- sort(unique(best$Player))
+salaries_wrong <- sort(setdiff(salary_names,player_names))
+look = best[best$Player %in% salaries_wrong,]
+# write.csv(data.frame(salaries_wrong),"salaries_wrong.csv")
+salaries_fix <- read.csv("salaries_fix.csv")
+best <- FindReplace(data = best, Var = "Player", replaceData = salaries_fix,
+                     from = "salaries_wrong", to = "salaries_right", exact = TRUE)
+```
+
+## dump the residue salaries
+
+```{r}
+again <- best[! best$Player %in% salaries_wrong,]
+combine <- left_join(NBA_stats,again) %>% filter(Adjusted >= 1000000) %>% select(c(-21,-26))
+save(combine,file = "combine.rda")
+```
+
+## Now get rid of partial seasons
+
+```{r}
+combine <- combine %>% as.data.frame()
+# Change TOT to ZZZ
+combine$Tm <- replace(combine$Tm,combine$Tm == "TOT","ZZZ")
+# now sort
+sort_players <- combine %>% arrange(From,Player,desc(Tm))
+# Remove Duplicates
+NBA_Players <- sort_players %>% distinct(From,Player, .keep_all= TRUE)
+#save it
+save(NBA_Players,file = "NBA_Players.rda")
+```
+
+## Worth
+
+```{r}
+load("NBA_Players.rda")
+NBA_Players <- NBA_Players %>% mutate_at(c(5,7:31), as.numeric) 
+
+NBA_Players[is.na(NBA_Players)] = 0
+p_model <- train(Adjusted ~., data = NBA_Players[,c(1,5,7:28,31)], method = "glmnet",
+                         trControl = trainControl("cv", number = 2),tuneLength = 2)
+
+NBA_Worth <- NBA_Players
+NBA_Worth$Worth <- predict(p_model, NBA_Players, type = "raw")
+NBA_Worth$Diff <- NBA_Worth$Adjusted - NBA_Worth$Worth
+
+save(NBA_Worth,file = "NBA_Worth.rda")
+```
+
+## Free Agents 2021-22
+
+```{r}
+NBA_2022 <- NBA_Worth %>% filter(From == 2020) %>% select(c(1:28,32))
+
+salary_2021 <- salaries %>% filter(From == 2020)
+salary_2022 <- salaries %>% filter(From == 2021)
+
+NBA_2022$Player <- stri_trans_general (NBA_2022$Player,id = "Latin-ASCII")
+NBA_2022$Player <- gsub("\\.","",NBA_2022$Player)
+NBA_2022$Player <- gsub("\\'","",NBA_2022$Player)
+salary_2021$Player <- gsub("\\.","",salary_2021$Player)
+salary_2021$Player <- gsub("\\'","",salary_2021$Player)
+salary_2022$Player <- gsub("\\.","",salary_2022$Player)
+salary_2022$Player <- gsub("\\'","",salary_2022$Player)
+NBA_2022$Player <- gsub("\\*","",NBA_2022$Player)
+
+salaries_fix <- read.csv("salaries_fix.csv")
+salary_2021 <- FindReplace(data = salary_2021, Var = "Player", replaceData = salaries_fix,
+                     from = "salaries_wrong", to = "salaries_right", exact = TRUE)
+salary_2022 <- FindReplace(data = salary_2022, Var = "Player", replaceData = salaries_fix,
+                     from = "salaries_wrong", to = "salaries_right", exact = TRUE)
+
+player_names <- sort(unique(NBA_2022$Player))
+salary_names <- sort(unique(salary_2022$Player))
+salaries_wrong <- sort(setdiff(salary_names,player_names))
+
+Match <- left_join(NBA_2022,salary_2022) %>% select(c(1:29,32))
+Match$Diff2021 <- Match$Worth - Match$Adjusted
+colnames(Match)[30] <- "2021-22 Salary"
+Match <- left_join(Match, salary_2021 %>% select(c(4,6)))
+Match$Diff2020 <- Match$Worth - Match$Adjusted
+colnames(Match)[32] <- "2020-21 Salary"
+save(Match,file = "Players_2022.rda")
+```
+
+
+

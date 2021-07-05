@@ -21,7 +21,7 @@ knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
 
 ```{r load_libraries, include=FALSE}
 # Use this R-Chunk to load all your libraries!
-pacman::p_load(tidyverse, rvest, DT)
+pacman::p_load(tidyverse, rvest, DT, stringi,DataCombine)
 ```
 
 ```{r swd, eval=FALSE, echo=FALSE}
@@ -75,7 +75,7 @@ for (season in seq(from = 1990, to = 2019)){
       
       salaries$Actual <- as.numeric(gsub('[$,]', '', salaries$Actual))
       salaries$Adjusted <- as.numeric(gsub('[$,]', '', salaries$Adjusted))
-      
+salaries$Player <- gsub("\\.","",salaries$Player) 
 
 datatable(salaries, rownames = FALSE, extensions = 'Responsive')
 save(salaries,file = "salaries.rda")
@@ -88,5 +88,61 @@ save(salaries,file = "salaries.rda")
 
 #https://www.basketball-reference.com/leagues/NBA_1991_advanced.html
 
+stats <- data.frame()
+for (season in seq(from = 1991, to = 2021)){
+      link <- paste0("https://www.basketball-reference.com/leagues/NBA_",season,"_advanced.html")
+      page <- read_html(link)
+      table_page <- page %>% html_table()
+      stat <- table_page[[1]]
+      hand <- data.frame(cbind(from = season-1,to = season,stat)) 
+      stats <- rbind(stats,hand)
+}
+colnames(stats) <- c("From","To",stats[24,3:31])
+NBA_stats <- stats %>% subset(Player != "Player") %>% subset(select = -c(Rk)) %>% as.tibble()
+save(NBA_stats,file = "NBA_stats.rda")
 ```
+
+## match and Combine
+
+```{r}
+NBA_stats$Player <- gsub("\\(","",ESPN_BPI$Team)
+player_names <- sort(unique(NBA_stats$Player))
+salary_names <- sort(unique(salaries$Player))
+salaries_wrong <- sort(setdiff(salary_names,player_names))
+
+write.csv(data.frame(player_names),"player_names.csv")
+NBA_Salaries <- left_join(NBA_stats,salaries)
+```
+
+## Match Names
+
+```{r}
+best <- salaries 
+NBA_stats$Player <- stri_trans_general (NBA_stats$Player,id = "Latin-ASCII")
+NBA_stats$Player <- gsub("\\.","",NBA_stats$Player)
+NBA_stats$Player <- gsub("\\'","",NBA_stats$Player)
+best$Player <- gsub("\\.","",best$Player)
+best$Player <- gsub("\\'","",best$Player)
+NBA_stats$Player <- gsub("\\*","",NBA_stats$Player)
+
+player_names <- sort(unique(NBA_stats$Player))
+salary_names <- sort(unique(best$Player))
+salaries_wrong <- sort(setdiff(salary_names,player_names))
+look = best[best$Player %in% salaries_wrong,]
+# write.csv(data.frame(salaries_wrong),"salaries_wrong.csv")
+salaries_fix <- read.csv("salaries_fix.csv")
+best <- FindReplace(data = best, Var = "Player", replaceData = salaries_fix,
+                     from = "salaries_wrong", to = "salaries_right", exact = TRUE)
+```
+
+## dump the residue salaries
+
+```{r}
+again <- best[! best$Player %in% salaries_wrong,]
+combine <- left_join(NBA_stats,again) %>% filter(Adjusted >= 1000000)
+save(combine,file = "combine.rda")
+```
+
+
+
 

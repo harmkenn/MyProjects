@@ -98,7 +98,7 @@ for (season in seq(from = 1991, to = 2021)){
       stats <- rbind(stats,hand)
 }
 colnames(stats) <- c("From","To",stats[24,3:31])
-NBA_stats <- stats %>% subset(Player != "Player") %>% subset(select = -c(Rk)) %>% as.tibble()
+NBA_stats <- stats %>% subset(Player != "Player") %>% subset(select = -c(Rk))
 save(NBA_stats,file = "NBA_stats.rda")
 ```
 
@@ -139,8 +139,22 @@ best <- FindReplace(data = best, Var = "Player", replaceData = salaries_fix,
 
 ```{r}
 again <- best[! best$Player %in% salaries_wrong,]
-combine <- left_join(NBA_stats,again) %>% filter(Adjusted >= 1000000)
+combine <- left_join(NBA_stats,again) %>% filter(Adjusted >= 1000000) %>% select(c(-21,-26))
 save(combine,file = "combine.rda")
+```
+
+## Now get rid of partial seasons
+
+```{r}
+combine <- combine %>% as.data.frame()
+# Change TOT to ZZZ
+combine$Tm <- replace(combine$Tm,combine$Tm == "TOT","ZZZ")
+# now sort
+sort_players <- combine %>% arrange(From,Player,desc(Tm))
+# Remove Duplicates
+NBA_Players <- sort_players %>% distinct(From,Player, .keep_all= TRUE)
+#save it
+save(NBA_Players,file = "NBA_Players.rda")
 ```
 
 

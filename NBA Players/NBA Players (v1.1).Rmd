@@ -21,7 +21,7 @@ knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
 
 ```{r load_libraries, include=FALSE}
 # Use this R-Chunk to load all your libraries!
-pacman::p_load(tidyverse, rvest, DT, stringi,DataCombine)
+pacman::p_load(tidyverse, rvest, DT, stringi,DataCombine,plotly)
 ```
 
 ```{r swd, eval=FALSE, echo=FALSE}
@@ -210,5 +210,12 @@ colnames(Match)[32] <- "2020-21 Salary"
 save(Match,file = "Players_2022.rda")
 ```
 
+## Smooth
+
+```{r}
+ggplot(NBA_Worth %>% filter(`Salary Rank`<=100), aes(From, Adjusted)) +
+  geom_point() +
+  geom_smooth()
+```
 
 

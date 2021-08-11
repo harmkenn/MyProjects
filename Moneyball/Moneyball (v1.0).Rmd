@@ -58,7 +58,7 @@ pbs$SLG <- (pbs$X1B+2*pbs$X2B+3*pbs$X3B+4*pbs$HR)/pbs$AB
 
 ```{r}
 these <- pbs %>% select(1:2,16:18,21,37,39,41)%>%
-  filter(AB>100,OBP >= .333,salary <= 8000000,yearID==2002)%>%
+  filter(AB>100,OBP >= .333,salary <= 4000000,yearID==2002)%>%
   mutate(val = salary/(3*OBP+SLG))
 ```
 

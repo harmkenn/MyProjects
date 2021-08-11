@@ -1,5 +1,5 @@
 ---
-title: "Madness 2022 Model Test"
+title: "Moneyball v1.0"
 author: "Ken Harmon"
 date: "`r format(Sys.time(), '%Y %B %d')`"
 output:
@@ -54,7 +54,7 @@ pbs$X1B <- pbs$H - pbs$X2B - pbs$X3B - pbs$HR
 pbs$SLG <- (pbs$X1B+2*pbs$X2B+3*pbs$X3B+4*pbs$HR)/pbs$AB
 ```
 
-##Get These Players
+##Get These Players 
 
 ```{r}
 these <- pbs %>% select(1:2,16:18,21,37,39,41)%>%

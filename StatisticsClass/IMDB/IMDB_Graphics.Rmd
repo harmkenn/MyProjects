@@ -35,14 +35,14 @@ setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
 ## Categorical Data
 
 ```{r}
-pon <- read.csv("201709-CAH_PulseOfTheNation.csv")
+load("IMDB3625.rda")
 
 # Pivot Table
 
-pon_pivot <- table(pon$Gender,pon$Political.Affiliation)
 
-pon_pivot
+two_way <- table(IMDB$Cert,round(IMDB$Rating,0))
 
+two_way
 ```
 
 ### Bar Chart
@@ -50,13 +50,11 @@ pon_pivot
 ```{r}
 # Simple side by side
 
-barplot(pon_pivot, beside = T)
+barplot(two_way, beside = T)
 
 # Prettier
 
-barplot(pon_pivot, ylab="Frequency", xlab="Party", main="Side-By-Side Bar Chart", col=c("blue", "pink", "purple" , "green" ), beside=T, width=.3)
-
-legend("topright", title="Gender", legend= sort(unique(pon$Gender)), fill =c("blue", "pink", "purple" , "green" ), box.lty=0)
+barplot(two_way, ylab="Cert", xlab="Rating", main="Side-By-Side Bar Chart", col=c("blue", "pink", "purple" , "green" ), beside=T, width=.3) + legend("topright", title="Gender", legend= sort(unique(IMDB$Cert)), fill =c("blue", "pink", "purple" , "green" ), box.lty=0)
 ```
 
 ```{r}
@@ -76,9 +74,9 @@ ggplot(movies, aes(ratings,percents)) + geom_bar(stat = "identity")
 ### Pie Chart
 
 ```{r}
-pon_pie <- table(pon$Political.Affiliation)
+cert_pie <- table(IMDB$Cert)
 
-pie(pon_pie)
+pie(cert_pie)
 ```
 
 
@@ -96,9 +94,10 @@ pie(percents, ratings)
 ### Dotplot
 
 ```{r}
-ggplot(pon, aes(x = Age)) + geom_dotplot(binwidth = .5)
+dp <- IMDB %>% filter(Rating >= 8)
+ggplot(dp, aes(x = Meta)) + geom_dotplot(binwidth = .8)
 
-ggplot(pon, aes(x = Age, fill = factor(Political.Affiliation))) + geom_dotplot(binwidth = .8)
+ggplot(dp, aes(x = Meta, fill = factor(Cert))) + geom_dotplot(binwidth = .8)
 ```
 
 ### Histogram

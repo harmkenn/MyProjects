@@ -98,7 +98,7 @@ pie(percents, ratings)
 ```{r}
 ggplot(pon, aes(x = Age)) + geom_dotplot(binwidth = .5)
 
-ggplot(pon, aes(x = Age, fill = factor(Political.Affiliation))) + geom_dotplot(binwidth = .8)
+ggplot(pon, aes(x = Age, fill = factor(Political.Affiliation))) + geom_dotplot(binwidth = 1)
 ```
 
 ### Histogram

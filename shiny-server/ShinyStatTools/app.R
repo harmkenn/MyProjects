@@ -41,7 +41,7 @@ binwidth <- 1
 # >>>>>>>>>>>>>>>Start of UI
 
 ui <- dashboardPage(
-  dashboardHeader(title = "Shiny Stat Tools v2.3",titleWidth = "450px",
+  dashboardHeader(title = "Shiny Stat Tools v2.4",titleWidth = "450px",
                   tags$li(class = "dropdown",tags$a("by Ken Harmon")),
                   dropdownMenuOutput(outputId = "notifications")),
   
@@ -81,6 +81,7 @@ ui <- dashboardPage(
                 ), #Ecolumn
                 column(width = 5,
                        box(title = "Plots", width = NULL,
+                           numericInput("ni.hist","Bins:",0,width = "80px"),
                            checkboxInput("ck.hist","Histogram"),
                            checkboxInput("ck.box","Box Plot"),
                            checkboxInput("ck.dot","Dot Plot"),
@@ -476,6 +477,7 @@ server <- function(input, output, session) {
       quant.x <- quant.in$values[!is.na(quant.in$values)]
       count <- length(quant.x)
       bins <- ceiling(1+3.322*log10(count))
+      if (input$ni.hist > 1) {bins <- input$ni.hist - 1}
       if (count > 2) {binwidth <- (max(quant.x)-min(quant.x))/(bins)}
       quant.df <- data.frame(quant.x)
       if(!is.null(tryCatch(ggplot(quant.df), error = function(e){}))){
@@ -496,7 +498,8 @@ server <- function(input, output, session) {
         }
         if(input$ck.dot == TRUE){
           qs.plots <- qs.plots +
-            geom_jitter(aes(x = "", y = quant.x), color= "orange", height = .01) +
+            geom_jitter(aes(x = "", y = quant.x), color= "red", size = 2, fill = "white") +
+            #geom_dotplot(aes(x = .5, y = quant.x),dotsize = .1 ,stackgroups = T,stackdir = "up",method = "histodot",binaxis = "y" ,color= "red",fill="white", height = .01) +
             coord_flip()
         }
       }

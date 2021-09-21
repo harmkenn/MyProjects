@@ -13,6 +13,7 @@ library(grid)
 library(gridExtra)
 library(ggExtra)
 library(plotly)
+require(e1071)
 theme_set(theme_bw())
 
 chisq.test <- stats::chisq.test
@@ -41,7 +42,7 @@ binwidth <- 1
 # >>>>>>>>>>>>>>>Start of UI
 
 ui <- dashboardPage(
-  dashboardHeader(title = "Shiny Stat Tools v2.5",titleWidth = "450px",
+  dashboardHeader(title = "Shiny Stat Tools v2.6",titleWidth = "450px",
                   tags$li(class = "dropdown",tags$a("by Ken Harmon")),
                   dropdownMenuOutput(outputId = "notifications")),
   
@@ -533,13 +534,13 @@ server <- function(input, output, session) {
       }) #Eoutput$qqalert
       sx <- summary(quant.x)
       sxe <- quantile(quant.x, c(0.25, 0.75), type = 6)
-      dsse <- matrix(formatC(c("","","","","",sxe[2],"",sxe[1],""),
-                             format="f",digits = 6,drop0trailing = TRUE),ncol=1,nrow=9)
+      dsse <- matrix(formatC(c("","","","","",sxe[2],"",sxe[1],"","",""),
+                             format="f",digits = 6,drop0trailing = TRUE),ncol=1,nrow=11)
       dss <- matrix(formatC(c(length(quant.x),sx[4],sd(quant.x),var(quant.x),
-                              sx[6],sx[5],sx[3],sx[2],sx[1]),
-                            format="f",digits = 6,drop0trailing = TRUE),ncol=1,nrow=9)
+                              sx[6],sx[5],sx[3],sx[2],sx[1],skewness(quant.x),kurtosis(quant.x)),
+                            format="f",digits = 6,drop0trailing = TRUE),ncol=1,nrow=11)
       dss <- cbind(dss,dsse)
-      rownames(dss) <- c("Count","Mean","Standard Dev","Variance","Max","3rd Quartile","Median","1st Quartile","Min")
+      rownames(dss) <- c("Count","Mean","Standard Dev","Variance","Max","3rd Quartile","Median","1st Quartile","Min","Skewness","Kurtosis")
       output$dss <- renderTable({dss},rownames = TRUE,colnames=FALSE)
     }#Eif
   }) #EobserveEvent

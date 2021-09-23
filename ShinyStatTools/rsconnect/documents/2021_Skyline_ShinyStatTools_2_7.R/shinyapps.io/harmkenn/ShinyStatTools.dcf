@@ -5,10 +5,10 @@ account: harmkenn
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 1607482
-bundleId: 5065894
+bundleId: 5065910
 url: https://harmkenn.shinyapps.io/ShinyStatTools/
-when: 1632434609.33553
-lastSyncTime: 1632434609.33553
+when: 1632435066.39605
+lastSyncTime: 1632435066.39605
 asMultiple: FALSE
 asStatic: FALSE
 ignoredFiles: 2021_Skyline_ShinyStatTools.R|2021_Skyline_ShinyStatTools_1_5.R|2021_Skyline_ShinyStatTools_1_6.R|2021_Skyline_ShinyStatTools_1_7.R|2021_Skyline_ShinyStatTools_1_8.R|2021_Skyline_ShinyStatTools_1_9.R|2021_Skyline_ShinyStatTools_2_0.R|2021_Skyline_ShinyStatTools_2_1.R|2021_Skyline_ShinyStatTools_2_2.R|2021_Skyline_ShinyStatTools_2_3.R|2021_Skyline_ShinyStatTools_2_4.R|2021_Skyline_ShinyStatTools_2_5.R|2021_Skyline_ShinyStatTools_2_6.R|App.R|BYUIdata.Rdata|datasets.R|datasets2.R|datasets3/app.R|SST/andthis/app.R|SST/app.R|SST/SST/server.R|SST/SST/ui.R|SST/trythis/app.R|Standalone/standalone.R|Standalone/Standalone.rmd|stat_tools B.R|stat_tools D.R|stat_tools.R|stat_tools_C.R|stat_tools_ex.R|tdist.xlsx|tinker B.R|tinker.R|tinker.Rmd|tinkerB.R|www/custom.css|datasetxl

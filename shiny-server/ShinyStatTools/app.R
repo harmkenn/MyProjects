@@ -771,11 +771,11 @@ server <- function(input, output, session) {
     }else if (input$t_choice == "2 Sample t-Test"){
       boxpA <- t.df %>% ggplot(aes(x="", y = t.x)) +
         geom_boxplot(color="darkblue", fill="lightblue", outlier.colour="red", outlier.shape=8, outlier.size=4) + 
-        geom_jitter(width = .1) + theme_classic() +
+        geom_jitter(width = .1, height = 0) + theme_classic() +
         labs(x="", y="A" ) + ylim(c(min(t.x,t.x.b),max(t.x,t.x.b)))
       boxpB <- t.df.b %>% ggplot(aes(x="", y = t.x.b)) +
         geom_boxplot(color="darkblue", fill="lightblue", outlier.colour="red", outlier.shape=8, outlier.size=4) + 
-        geom_jitter(width = .1) + theme_classic() +
+        geom_jitter(width = .1, height = 0) + theme_classic() +
         labs(x="", y="B" ) + ylim(c(min(t.x,t.x.b),max(t.x,t.x.b)))
       output$ttqq <- renderPlot({grid.arrange(boxpA,boxpB,qqt, qqt.b, ncol =2, nrow =2)})
     } #Eif

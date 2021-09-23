@@ -830,6 +830,7 @@ server <- function(input, output, session) {
           t.x.a <- t.x.a[!is.na(t.x.a)]
           t.x.b <- t.in$values[,2]
           t.x.b <- t.x.b[!is.na(t.x.b)]
+          t_xbar <- mean(t.x.b) - mean(t.x.a)
           ttr <- t.test(t.x.b,t.x.a,alternative = tail,mu=mu, var.equal = input$eqvar, conf.level = cl)
           t_se <- sqrt(sd(t.x.b)^2/length(t.x.b)+sd(t.x.a)^2/length(t.x.a))
         }else{

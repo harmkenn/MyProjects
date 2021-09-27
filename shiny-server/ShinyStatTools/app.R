@@ -135,9 +135,9 @@ ui <- dashboardPage(
                 column(width = 9,
                        conditionalPanel(condition = "input.nway == 'z to Prob'",
                                         splitLayout(
-                                          numericInput("lz","Left z-Score",-1,width="25%",step = .1),
+                                          numericInput("lz","Left z-Score",-1,width="150px",step = .1),
                                           actionButton("z2p","Find Probability"),
-                                          numericInput("rz","Right z-Score",1,width="25%", step = .1)
+                                          numericInput("rz","Right z-Score",1,width="150px", step = .1)
                                         ), #EsplitLayout
                                         plotOutput("npp"),
                                         textOutput("npptext")
